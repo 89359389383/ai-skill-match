@@ -109,6 +109,8 @@ class ApplicationController extends Controller
             'unreadScoutCount' => $unreadScoutCount,
             // ユーザー名の最初の文字
             'userInitial' => $userInitial,
+            // フリーランス情報（アイコン表示用）
+            'freelancer' => $freelancer,
         ]);
     }
 

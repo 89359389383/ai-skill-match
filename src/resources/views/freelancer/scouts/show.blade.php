@@ -4,45 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スカウト詳細 - AITECH</title>
+    {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         :root {
-            --header-height: 104px;       /* 80px * 1.3 */
-            --header-height-mobile: 91px; /* 70px * 1.3 */
-
-            /* UI tokens (messages/show.blade.php より統一) */
-            --bg: #f6f8fb;
-            --surface: #ffffff;
-            --surface-2: #fbfcfe;
-            --text: #0f172a;
-            --muted: #64748b;
-            --border: #e6eaf2;
-            --border-2: #dbe2ee;
-            --primary: #0366d6;
-            --primary-2: #0256cc;
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-            --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.10);
-            --radius-lg: 18px;
-            --radius-md: 14px;
-            --radius-sm: 12px;
-            --focus: 0 0 0 4px rgba(3, 102, 214, 0.14);
+            --header-height: 104px;
+            --header-height-mobile: 91px;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { font-size: 100%; }
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background:
-                radial-gradient(1200px 600px at 20% 0%, rgba(3, 102, 214, 0.08), transparent 60%),
-                radial-gradient(900px 500px at 90% 10%, rgba(102, 126, 234, 0.10), transparent 55%),
-                var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            text-rendering: optimizeLegibility;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Header Styles - Minimalist（messages/show.blade.php に揃える） */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
@@ -135,10 +102,6 @@
             padding: 0;
             appearance: none;
         }
-        .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-        .user-avatar:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.25), 0 2px 8px rgba(0,0,0,0.1); }
-
-        /* Dropdown Menu */
         .dropdown { position: relative; }
         .dropdown-content {
             display: none;
@@ -161,13 +124,55 @@
             color: #586069;
             transition: all 0.15s ease;
             border-radius: 6px;
-            margin: 0 0.25rem;
+            margin: 0.25rem;
             white-space: nowrap;
         }
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
+        @media (max-width: 768px) {
+            .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
+            .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
+            .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
+            .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
+        }
+    </style>
+    <style>
+        /* 元のスカウト詳細ページのスタイルをそのまま保持します */
+        :root {
+            --header-height: 104px;
+            --header-height-mobile: 91px;
+            --bg: #f6f8fb;
+            --surface: #ffffff;
+            --surface-2: #fbfcfe;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e6eaf2;
+            --border-2: #dbe2ee;
+            --primary: #0366d6;
+            --primary-2: #0256cc;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.10);
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --radius-sm: 12px;
+            --focus: 0 0 0 4px rgba(3, 102, 214, 0.14);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 100%; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 20% 0%, rgba(3, 102, 214, 0.08), transparent 60%),
+                radial-gradient(900px 500px at 90% 10%, rgba(102, 126, 234, 0.10), transparent 55%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-        /* Page（messages/show.blade.php に揃える） */
+        /* Page */
         .main-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -193,6 +198,11 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border);
             overflow: hidden;
+        }
+        .chat-pane {
+            display: flex;
+            flex-direction: column;
+            min-height: min(800px, calc(100vh - var(--header-height) - 8rem));
         }
         .chat-header {
             padding: 1.25rem 1.5rem;
@@ -257,7 +267,7 @@
             justify-content: flex-end;
             width: 100%;
             margin-left: auto;
-            position: sticky; /* メッセージ欄の右上に固定表示（見た目のみ） */
+            position: sticky;
             top: 1rem;
             z-index: 3;
         }
@@ -385,7 +395,7 @@
         .send:active { transform: translateY(0px); }
         .send:focus-visible { outline: none; box-shadow: var(--focus), 0 14px 26px rgba(3, 102, 214, 0.26); }
 
-        /* Responsive（messages/show.blade.php メディアクエリ準拠） */
+        /* Responsive */
         @media (max-width: 1200px) {
             .main-content { padding: 2rem 1.25rem 2.5rem; }
         }
@@ -400,6 +410,7 @@
             .main-content { padding: 1.5rem 1rem 2rem; }
             .page-title { font-size: 1.65rem; }
             .page-subtitle { font-size: 0.98rem; }
+            .chat-pane { min-height: min(860px, calc(100vh - var(--header-height-mobile) - 6.25rem)); }
             .messages { padding: 1rem; }
             .bubble { max-width: 92%; }
             .bubble-row.first-message {
@@ -414,92 +425,46 @@
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; scroll-behavior: auto !important; }
         }
-        /* Delete confirmation modal (messages と同じスタイル) */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(2,6,23,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        .modal-overlay.is-open { display: flex; }
-        .modal-dialog {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 1.5rem;
-            max-width: 420px;
-            width: calc(100% - 2rem);
-            box-shadow: 0 14px 40px rgba(2,6,23,0.18);
-            border: 1px solid var(--border-2);
-            text-align: left;
-        }
-        .modal-dialog h2 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.05rem;
-            font-weight: 900;
-            color: var(--text);
-        }
-        .modal-dialog p { color: var(--muted); margin: 0 0 1rem 0; }
-        .modal-actions {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .modal-actions > button {
-            flex: 1;
-            min-width: 0; /* allow shrinking in flex */
-            font-size: 0.92rem; /* match .btn */
-            padding: 0.72rem 1rem;
-            font-weight: 800;
-            border-radius: 10px;
-        }
-        .btn-danger {
-            background: linear-gradient(180deg, #d73a49 0%, #c5303f 100%);
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-        .modal-actions .btn {
-            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-            color: var(--text);
-            border: 1px solid var(--border-2);
-        }
     </style>
     @include('partials.aitech-responsive')
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="header-content">
-            <nav class="nav-links">
+            <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
                     $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     応募した案件
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
-                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     スカウト
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
             </nav>
-            <div class="user-menu">
+
+            <div class="user-menu" role="region" aria-label="ユーザー">
                 <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? 'U' }}</button>
+                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">
+                        @if(isset($freelancer) && $freelancer && $freelancer->icon_path)
+                            <img src="{{ asset('storage/' . $freelancer->icon_path) }}" alt="プロフィール画像" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $userInitial ?? 'U' }}
+                        @endif
+                    </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
-                        <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
                             @csrf
+                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
                         </form>
                     </div>
                 </div>
@@ -539,10 +504,7 @@
                         <div class="bubble-row first-message">
                             <div class="bubble first-message">
                                 <p>{{ $message->body }}</p>
-                                <small>
-                                    {{ $sentAt }}
-                                    {{-- 最初のメッセージの削除ボタンは表示しない --}}
-                                </small>
+                                <small>{{ $sentAt }}</small>
                             </div>
                         </div>
                     @endif
@@ -624,72 +586,7 @@
     <script>
         (function () {
             const el = document.getElementById('messages');
-            if (!el) return;
-            el.scrollTop = el.scrollHeight;
-        })();
-    </script>
-    <!-- Delete confirmation modal -->
-    <div id="confirmDeleteModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteTitle">
-        <div class="modal-dialog" role="document">
-            <h2 id="confirmDeleteTitle">このメッセージを削除しますか？</h2>
-            <p>削除すると元に戻せません。よろしいですか？</p>
-            <div class="modal-actions">
-                <button id="confirmDeleteBtn" class="btn-danger">削除する</button>
-                <button id="cancelDeleteBtn" class="btn">キャンセル</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        (function () {
-            let pendingForm = null;
-            const modal = document.getElementById('confirmDeleteModal');
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
-            const cancelBtn = document.getElementById('cancelDeleteBtn');
-
-            function openModal(form) {
-                pendingForm = form;
-                modal.classList.add('is-open');
-                modal.setAttribute('aria-hidden', 'false');
-                confirmBtn.focus();
-            }
-            function closeModal() {
-                pendingForm = null;
-                modal.classList.remove('is-open');
-                modal.setAttribute('aria-hidden', 'true');
-            }
-
-            document.addEventListener('click', (e) => {
-                const trigger = e.target.closest && e.target.closest('.delete-trigger');
-                if (trigger) {
-                    e.preventDefault();
-                    const form = trigger.closest('form');
-                    if (form) openModal(form);
-                }
-            });
-
-            // Overlay click closes modal
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            cancelBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                closeModal();
-            });
-
-            confirmBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!pendingForm) return closeModal();
-                // submit the form
-                pendingForm.submit();
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('is-open')) {
-                    closeModal();
-                }
-            });
+            if (el) el.scrollTop = el.scrollHeight;
         })();
     </script>
 </body>

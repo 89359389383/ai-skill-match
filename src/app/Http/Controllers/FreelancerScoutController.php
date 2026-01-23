@@ -98,6 +98,7 @@ class FreelancerScoutController extends Controller
             'unreadApplicationCount' => $unreadApplicationCount,
             'unreadScoutCount' => $unreadScoutCount,
             'userInitial' => $userInitial,
+            'freelancer' => $freelancer,
         ]);
     }
 }

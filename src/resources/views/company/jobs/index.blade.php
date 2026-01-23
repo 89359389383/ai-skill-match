@@ -445,6 +445,29 @@
             min-width: 100px;
         }
 
+        /* Flash messages (success / error) */
+        .flash-success {
+            background-color: #e6ffed;
+            border: 1px solid #b7f5c3;
+            color: #1a7f37;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .flash-error {
+            background-color: #fff5f5;
+            border: 1px solid #ffccd2;
+            color: #b31d28;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
         @media (max-width: 920px) {
             .header-content { height: var(--header-height-mobile); }
             .nav-links { position: static; left: auto; transform: none; justify-content: flex-start; }
@@ -524,13 +547,13 @@
             </div>
 
             @if(session('success'))
-                <div style="background-color: #e6ffed; border: 1px solid #b7f5c3; color: #1a7f37; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <div class="flash-success">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if(session('error'))
-                <div style="background-color: #fff5f5; border: 1px solid #ffccd2; color: #b31d28; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <div class="flash-error">
                     {{ session('error') }}
                 </div>
             @endif

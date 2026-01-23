@@ -369,7 +369,7 @@
             color: #586069;
             transition: all 0.15s ease;
             border-radius: 6px;
-            margin: 0 0.25rem;
+            margin: 0.25rem;
             white-space: nowrap;
         }
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
@@ -419,13 +419,19 @@
             </nav>
             <div class="user-menu">
                 <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? 'U' }}</button>
+                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">
+                        @if($freelancer && $freelancer->icon_path)
+                            <img src="{{ asset('storage/' . $freelancer->icon_path) }}" alt="プロフィール画像" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $userInitial ?? mb_substr($freelancer->display_name ?? 'U', 0, 1) }}
+                        @endif
+                    </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
-                        <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
                             @csrf
+                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
                         </form>
                     </div>
                 </div>

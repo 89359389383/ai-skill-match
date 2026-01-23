@@ -4,22 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スカウト一覧 - AITECH</title>
+    {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         :root {
-            --header-height: 104px;       /* 80px * 1.3 */
-            --header-height-mobile: 91px; /* 70px * 1.3 */
+            --header-height: 104px;
+            --header-height-mobile: 91px;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { font-size: 97.5%; }
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #fafbfc;
-            color: #24292e;
-            line-height: 1.5;
-        }
-
-        /* Header Styles - Minimalist */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
@@ -112,10 +102,6 @@
             padding: 0;
             appearance: none;
         }
-        .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-        .user-avatar:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.25), 0 2px 8px rgba(0,0,0,0.1); }
-
-        /* Dropdown Menu */
         .dropdown { position: relative; }
         .dropdown-content {
             display: none;
@@ -138,11 +124,32 @@
             color: #586069;
             transition: all 0.15s ease;
             border-radius: 6px;
-            margin: 0 0.25rem;
+            margin: 0.25rem;
             white-space: nowrap;
         }
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
+        @media (max-width: 768px) {
+            .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
+            .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
+            .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
+            .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
+        }
+    </style>
+    <style>
+        :root {
+            --header-height: 104px;       /* 80px * 1.3 */
+            --header-height-mobile: 91px; /* 70px * 1.3 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 97.5%; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #fafbfc;
+            color: #24292e;
+            line-height: 1.5;
+        }
 
         /* Main Layout */
         .main-content {
@@ -354,36 +361,42 @@
     @include('partials.aitech-responsive')
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="header-content">
-            <nav class="nav-links">
-                <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
+            <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
+                <a href="{{ route('freelancer.jobs.index') }}" class="nav-link {{ Request::routeIs('freelancer.jobs.*') ? 'active' : '' }}">案件一覧</a>
                 @php
                     $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     応募した案件
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
-                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     スカウト
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
             </nav>
-            <div class="user-menu">
+
+            <div class="user-menu" role="region" aria-label="ユーザー">
                 <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial }}</button>
+                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">
+                        @if(isset($freelancer) && $freelancer && $freelancer->icon_path)
+                            <img src="{{ asset('storage/' . $freelancer->icon_path) }}" alt="プロフィール画像" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $userInitial ?? 'U' }}
+                        @endif
+                    </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
-                        <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
                             @csrf
+                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
                         </form>
                     </div>
                 </div>
@@ -479,4 +492,3 @@
     </script>
 </body>
 </html>
-
