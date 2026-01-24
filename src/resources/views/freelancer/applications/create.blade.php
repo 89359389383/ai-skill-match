@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募する - AITECH</title>
-    {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
+            --header-height: 104px;       /* 80px * 1.3 */
+            --header-height-mobile: 91px; /* 70px * 1.3 */
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 97.5%; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #fafbfc;
+            color: #24292e;
+            line-height: 1.5;
+        }
+
+        /* Header Styles - Minimalist */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
@@ -102,6 +112,197 @@
             padding: 0;
             appearance: none;
         }
+        .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .user-avatar:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.25), 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* Main Layout */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem;
+        }
+        .content-area { width: 100%; }
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #24292e;
+            letter-spacing: -0.025em;
+        }
+        .page-subtitle {
+            color: #6a737d;
+            font-size: 1rem;
+            margin-bottom: 2.25rem;
+        }
+
+        .panel {
+            background-color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            border: 1px solid #e1e4e8;
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+            color: #24292e;
+            letter-spacing: -0.01em;
+        }
+
+        .job-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .summary-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+        .summary-label {
+            color: #6a737d;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .summary-value {
+            color: #24292e;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .summary-separator {
+            color: #6a737d;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 0.25rem;
+        }
+        .kv {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 0.75rem 1rem;
+            align-items: start;
+        }
+        .k { color: #6a737d; font-weight: 700; font-size: 0.9rem; }
+        .v { color: #24292e; font-weight: 700; font-size: 0.95rem; }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .skill-tag {
+            background-color: #f1f8ff;
+            color: #0366d6;
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #c8e1ff;
+        }
+
+        .form {
+            display: grid;
+            gap: 1.25rem;
+        }
+        .form-row { display: grid; gap: 0.6rem; }
+        .label {
+            font-weight: 800;
+            color: #586069;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .required {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: white;
+            background: #d73a49;
+            border-radius: 999px;
+            padding: 0.15rem 0.55rem;
+            letter-spacing: 0.02em;
+        }
+        .input, .textarea, .select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+            background-color: #fafbfc;
+        }
+        .textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
+        .input:focus, .textarea:focus, .select:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+            background-color: white;
+        }
+        .input.is-invalid, .textarea.is-invalid, .select.is-invalid {
+            border-color: rgba(239, 68, 68, 0.8);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+        }
+        .error-message {
+            display: block;
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #dc2626;
+        }
+        .help {
+            color: #6a737d;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-start;
+            padding-top: 1rem;
+            border-top: 1px solid #e1e4e8;
+            flex-wrap: wrap;
+        }
+        .actions .btn {
+            flex: 1;
+            min-width: 0;
+        }
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+        .btn-secondary {
+            background-color: #586069;
+            color: white;
+            font-size: 20px;
+            padding: 15px 60px;
+        }
+        .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
+        .btn-primary {
+            background-color: #0366d6;
+            color: white;
+            font-size: 20px;
+            padding: 15px 60px;
+        }
+        .btn-primary:hover { background-color: #0256cc; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3); }
+
+        /* Dropdown Menu */
         .dropdown { position: relative; }
         .dropdown-content {
             display: none;
@@ -124,236 +325,60 @@
             color: #586069;
             transition: all 0.15s ease;
             border-radius: 6px;
-            margin: 0.25rem;
+            margin: 0 0.25rem;
             white-space: nowrap;
         }
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
-        @media (max-width: 768px) {
-            .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
-            .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
-            .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
-            .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
-        }
-    </style>
-    <style>
-        /* ページ固有のスタイルをそのまま保持（ヘッダーを除くが元のCSSは全て残す） */
-        :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { font-size: 97.5%; }
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #fafbfc;
-            color: #24292e;
-            line-height: 1.5;
-        }
-
-        .main-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        .content-area {
-            width: 100%;
-        }
-        .page-title {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.75rem;
-            color: #24292e;
-            letter-spacing: -0.025em;
-        }
-        .page-subtitle {
-            color: #6a737d;
-            font-size: 1rem;
-            margin-bottom: 2.25rem;
-        }
-        .panel {
-            background-color: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-            border: 1px solid #e1e4e8;
-            margin-bottom: 2rem;
-        }
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 900;
-            margin-bottom: 1.25rem;
-            color: #24292e;
-            letter-spacing: -0.01em;
-        }
-
-        .job-summary {
-            display: grid;
-            gap: 1rem;
-        }
-        .summary-line {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .summary-label {
-            font-weight: 800;
-            color: #586069;
-            font-size: 0.9rem;
-            min-width: 100px;
-        }
-        .summary-value {
-            color: #24292e;
-            font-weight: 600;
-            flex: 1;
-        }
-        .summary-separator {
-            color: #6a737d;
-            font-weight: 800;
-        }
-        .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-        }
-        .skill-tag {
-            background-color: #f1f8ff;
-            color: #0366d6;
-            padding: 0.375rem 0.875rem;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 600;
-            border: 1px solid #c8e1ff;
-        }
-
-        .form {
-            display: grid;
-            gap: 1.5rem;
-        }
-        .form-row {
-            display: grid;
-            gap: 0.75rem;
-        }
-        .label {
-            font-weight: 900;
-            color: #586069;
-            font-size: 0.9rem;
-        }
-        .required {
-            color: #d73a49;
-            font-weight: 800;
-        }
-        .textarea {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e1e4e8;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: all 0.15s ease;
-            background-color: #fafbfc;
-            min-height: 200px;
-            resize: vertical;
-            line-height: 1.6;
-        }
-        .textarea:focus {
-            outline: none;
-            border-color: #0366d6;
-            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
-            background-color: white;
-        }
-        .textarea.is-invalid {
-            border-color: #d73a49;
-        }
-        .error-message {
-            display: block;
-            margin-top: 6px;
-            font-size: 13px;
-            font-weight: 800;
-            color: #dc2626;
-        }
-
-        .actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            padding-top: 1rem;
-            border-top: 1px solid #e1e4e8;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 15px 60px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            cursor: pointer;
-            border: none;
-            font-size: 20px;
-            letter-spacing: -0.01em;
-            white-space: nowrap;
-        }
-        .btn-primary { background-color: #0366d6; color: white; }
-        .btn-primary:hover { background-color: #0256cc; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3); }
-        .btn-secondary { background-color: #586069; color: white; }
-        .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
 
         /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content { padding: 2rem; }
+        }
         @media (max-width: 768px) {
             .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
             .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
             .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
             .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
             .main-content { padding: 1.5rem; }
-            .panel { padding: 1.5rem; }
             .actions { flex-direction: column; }
             .btn { width: 100%; }
-            .summary-line { flex-direction: column; gap: 0.25rem; }
-            .summary-label { min-width: auto; }
+            .kv { grid-template-columns: 1fr; }
         }
     </style>
     @include('partials.aitech-responsive')
 </head>
 <body>
-    <header class="header" role="banner">
+    <!-- Header -->
+    <header class="header">
         <div class="header-content">
-            <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
+            <nav class="nav-links">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
                     $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
                     応募した案件
                     @if($totalUnreadCount > 0)
-                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
+                        <span class="badge">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
-                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     スカウト
                     @if($totalUnreadCount > 0)
-                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
+                        <span class="badge">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
             </nav>
-
-            <div class="user-menu" role="region" aria-label="ユーザー">
+            <div class="user-menu">
                 <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">
-                        @if(isset($freelancer) && $freelancer && $freelancer->icon_path)
-                            <img src="{{ asset('storage/' . $freelancer->icon_path) }}" alt="プロフィール画像" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                        @else
-                            {{ $userInitial ?? 'U' }}
-                        @endif
-                    </button>
+                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? 'U' }}</button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
+                        <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
+                        <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
                             @csrf
-                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
                         </form>
                     </div>
                 </div>
@@ -378,7 +403,8 @@
                     <div class="summary-line">
                         <span class="summary-label">求人名：</span>
                         <span class="summary-value">{{ $job->title }}</span>
-                        <span class="summary-separator"> / </span>
+                    </div>
+                    <div class="summary-line">
                         <span class="summary-label">報酬：</span>
                         <span class="summary-value">
                             @php

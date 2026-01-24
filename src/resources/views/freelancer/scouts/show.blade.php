@@ -219,7 +219,7 @@
             min-width: 0;
         }
         .chat-title strong {
-            font-size: 1.05rem;
+            font-size: 26px;
             font-weight: 900;
             color: var(--text);
             white-space: nowrap;
@@ -250,7 +250,7 @@
         }
         .btn:hover { background: #f6f8fa; transform: translateY(-1px); }
         .messages {
-            padding: 1.25rem 1.25rem 1rem;
+            padding: 0px 10px 15px 25px;
             overflow-y: auto;
             display: grid;
             gap: 0.85rem;
@@ -318,7 +318,6 @@
         }
         .bubble.first-message p {
             color: var(--text);
-            font-weight: 650;
             font-size: 0.95rem;
             line-height: 1.7;
             white-space: pre-wrap;
@@ -434,18 +433,19 @@
             <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
-                    $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
+                    $appUnread = ($unreadApplicationCount ?? 0);
+                    $scoutUnread = ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ (Request::routeIs('freelancer.applications.*') || (isset($thread) && $thread->job_id !== null)) ? 'active' : '' }} {{ $appUnread > 0 ? 'has-badge' : '' }}">
                     応募した案件
-                    @if($totalUnreadCount > 0)
-                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
+                    @if($appUnread > 0)
+                        <span class="badge" aria-live="polite">{{ $appUnread }}</span>
                     @endif
                 </a>
-                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ (Request::routeIs('freelancer.scouts.*') || (isset($thread) && $thread->job_id === null)) ? 'active' : '' }} {{ $scoutUnread > 0 ? 'has-badge' : '' }}">
                     スカウト
-                    @if($totalUnreadCount > 0)
-                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
+                    @if($scoutUnread > 0)
+                        <span class="badge" aria-hidden="false">{{ $scoutUnread }}</span>
                     @endif
                 </a>
             </nav>
@@ -473,14 +473,10 @@
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">スカウトチャット</h1>
-        <p class="page-subtitle">スカウトに関するやり取りを確認できます。開いた時点で未読が解除されます。</p>
-
         <section class="panel chat-pane" aria-label="チャット">
             <div class="chat-header">
                 <div class="chat-title">
-                    <strong>{{ $thread->company->name ?? '企業名不明' }}</strong>
-                    <span>スカウトに関するやり取り</span>
+                    <strong>{{ $thread->company->name ?? '企業名不明' }}とのチャット</strong>
                 </div>
                 <a class="btn" href="{{ route('freelancer.scouts.index') }}">一覧へ</a>
             </div>
@@ -510,9 +506,6 @@
                     @endif
                     @if(!$isFirst)
                         <div class="bubble-row {{ $isMe ? 'me' : '' }}">
-                            @if(!$isMe)
-                                <div class="avatar" style="width:36px;height:36px;">{{ $senderName }}</div>
-                            @endif
                             <div class="bubble {{ $isMe ? 'me' : '' }}">
                                 <p>{{ $message->body }}</p>
                                 <small>
@@ -587,6 +580,54 @@
         (function () {
             const el = document.getElementById('messages');
             if (el) el.scrollTop = el.scrollHeight;
+        })();
+    </script>
+    <!-- 削除確認モーダル -->
+    <div id="confirmDeleteModal" role="dialog" aria-hidden="true" aria-labelledby="confirmDeleteTitle" style="display:block;">
+        <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1000;">
+            <div id="confirmDeleteDialog" style="pointer-events:auto;width:min(540px,92%);background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);padding:1.25rem;display:none;" aria-modal="true">
+                <h2 id="confirmDeleteTitle" style="margin:0 0 0.5rem;font-size:1.05rem;font-weight:800;color:#0f172a;">本当に削除しますか？</h2>
+                <p style="margin:0 0 1rem;color:#64748b;">この操作は取り消せません。よろしければ「削除する」をクリックしてください。</p>
+                <div style="display:flex;gap:0.75rem;">
+                    <button id="cancelDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid #e6eaf2;background:#fafbfc;cursor:pointer;">キャンセル</button>
+                    <button id="confirmDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:none;background:#d73a49;color:#fff;cursor:pointer;">削除する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let pendingForm = null;
+            const modal = document.getElementById('confirmDeleteModal');
+            const dialog = document.getElementById('confirmDeleteDialog');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+            function openModal(form) {
+                pendingForm = form;
+                if (modal && dialog) {
+                    modal.setAttribute('aria-hidden','false');
+                    dialog.style.display = 'block';
+                    modal.classList.add('is-open');
+                    confirmBtn && confirmBtn.focus();
+                }
+            }
+            function closeModal() {
+                pendingForm = null;
+                if (modal && dialog) {
+                    dialog.style.display = 'none';
+                    modal.setAttribute('aria-hidden','true');
+                    modal.classList.remove('is-open');
+                }
+            }
+            document.addEventListener('click', (e) => {
+                const trigger = e.target.closest && e.target.closest('.delete-trigger');
+                if (trigger) { e.preventDefault(); const form = trigger.closest('form'); if (form) openModal(form); }
+            });
+            modal && modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            cancelBtn && cancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+            confirmBtn && confirmBtn.addEventListener('click', (e) => { e.preventDefault(); if (!pendingForm) return closeModal(); pendingForm.submit(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal && modal.classList.contains('is-open')) closeModal(); });
         })();
     </script>
 </body>

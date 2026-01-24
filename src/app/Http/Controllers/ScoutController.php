@@ -194,6 +194,17 @@ class ScoutController extends Controller
         foreach ($threads->items() as $thread) {
             $thread->is_unread = (bool) $thread->is_unread_for_company;
 
+            // 未読メッセージ数を計算（企業側から見て、フリーランスが送信したメッセージ数）
+            if ($thread->is_unread) {
+                $thread->unread_count = \App\Models\Message::query()
+                    ->where('thread_id', $thread->id)
+                    ->whereNull('deleted_at')
+                    ->where('sender_type', 'freelancer')
+                    ->count();
+            } else {
+                $thread->unread_count = 0;
+            }
+
             // スカウト情報を取得（job_idがnullのスカウト）
             $scout = Scout::query()
                 ->where('company_id', $company->id)

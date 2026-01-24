@@ -162,10 +162,11 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            letter-spacing: -0.02em;
         }
         .chat-title span {
             color: var(--muted);
-            font-size: 0.9rem;
+            font-size: 28px;
             font-weight: 700;
         }
         .btn {
@@ -188,7 +189,7 @@
         .btn:focus-visible { outline: none; box-shadow: var(--focus), var(--shadow-sm); }
 
         .messages {
-            padding: 1.25rem 1.25rem 1rem;
+            padding: 15px 10px 15px 25px;
             overflow-y: auto;
             display: grid;
             gap: 0.85rem;
@@ -198,7 +199,6 @@
             position: relative;
             scrollbar-gutter: stable;
             flex: 1 1 auto;
-            max-height: 620px;
         }
         .bubble-row { display: flex; align-items: flex-end; gap: 0.75rem; }
         .bubble-row.me { justify-content: flex-end; }
@@ -206,21 +206,6 @@
             justify-content: flex-end;
             width: 100%;
             margin-left: auto;
-            position: sticky; /* メッセージ欄の右上に固定表示（見た目のみ） */
-            top: 1rem;
-            z-index: 3;
-        }
-        .avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: grid;
-            place-items: center;
-            color: white;
-            font-weight: 900;
-            font-size: 0.95rem;
-            flex-shrink: 0;
         }
         .bubble {
             max-width: 74%;
@@ -241,50 +226,67 @@
             padding: 20px;
         }
         .bubble.first-message {
+            max-width: 74%;
             width: 80%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%);
-            margin-bottom: 50px;
-            border: 1px solid var(--border-2);
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-            padding: 1rem 1.1rem 0.9rem;
+            padding: 20px;
+            border-radius: 16px;
+            border-color: #cfe4ff;
+            background: linear-gradient(180deg, rgba(241,248,255,0.98) 0%, rgba(236,246,255,0.98) 100%);
+            box-shadow: var(--shadow-sm);
             position: relative;
-            border-radius: 18px;
         }
-        .bubble p { color: #24292e; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; }
-        .bubble small { display: block; margin-top: 0.4rem; color: #6a737d; font-weight: 800; font-size: 0.8rem; }
-        .del {
-            background: none;
-            border: none;
-            color: #d73a49;
-            font-weight: 900;
-            cursor: pointer;
-            padding: 0;
+        .bubble.first-message::before {
+            display: none;
+            content: "";
+        }
+        .bubble.first-message p {
+            color: var(--text);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .bubble.first-message small {
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .bubble p { color: var(--text); font-size: 0.95rem; line-height: 1.7; white-space: pre-wrap; }
+        .bubble small {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 0.45rem;
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 0.82rem;
         }
 
         .composer {
-            padding: 1.25rem 1.5rem;
-            border-top: 1px solid #e1e4e8;
+            padding: 1rem 1.25rem 1.25rem;
+            border-top: 1px solid var(--border);
             display: grid;
             grid-template-columns: 1fr;
             gap: 0.75rem;
-            background: #ffffff;
+            background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
         }
         .input {
             width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #e1e4e8;
-            border-radius: 12px;
-            font-size: 0.95rem;
+            padding: 0.95rem 1rem;
+            border: 1px solid var(--border-2);
+            border-radius: 14px;
+            font-size: 0.98rem;
             transition: all 0.15s ease;
-            background-color: #fafbfc;
-            min-height: 14rem;
+            background-color: #ffffff;
+            min-height: 7.25rem;
+            max-height: 18rem;
             resize: vertical;
+            line-height: 1.7;
+            box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.03);
         }
         .input:focus {
             outline: none;
-            border-color: #0366d6;
-            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
-            background-color: white;
+            border-color: rgba(3, 102, 214, 0.55);
+            box-shadow: var(--focus);
         }
         .input.is-invalid {
             border-color: rgba(239, 68, 68, 0.8);
@@ -316,34 +318,12 @@
         .send:active { transform: translateY(0px); }
         .send:focus-visible { outline: none; box-shadow: var(--focus), 0 14px 26px rgba(3, 102, 214, 0.26); }
 
+        /* Responsive */
         @media (max-width: 1200px) {
             .main-content { padding: 2rem 1.25rem 2.5rem; }
-            .chat-shell { grid-template-columns: 340px 1fr; }
         }
         @media (max-width: 900px) {
-            .chat-shell { grid-template-columns: 1fr; }
-            .thread-list { max-height: 360px; }
             .messages { max-height: 500px; }
-        }
-        @media (max-width: 768px) {
-            .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
-            .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
-            .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
-            .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
-            .main-content { padding: 1.5rem 1rem 2rem; }
-            .page-title { font-size: 1.65rem; }
-            .page-subtitle { font-size: 0.98rem; }
-            .chat-pane { min-height: min(860px, calc(100vh - var(--header-height-mobile) - 6.25rem)); }
-            .messages { padding: 1rem; }
-            .bubble { max-width: 92%; }
-            .bubble-row.first-message {
-                max-width: calc(100% - 1rem);
-                margin-left: auto;
-            }
-            .bubble.first-message {
-                max-width: 100%;
-            }
-            .composer { grid-template-columns: 1fr; }
         }
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; scroll-behavior: auto !important; }
@@ -410,18 +390,19 @@
                 <a href="{{ route('company.freelancers.index') }}" class="nav-link">フリーランス一覧</a>
                 <a href="{{ route('company.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
-                    $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
+                    $appUnread = ($unreadApplicationCount ?? 0);
+                    $scoutUnread = ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $appUnread > 0 ? 'has-badge' : '' }}">
                     応募された案件
-                    @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                    @if($appUnread > 0)
+                        <span class="badge">{{ $appUnread }}</span>
                     @endif
                 </a>
-                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
+                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $scoutUnread > 0 ? 'has-badge' : '' }} active">
                     スカウト
-                    @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                    @if($scoutUnread > 0)
+                        <span class="badge">{{ $scoutUnread }}</span>
                     @endif
                 </a>
             </nav>
@@ -442,15 +423,10 @@
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">スカウトチャット</h1>
-        @include('partials.error-panel')
-        <p class="page-subtitle">スカウト送信時のメッセージを先頭に表示します。開いた時点で未読が解除されます。</p>
-
         <section class="panel chat-pane" aria-label="スカウトチャット">
             <div class="chat-header">
                 <div class="chat-title">
-                    <strong>スカウトチャット</strong>
-                    <span>宛先：{{ $thread->freelancer->display_name ?? '不明' }}（{{ $thread->job ? $thread->job->title : '案件紐付けなし' }}）</span>
+                    <span>{{ $thread->freelancer->display_name ?? '不明' }}とのチャット</span>
                 </div>
                 <a class="btn" href="{{ route('company.scouts.index') }}">一覧へ</a>
             </div>
@@ -479,10 +455,10 @@
                                     {{ $sentAt }}
                                     @if($canDelete)
                                         <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('このメッセージを削除しますか？');">
+                                            <form action="{{ route('company.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="del">削除</button>
+                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
                                             </form>
                                         </span>
                                     @endif
@@ -497,10 +473,10 @@
                                     {{ $sentAt }}
                                     @if($canDelete)
                                         <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('このメッセージを削除しますか？');">
+                                            <form action="{{ route('company.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="del">削除</button>
+                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
                                             </form>
                                         </span>
                                     @endif
@@ -545,6 +521,54 @@
             const el = document.getElementById('messages');
             if (!el) return;
             el.scrollTop = el.scrollHeight;
+        })();
+    </script>
+    <!-- 削除確認モーダル -->
+    <div id="confirmDeleteModal" role="dialog" aria-hidden="true" aria-labelledby="confirmDeleteTitle" style="display:block;">
+        <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1000;">
+            <div id="confirmDeleteDialog" style="pointer-events:auto;width:min(540px,92%);background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);padding:1.25rem;display:none;" aria-modal="true">
+                <h2 id="confirmDeleteTitle" style="margin:0 0 0.5rem;font-size:1.05rem;font-weight:800;color:#0f172a;">本当に削除しますか？</h2>
+                <p style="margin:0 0 1rem;color:#64748b;">この操作は取り消せません。よろしければ「削除する」をクリックしてください。</p>
+                <div style="display:flex;gap:0.75rem;">
+                    <button id="cancelDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid #e6eaf2;background:#fafbfc;cursor:pointer;">キャンセル</button>
+                    <button id="confirmDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:none;background:#d73a49;color:#fff;cursor:pointer;">削除する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let pendingForm = null;
+            const modal = document.getElementById('confirmDeleteModal');
+            const dialog = document.getElementById('confirmDeleteDialog');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+            function openModal(form) {
+                pendingForm = form;
+                if (modal && dialog) {
+                    modal.setAttribute('aria-hidden','false');
+                    dialog.style.display = 'block';
+                    modal.classList.add('is-open');
+                    confirmBtn && confirmBtn.focus();
+                }
+            }
+            function closeModal() {
+                pendingForm = null;
+                if (modal && dialog) {
+                    dialog.style.display = 'none';
+                    modal.setAttribute('aria-hidden','true');
+                    modal.classList.remove('is-open');
+                }
+            }
+            document.addEventListener('click', (e) => {
+                const trigger = e.target.closest && e.target.closest('.delete-trigger');
+                if (trigger) { e.preventDefault(); const form = trigger.closest('form'); if (form) openModal(form); }
+            });
+            modal && modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            cancelBtn && cancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+            confirmBtn && confirmBtn.addEventListener('click', (e) => { e.preventDefault(); if (!pendingForm) return closeModal(); pendingForm.submit(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal && modal.classList.contains('is-open')) closeModal(); });
         })();
     </script>
 </body>

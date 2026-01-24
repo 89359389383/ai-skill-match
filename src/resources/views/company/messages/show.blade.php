@@ -189,7 +189,7 @@
             min-width: 0;
         }
         .chat-title strong {
-            font-size: 1.05rem;
+            font-size: 26px;
             font-weight: 900;
             color: var(--text);
             white-space: nowrap;
@@ -199,7 +199,7 @@
         }
         .chat-title span {
             color: var(--muted);
-            font-size: 0.9rem;
+            font-size: 26px;
             font-weight: 700;
         }
 
@@ -223,7 +223,7 @@
         .btn:focus-visible { outline: none; box-shadow: var(--focus), var(--shadow-sm); }
 
         .messages {
-            padding: 1.25rem 1.25rem 1rem;
+            padding: 15px 10px 15px 25px;
             overflow-y: auto;
             display: grid;
             gap: 0.85rem;
@@ -268,7 +268,6 @@
             border-color: #cfe4ff;
             background: linear-gradient(180deg, rgba(241,248,255,0.98) 0%, rgba(236,246,255,0.98) 100%);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 0.85rem;
             position: relative;
         }
         .bubble.first-message::before {
@@ -277,7 +276,6 @@
         }
         .bubble.first-message p {
             color: var(--text);
-            font-weight: 650;
             font-size: 0.95rem;
             line-height: 1.7;
             white-space: pre-wrap;
@@ -355,6 +353,15 @@
         .send:active { transform: translateY(0px); }
         .send:focus-visible { outline: none; box-shadow: var(--focus), 0 14px 26px rgba(3, 102, 214, 0.26); }
 
+        /* 応募ステータス用スタイル（インラインから移動） */
+        .status-form {
+            display: inline-flex;
+            gap: 0.5rem;
+            margin-right: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .main-content { padding: 2rem 1.25rem 2.5rem; }
@@ -365,57 +372,16 @@
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; scroll-behavior: auto !important; }
         }
-        /* Delete confirmation modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(2,6,23,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        .modal-overlay.is-open { display: flex; }
-        .modal-dialog {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 1.5rem;
-            max-width: 420px;
-            width: calc(100% - 2rem);
-            box-shadow: 0 14px 40px rgba(2,6,23,0.18);
-            border: 1px solid var(--border-2);
-            text-align: left;
-        }
-        .modal-dialog h2 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.05rem;
+        /* 応募ステータス用スタイル（インラインから移動） */
+        .status-label {
             font-weight: 900;
-            color: var(--text);
+            color: #586069;
+            font-size: 1.3em; /* 1.3倍 */
+            display: inline-block;
+            margin-right: 0.4rem;
         }
-        .modal-dialog p { color: var(--muted); margin: 0 0 1rem 0; }
-        .modal-actions {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .modal-actions > button {
-            flex: 1;
-            min-width: 0; /* allow shrinking in flex */
-            font-size: 0.92rem; /* match .btn */
-            padding: 0.72rem 1rem;
-            font-weight: 800;
-            border-radius: 10px;
-        }
-        .btn-danger {
-            background: linear-gradient(180deg, #d73a49 0%, #c5303f 100%);
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-        .modal-actions .btn {
-            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-            color: var(--text);
-            border: 1px solid var(--border-2);
+        .status-select {
+            font-size: 1.3em; /* 1.3倍 */
         }
     </style>
     @include('partials.aitech-responsive')
@@ -427,18 +393,19 @@
                 <a href="{{ route('company.freelancers.index') }}" class="nav-link">フリーランス一覧</a>
                 <a href="{{ route('company.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
-                    $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
+                    $appUnread = ($unreadApplicationCount ?? 0);
+                    $scoutUnread = ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
+                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $appUnread > 0 ? 'has-badge' : '' }} active">
                     応募された案件
-                    @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                    @if($appUnread > 0)
+                        <span class="badge">{{ $appUnread }}</span>
                     @endif
                 </a>
-                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $scoutUnread > 0 ? 'has-badge' : '' }}">
                     スカウト
-                    @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                    @if($scoutUnread > 0)
+                        <span class="badge">{{ $scoutUnread }}</span>
                     @endif
                 </a>
             </nav>
@@ -459,23 +426,19 @@
     </header>
 
     <main class="main-content">
-        <h1 class="page-title">応募案件チャット</h1>
-        @include('partials.error-panel')
-        <p class="page-subtitle">応募に関するやり取りを確認できます。開いた時点で未読が解除されます。</p>
-
         <section class="panel chat-pane" aria-label="応募チャット">
             <div class="chat-header">
                 <div class="chat-title">
                     <strong>{{ $thread->job ? $thread->job->title : '案件' }}</strong>
-                    <span>応募者：{{ $thread->freelancer->display_name ?? '不明' }} / 企業：{{ $thread->company->name ?? '不明' }}</span>
+                    <span>{{ $thread->freelancer->display_name ?? '不明' }}とのチャット</span>
                 </div>
                 <div class="chat-tools">
                     @if($application)
-                        <form method="POST" action="{{ route('company.threads.application-status.update', ['thread' => $thread]) }}" id="statusForm" style="display:inline-flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                        <form method="POST" action="{{ route('company.threads.application-status.update', ['thread' => $thread]) }}" id="statusForm" class="status-form">
                             @csrf
                             @method('PATCH')
-                            <label for="statusSelect" style="font-weight:900; color:#586069;">応募ステータス</label>
-                            <select class="select" id="statusSelect" name="status" aria-label="応募ステータス">
+                            <label for="statusSelect" class="status-label">応募ステータス</label>
+                            <select class="select status-select" id="statusSelect" name="status" aria-label="応募ステータス">
                                 <option value="0" {{ $application->status === \App\Models\Application::STATUS_PENDING ? 'selected' : '' }}>未対応</option>
                                 <option value="1" {{ $application->status === \App\Models\Application::STATUS_IN_PROGRESS ? 'selected' : '' }}>対応中</option>
                                 <option value="2" {{ $application->status === \App\Models\Application::STATUS_CLOSED ? 'selected' : '' }}>クローズ（終了）</option>
@@ -510,10 +473,10 @@
                                     {{ $sentAt }}
                                     @if($canDelete)
                                         <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" onsubmit="return confirm('このメッセージを削除しますか？');">
+                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="del">削除</button>
+                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
                                             </form>
                                         </span>
                                     @endif
@@ -528,10 +491,10 @@
                                     {{ $sentAt }}
                                     @if($canDelete)
                                         <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" onsubmit="return confirm('このメッセージを削除しますか？');">
+                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="del">削除</button>
+                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
                                             </form>
                                         </span>
                                     @endif
@@ -602,6 +565,54 @@
             const el = document.getElementById('messages');
             if (!el) return;
             el.scrollTop = el.scrollHeight;
+        })();
+    </script>
+    <!-- 削除確認モーダル -->
+    <div id="confirmDeleteModal" role="dialog" aria-hidden="true" aria-labelledby="confirmDeleteTitle" style="display:block;">
+        <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1000;">
+            <div id="confirmDeleteDialog" style="pointer-events:auto;width:min(540px,92%);background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);padding:1.25rem;display:none;" aria-modal="true">
+                <h2 id="confirmDeleteTitle" style="margin:0 0 0.5rem;font-size:1.05rem;font-weight:800;color:#0f172a;">本当に削除しますか？</h2>
+                <p style="margin:0 0 1rem;color:#64748b;">この操作は取り消せません。よろしければ「削除する」をクリックしてください。</p>
+                <div style="display:flex;gap:0.75rem;">
+                    <button id="cancelDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid #e6eaf2;background:#fafbfc;cursor:pointer;">キャンセル</button>
+                    <button id="confirmDeleteBtn" style="flex:1;padding:0.6rem 0.9rem;border-radius:8px;border:none;background:#d73a49;color:#fff;cursor:pointer;">削除する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let pendingForm = null;
+            const modal = document.getElementById('confirmDeleteModal');
+            const dialog = document.getElementById('confirmDeleteDialog');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+            function openModal(form) {
+                pendingForm = form;
+                if (modal && dialog) {
+                    modal.setAttribute('aria-hidden','false');
+                    dialog.style.display = 'block';
+                    modal.classList.add('is-open');
+                    confirmBtn && confirmBtn.focus();
+                }
+            }
+            function closeModal() {
+                pendingForm = null;
+                if (modal && dialog) {
+                    dialog.style.display = 'none';
+                    modal.setAttribute('aria-hidden','true');
+                    modal.classList.remove('is-open');
+                }
+            }
+            document.addEventListener('click', (e) => {
+                const trigger = e.target.closest && e.target.closest('.delete-trigger');
+                if (trigger) { e.preventDefault(); const form = trigger.closest('form'); if (form) openModal(form); }
+            });
+            modal && modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            cancelBtn && cancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+            confirmBtn && confirmBtn.addEventListener('click', (e) => { e.preventDefault(); if (!pendingForm) return closeModal(); pendingForm.submit(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal && modal.classList.contains('is-open')) closeModal(); });
         })();
     </script>
 </body>

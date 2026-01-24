@@ -366,18 +366,19 @@
             <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link {{ Request::routeIs('freelancer.jobs.*') ? 'active' : '' }}">案件一覧</a>
                 @php
-                    $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
+                    $appUnread = ($unreadApplicationCount ?? 0);
+                    $scoutUnread = ($unreadScoutCount ?? 0);
                 @endphp
-                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $appUnread > 0 ? 'has-badge' : '' }}">
                     応募した案件
-                    @if($totalUnreadCount > 0)
-                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
+                    @if($appUnread > 0)
+                        <span class="badge" aria-live="polite">{{ $appUnread }}</span>
                     @endif
                 </a>
-                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ Request::routeIs('freelancer.scouts.*') ? 'active' : '' }} {{ $scoutUnread > 0 ? 'has-badge' : '' }}">
                     スカウト
-                    @if($totalUnreadCount > 0)
-                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
+                    @if($scoutUnread > 0)
+                        <span class="badge" aria-hidden="false">{{ $scoutUnread }}</span>
                     @endif
                 </a>
             </nav>
