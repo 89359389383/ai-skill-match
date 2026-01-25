@@ -73,6 +73,21 @@ class FreelancerProfileUpdateRequest extends FormRequest
             $this->merge(['max_rate' => $min]);
             return;
         }
+        // skills がカンマ区切りの文字列で送られてきた場合は
+        // custom_skills 配列に変換して空配列の skills をセットする
+        // （ユーザーが「PHP, Laravel」のように入力できるようにするため）
+        $skillsInput = $this->input('skills');
+        if (is_string($skillsInput)) {
+            $parsed = array_filter(array_map('trim', explode(',', $skillsInput)), function ($s) {
+                return $s !== '';
+            });
+            if (!empty($parsed)) {
+                // 文字列入力はカスタムスキルとして扱う
+                $this->merge(['custom_skills' => array_values($parsed)]);
+            }
+            // skills は配列としてバリデーションが通るように空配列をセット
+            $this->merge(['skills' => []]);
+        }
     }
 
     public function messages(): array

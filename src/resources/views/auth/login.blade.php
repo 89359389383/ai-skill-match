@@ -131,8 +131,9 @@
         .page-title {
             text-align: center;
             font-weight: 900;
-            font-size: 16px;
+            font-size: 24px;
             color: #0f172a;
+            letter-spacing: 2px;
             margin-bottom: 18px;
         }
 
@@ -357,7 +358,7 @@
 
     <div class="container">
         <div class="login-card">
-            <div class="page-title">ログイン</div>
+            <div class="page-title">複業AI</div>
             @include('partials.error-panel')
 
             @if (session('success'))

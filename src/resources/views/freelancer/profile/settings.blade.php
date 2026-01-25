@@ -29,6 +29,13 @@
             height: var(--header-height);
             position: relative;
         }
+        .logo-text {
+            font-weight: 900;
+            font-size: 20px;
+            margin-left: 20px;
+            color: #111827;
+            letter-spacing: 1px;
+        }
         .nav-links {
             display: flex;
             flex-direction: row;
@@ -157,7 +164,7 @@
 
         .main-content {
             display: flex;
-            max-width: var(--container-max-width);
+            max-width: 1150px;
             margin: 0 auto;
             padding: var(--main-padding);
             gap: var(--sidebar-gap);
@@ -399,6 +406,9 @@
 <body>
     <header class="header" role="banner">
         <div class="header-content">
+            <div class="logo" aria-hidden="true">
+                <div class="logo-text">複業AI</div>
+            </div>
             <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
@@ -547,15 +557,27 @@
 
                     <div class="row">
                         <div class="label">自己紹介</div>
-                        <textarea class="textarea @error('introduction') is-invalid @enderror" id="introduction" name="introduction" placeholder="あなたの経験や得意分野について教えてください">{{ old('introduction', $freelancer->introduction ?? '') }}</textarea>
-                        @error('introduction')
+                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" placeholder="あなたの経験や得意分野について教えてください">{{ old('bio', $freelancer->bio ?? '') }}</textarea>
+                        @error('bio')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="row">
-                        <div class="label">スキル（カンマ区切りで複数入力可）</div>
-                        <input class="input @error('skills') is-invalid @enderror" id="skills" name="skills" type="text" value="{{ old('skills', $freelancer->skills ?? '') }}" placeholder="例: PHP, Laravel, JavaScript, Vue.js">
+                        <div class="label">スキル（カンマ区切りで複数入力）</div>
+                        @php
+                            $skillNames = [];
+                            if (isset($freelancer) && $freelancer) {
+                                if ($freelancer->skills) {
+                                    $skillNames = array_merge($skillNames, $freelancer->skills->pluck('name')->toArray());
+                                }
+                                if ($freelancer->customSkills) {
+                                    $skillNames = array_merge($skillNames, $freelancer->customSkills->pluck('name')->toArray());
+                                }
+                            }
+                            $skillInputValue = old('skills', implode(', ', $skillNames));
+                        @endphp
+                        <input class="input @error('skills') is-invalid @enderror" id="skills" name="skills" type="text" value="{{ $skillInputValue }}" placeholder="例: PHP, Laravel, JavaScript">
                         @error('skills')
                         <span class="error-message">{{ $message }}</span>
                         @enderror

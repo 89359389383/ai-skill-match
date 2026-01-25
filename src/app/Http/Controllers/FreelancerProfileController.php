@@ -7,6 +7,7 @@ use App\Http\Requests\FreelancerRegisterRequest;
 use App\Http\Requests\FreelancerProfileUpdateRequest;
 use App\Models\Thread;
 use App\Services\FreelancerProfileService;
+use App\Models\Skill;
 
 class FreelancerProfileController extends Controller
 {
@@ -98,6 +99,8 @@ class FreelancerProfileController extends Controller
         return view('freelancer.profile.settings', [
             'user' => $user,
             'freelancer' => $freelancer,
+            // 全スキル一覧（プロフィール設定で複数選択させるため）
+            'allSkills' => Skill::orderBy('name')->get(),
             // ヘッダー用未読数
             'unreadApplicationCount' => $unreadApplicationCount,
             'unreadScoutCount' => $unreadScoutCount,

@@ -35,6 +35,28 @@
             height: var(--header-height);
             position: relative;
         }
+        /* ロゴ（左） */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 1rem;
+        }
+        .logo-text {
+            font-weight: 900;
+            font-size: 20px;
+            margin-left: 20px;
+            color: #111827;
+            letter-spacing: 1px;
+        }
+        .logo-badge {
+            background: #0366d6;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
         .nav-links {
             display: flex;
             gap: 3rem;
@@ -428,6 +450,9 @@
 <body>
     <header class="header">
         <div class="header-content">
+            <div class="logo" aria-hidden="true">
+                <div class="logo-text">複業AI</div>
+            </div>
             <nav class="nav-links">
                 <a href="{{ route('company.freelancers.index') }}" class="nav-link active">フリーランス一覧</a>
                 <a href="{{ route('company.jobs.index') }}" class="nav-link">案件一覧</a>

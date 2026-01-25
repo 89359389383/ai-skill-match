@@ -129,7 +129,7 @@
         .page-title {
             text-align: center;
             font-weight: 900;
-            font-size: 16px;
+            font-size: 18px;
             color: #0f172a;
             margin-bottom: 18px;
         }

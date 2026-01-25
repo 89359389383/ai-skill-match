@@ -29,6 +29,14 @@
             height: var(--header-height);
             position: relative;
         }
+        .logo { display: flex; align-items: center; }
+        .logo-text {
+            font-weight: 900;
+            font-size: 20px;
+            margin-left: 20px;
+            color: #111827;
+            letter-spacing: 1px;
+        }
         .nav-links {
             display: flex;
             flex-direction: row;
@@ -363,6 +371,9 @@
 <body>
     <header class="header" role="banner">
         <div class="header-content">
+            <div class="logo" aria-hidden="true">
+                <div class="logo-text">複業AI</div>
+            </div>
             <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link {{ Request::routeIs('freelancer.jobs.*') ? 'active' : '' }}">案件一覧</a>
                 @php

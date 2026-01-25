@@ -431,6 +431,9 @@
 <body>
     <header class="header" role="banner">
         <div class="header-content">
+            <div class="logo" aria-hidden="true">
+                <div class="logo-text">複業AI</div>
+            </div>
             <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
