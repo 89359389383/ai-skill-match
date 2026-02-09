@@ -282,79 +282,16 @@
             text-decoration: underline;
         }
 
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .register-card {
-                padding: 40px 32px;
-                max-width: 480px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .register-card {
-                padding: 32px 24px;
-                max-width: 100%;
-            }
-
-            .logo-text {
-                font-size: 20px;
-            }
-        }
-
-        @media (min-width: 1400px) and (max-width: 1540px) {
-            .register-card {
-                max-width: 640px;
-                padding: 56px 76px;
-            }
-
-            .logo-text {
-                font-size: 24px;
-            }
-
-            .form-input {
-                font-size: 15px;
-            }
-
-            .register-button {
-                font-size: 15px;
-                padding: 14px 28px;
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 850px) {
-            .register-card {
-                max-width: 500px;
-                padding: 42px 40px;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .register-card {
-                max-width: 100%;
-                padding: 28px 20px;
-                box-shadow: 0 12px 32px rgba(33, 150, 243, .18);
-            }
-
-            .form-input {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-
-            .register-button {
-                padding: 12px 20px;
-                font-size: 13px;
-            }
-        }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
     <div class="background"></div>
 
-    <div class="container">
-        <div class="register-card">
-            <div class="page-title">フリーランス登録（ログイン情報登録）</div>
+    <div class="container px-4 md:px-6 lg:px-8 py-10">
+        <div class="register-card p-6 md:p-10 lg:p-12">
+            <div class="page-title text-lg md:text-xl font-black text-center">フリーランス登録（ログイン情報登録）</div>
             @include('partials.error-panel')
 
             @if (session('success'))

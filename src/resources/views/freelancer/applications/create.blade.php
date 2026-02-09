@@ -8,6 +8,44 @@
         :root {
             --header-height: 104px;       /* 80px * 1.3 */
             --header-height-mobile: 91px; /* 70px * 1.3 */
+            --header-height-sm: 96px;         /* sm */
+            --header-height-md: 104px;        /* md */
+            --header-height-lg: 112px;        /* lg */
+            --header-height-xl: 120px;        /* xl */
+            --header-height-current: var(--header-height-mobile);
+            --header-padding-x: 1rem;
+        }
+
+        /* Breakpoint: sm (>=640px) */
+        @media (min-width: 640px) {
+            :root {
+                --header-padding-x: 1.5rem;
+                --header-height-current: var(--header-height-sm);
+            }
+        }
+
+        /* Breakpoint: md (>=768px) */
+        @media (min-width: 768px) {
+            :root {
+                --header-padding-x: 2rem;
+                --header-height-current: var(--header-height-md);
+            }
+        }
+
+        /* Breakpoint: lg (>=1024px) */
+        @media (min-width: 1024px) {
+            :root {
+                --header-padding-x: 2.5rem;
+                --header-height-current: var(--header-height-lg);
+            }
+        }
+
+        /* Breakpoint: xl (>=1280px) */
+        @media (min-width: 1280px) {
+            :root {
+                --header-padding-x: 3rem;
+                --header-height-current: var(--header-height-xl);
+            }
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,57 +57,110 @@
             line-height: 1.5;
         }
 
-        /* Header Styles - Minimalist */
+        /* Header (企業側と同じレスポンシブ構造: 640 / 768 / 1024 / 1280) */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
-            padding: 0 3rem;
+            padding: 0 var(--header-padding-x, 1rem);
             position: sticky;
             top: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            min-height: var(--header-height-current, 91px);
         }
+
         .header-content {
             max-width: 1600px;
             margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto; /* mobile: ロゴ / 右側 */
             align-items: center;
-            height: var(--header-height);
+            gap: 0.5rem;
+            height: var(--header-height-current, 91px);
             position: relative;
+            min-width: 0;
+            padding: 0.25rem 0; /* 縦余白 */
         }
-        .logo { display: flex; align-items: center; }
+
+        /* md以上: ロゴ / 中央ナビ / 右側 */
+        @media (min-width: 768px) {
+            .header-content { grid-template-columns: auto 1fr auto; gap: 1rem; }
+        }
+
+        /* lg: 間隔を広げる */
+        @media (min-width: 1024px) {
+            .header-content { gap: 1.5rem; padding: 0.5rem 0; }
+        }
+
+        .header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .header-right { display: flex; align-items: center; justify-content: flex-end; min-width: 0; gap: 0.75rem; }
+
+        /* ロゴ */
+        .logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .logo-text {
             font-weight: 900;
-            font-size: 20px;
-            margin-left: 20px;
+            font-size: 18px;
+            margin-left: 0;
             color: #111827;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
-        .nav-links {
-            display: flex;
-            flex-direction: row;
-            gap: 3rem;
+        @media (min-width: 640px) { .logo-text { font-size: 20px; } }
+        @media (min-width: 768px) { .logo-text { font-size: 22px; } }
+        @media (min-width: 1024px) { .logo-text { font-size: 24px; } }
+        @media (min-width: 1280px) { .logo-text { font-size: 26px; } }
+
+        /* Mobile nav toggle (<=768pxで表示) */
+        .nav-toggle {
+            display: inline-flex;
             align-items: center;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
             justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #e1e4e8;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 0 0 auto;
         }
+        .nav-toggle:hover { background: #f6f8fa; }
+        .nav-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.15); }
+        .nav-toggle svg { width: 22px; height: 22px; color: #24292e; }
+        @media (min-width: 768px) { .nav-toggle { display: none; } }
+
+        /* Desktop nav (>=768pxで表示) */
+        .nav-links {
+            display: none; /* mobile: hidden (use hamburger) */
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            min-width: 0;
+            overflow: hidden;
+            gap: 1.25rem;
+        }
+        @media (min-width: 640px) { .nav-links { display: none; } }
+        @media (min-width: 768px) { .nav-links { display: flex; gap: 1.25rem; } }
+        @media (min-width: 1024px) { .nav-links { gap: 2rem; } }
+        @media (min-width: 1280px) { .nav-links { gap: 3rem; } }
+
         .nav-link {
             text-decoration: none;
             color: #586069;
             font-weight: 500;
-            font-size: 1.1rem;
-            padding: 0.75rem 1.25rem;
+            font-size: 1.05rem;
+            padding: 0.6rem 1rem;
             border-radius: 8px;
             transition: all 0.15s ease;
             position: relative;
             letter-spacing: -0.01em;
             display: inline-flex;
             align-items: center;
+            white-space: nowrap;
         }
+        @media (min-width: 768px) { .nav-link { font-size: 1.1rem; padding: 0.75rem 1.25rem; } }
+        @media (min-width: 1280px) { .nav-link { font-size: 1.15rem; } }
         .nav-link.has-badge { padding-right: 3rem; }
         .nav-link:hover { background-color: #f6f8fa; color: #24292e; }
         .nav-link.active {
@@ -77,6 +168,7 @@
             color: white;
             box-shadow: 0 2px 8px rgba(3, 102, 214, 0.3);
         }
+
         .badge {
             background-color: #d73a49;
             color: white;
@@ -95,14 +187,51 @@
             top: 50%;
             transform: translateY(-50%);
         }
-        .user-menu {
-            display: flex;
-            align-items: center;
+
+        /* Mobile nav menu */
+        .mobile-nav {
             position: absolute;
+            top: 100%;
+            left: 0;
             right: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            background: #fff;
+            border-bottom: 1px solid #e1e4e8;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+            padding: 0.75rem var(--header-padding-x, 1rem);
+            display: none;
+            z-index: 110;
         }
+        .header.is-mobile-nav-open .mobile-nav { display: block; }
+        @media (min-width: 768px) { .mobile-nav { display: none !important; } }
+        .mobile-nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            gap: 0.5rem;
+        }
+        .mobile-nav .nav-link {
+            width: 100%;
+            justify-content: flex-start;
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            padding: 0.875rem 1rem;
+        }
+        .mobile-nav .nav-link:hover { background: #f6f8fa; }
+        .mobile-nav .nav-link.active {
+            background-color: #0366d6;
+            color: #fff;
+            border-color: #0366d6;
+        }
+        .mobile-nav .nav-link.has-badge { padding-right: 1rem; }
+        .mobile-nav .badge {
+            position: static;
+            transform: none;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* User menu / Dropdown */
+        .user-menu { display: flex; align-items: center; position: static; transform: none; }
         .user-avatar {
             width: 36px;
             height: 36px;
@@ -339,31 +468,20 @@
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .main-content { padding: 2rem; }
-        }
-        @media (max-width: 768px) {
-            .header-content { padding: 0 1.5rem; height: var(--header-height-mobile); }
-            .nav-links { gap: 1.5rem; position: static; left: auto; transform: none; justify-content: flex-start; flex-direction: row; flex-wrap: wrap; }
-            .user-menu { position: static; right: auto; top: auto; transform: none; margin-left: auto; }
-            .nav-link { padding: 0.5rem 1rem; font-size: 1rem; }
-            .main-content { padding: 1.5rem; }
-            .actions { flex-direction: column; }
-            .btn { width: 100%; }
-            .kv { grid-template-columns: 1fr; }
-        }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="header-content">
-            <div class="logo" aria-hidden="true">
-                <div class="logo-text">複業AI</div>
+            <div class="header-left">
+                <div class="logo" aria-hidden="true">
+                    <div class="logo-text">複業AI</div>
+                </div>
             </div>
-            <nav class="nav-links">
+
+            <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
                 <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
                 @php
                     $totalUnreadCount = ($unreadApplicationCount ?? 0) + ($unreadScoutCount ?? 0);
@@ -371,33 +489,70 @@
                 <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
                     応募した案件
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
                 <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
                     スカウト
                     @if($totalUnreadCount > 0)
-                        <span class="badge">{{ $totalUnreadCount }}</span>
+                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
                     @endif
                 </a>
             </nav>
-            <div class="user-menu">
-                <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? 'U' }}</button>
-                    <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
-                        <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
-                        <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
-                            @csrf
-                        </form>
+
+            <div class="header-right" role="region" aria-label="ユーザー">
+                <button
+                    class="nav-toggle"
+                    id="mobileNavToggle"
+                    type="button"
+                    aria-label="メニューを開く"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                    aria-controls="mobileNav"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18"></path>
+                        <path d="M3 12h18"></path>
+                        <path d="M3 18h18"></path>
+                    </svg>
+                </button>
+
+                <div class="user-menu">
+                    <div class="dropdown" id="userDropdown">
+                        <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? 'U' }}</button>
+                        <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                            <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
+                            <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="mobile-nav" id="mobileNav" role="menu" aria-label="モバイルナビゲーション">
+            <div class="mobile-nav-inner">
+                <a href="{{ route('freelancer.jobs.index') }}" class="nav-link">案件一覧</a>
+                <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }} active">
+                    応募した案件
+                    @if($totalUnreadCount > 0)
+                        <span class="badge" aria-live="polite">{{ $totalUnreadCount }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('freelancer.scouts.index') }}" class="nav-link {{ $totalUnreadCount > 0 ? 'has-badge' : '' }}">
+                    スカウト
+                    @if($totalUnreadCount > 0)
+                        <span class="badge" aria-hidden="false">{{ $totalUnreadCount }}</span>
+                    @endif
+                </a>
+            </div>
+        </div>
     </header>
 
-    <main class="main-content">
+    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
         <div class="content-area">
             <h1 class="page-title">応募する</h1>
             @include('partials.error-panel')
@@ -462,9 +617,9 @@
                         @enderror
                     </div>
 
-                    <div class="actions">
-                        <a class="btn btn-secondary" href="{{ route('freelancer.jobs.show', $job) }}" role="button">戻る</a>
-                        <button class="btn btn-primary" type="submit">応募を送信</button>
+                    <div class="actions flex flex-col md:flex-row gap-3 md:gap-4">
+                        <a class="btn btn-secondary w-full md:flex-1" href="{{ route('freelancer.jobs.show', $job) }}" role="button">戻る</a>
+                        <button class="btn btn-primary w-full md:flex-1" type="submit">応募を送信</button>
                     </div>
                 </form>
             </div>
@@ -472,6 +627,45 @@
         </div>
     </main>
 
+    <script>
+        (function () {
+            const header = document.querySelector('header.header');
+            const toggle = document.getElementById('mobileNavToggle');
+            const mobileNav = document.getElementById('mobileNav');
+            if (!header || !toggle || !mobileNav) return;
+
+            const OPEN_CLASS = 'is-mobile-nav-open';
+            const isOpen = () => header.classList.contains(OPEN_CLASS);
+
+            const open = () => {
+                header.classList.add(OPEN_CLASS);
+                toggle.setAttribute('aria-expanded', 'true');
+            };
+
+            const close = () => {
+                header.classList.remove(OPEN_CLASS);
+                toggle.setAttribute('aria-expanded', 'false');
+            };
+
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isOpen()) close();
+                else open();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!header.contains(e.target)) close();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') close();
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) close();
+            });
+        })();
+    </script>
     <script>
         (function () {
             const dropdown = document.getElementById('userDropdown');

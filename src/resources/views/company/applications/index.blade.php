@@ -4,8 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募された案件（企業）- AITECH</title>
+    @include('partials.company-header-style')
     <style>
-        :root { --header-height: 104px; --header-height-mobile: 91px; }
+        :root {
+            --header-height: 104px;           /* md 基本高さ */
+            --header-height-mobile: 91px;     /* xs / mobile */
+            --header-height-sm: 96px;         /* sm */
+            --header-height-md: 104px;        /* md */
+            --header-height-lg: 112px;        /* lg */
+            --header-height-xl: 120px;        /* xl */
+            --header-height-current: var(--header-height-mobile);
+            --header-padding-x: 1rem;
+        }
+
+        /* Breakpoint: sm (>=640px) */
+        @media (min-width: 640px) {
+            :root {
+                --header-padding-x: 1.5rem;
+                --header-height-current: var(--header-height-sm);
+            }
+        }
+
+        /* Breakpoint: md (>=768px) -- デスクトップの基本 */
+        @media (min-width: 768px) {
+            :root {
+                --header-padding-x: 2rem;
+                --header-height-current: var(--header-height-md);
+            }
+        }
+
+        /* Breakpoint: lg (>=1024px) */
+        @media (min-width: 1024px) {
+            :root {
+                --header-padding-x: 2.5rem;
+                --header-height-current: var(--header-height-lg);
+            }
+        }
+
+        /* Breakpoint: xl (>=1280px) */
+        @media (min-width: 1280px) {
+            :root {
+                --header-padding-x: 3rem;
+                --header-height-current: var(--header-height-xl);
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 97.5%; }
         body {
@@ -15,51 +58,107 @@
             line-height: 1.5;
         }
 
-        /* Header */
+        /* Header (4 breakpoints: sm/md/lg/xl) */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
-            padding: 0 3rem;
+            padding: 0 var(--header-padding-x);
             position: sticky;
             top: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            min-height: var(--header-height-current);
         }
         .header-content {
             max-width: 1600px;
             margin: 0 auto;
-            border-bottom: 1px solid #e1e4e8;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto; /* mobile: ロゴ / 右側 */
             align-items: center;
-            height: var(--header-height);
+            gap: 0.5rem;
+            height: var(--header-height-current);
             position: relative;
+            min-width: 0;
+            padding: 0.25rem 0; /* 縦余白を確保 */
         }
-        .logo { display: flex; align-items: center; }
+
+        /* md以上: ロゴ / 中央ナビ / 右側 (ユーザー) */
+        @media (min-width: 768px) {
+            .header-content { grid-template-columns: auto 1fr auto; gap: 1rem; }
+        }
+
+        /* lg: より広く間隔を取る */
+        @media (min-width: 1024px) {
+            .header-content { gap: 1.5rem; padding: 0.5rem 0; }
+        }
+
+        .header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .header-right { display: flex; align-items: center; justify-content: flex-end; min-width: 0; gap: 0.75rem; }
+
+        /* ロゴ（左） */
+        .logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .logo-text {
             font-weight: 900;
-            font-size: 20px;
-            margin-left: 20px;
+            font-size: 18px;
+            margin-left: 0;
             color: #111827;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
-        .nav-links {
-            display: flex;
-            gap: 3rem;
+        @media (min-width: 640px) { .logo-text { font-size: 20px; } }
+        @media (min-width: 768px) { .logo-text { font-size: 22px; } }
+        @media (min-width: 1024px) { .logo-text { font-size: 24px; } }
+        @media (min-width: 1280px) { .logo-text { font-size: 26px; } }
+        .logo-badge {
+            background: #0366d6;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Mobile nav toggle */
+        .nav-toggle {
+            display: inline-flex;
             align-items: center;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #e1e4e8;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 0 0 auto;
+        }
+        .nav-toggle:hover { background: #f6f8fa; }
+        .nav-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.15); }
+        .nav-toggle svg { width: 22px; height: 22px; color: #24292e; }
+        @media (min-width: 768px) { .nav-toggle { display: none; } }
+
+        .nav-links {
+            display: none; /* mobile: hidden (use hamburger) */
+            align-items: center;
             justify-content: center;
             flex-wrap: nowrap;
+            min-width: 0;
+            overflow: hidden;
+            gap: 1.25rem;
         }
+        @media (min-width: 640px) { .nav-links { display: none; } } /* smではまだ省スペースにすることが多い */
+        @media (min-width: 768px) { .nav-links { display: flex; gap: 1.25rem; } }
+        @media (min-width: 1024px) { .nav-links { gap: 2rem; } }
+        @media (min-width: 1280px) { .nav-links { gap: 3rem; } }
+
         .nav-link {
             text-decoration: none;
             color: #586069;
             font-weight: 500;
-            font-size: 1.1rem;
-            padding: 0.75rem 1.25rem;
+            font-size: 1.05rem;
+            padding: 0.6rem 1rem;
             border-radius: 8px;
             transition: all 0.15s ease;
             position: relative;
@@ -68,6 +167,8 @@
             align-items: center;
             white-space: nowrap;
         }
+        @media (min-width: 768px) { .nav-link { font-size: 1.1rem; padding: 0.75rem 1.25rem; } }
+        @media (min-width: 1280px) { .nav-link { font-size: 1.15rem; } }
         .nav-link.has-badge { padding-right: 3rem; }
         .nav-link:hover { background-color: #f6f8fa; color: #24292e; }
         .nav-link.active {
@@ -93,16 +194,51 @@
             top: 50%;
             transform: translateY(-50%);
         }
-        .user-menu { display: flex; align-items: center; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
-        .user-avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 600; cursor: pointer; transition: all 0.15s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: none; padding: 0; appearance: none;
+        .user-menu { display: flex; align-items: center; position: static; transform: none; }
+
+        /* Mobile nav menu */
+        .mobile-nav {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-bottom: 1px solid #e1e4e8;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+            padding: 0.75rem var(--header-padding-x);
+            display: none;
+            z-index: 110;
         }
-        .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .header.is-mobile-nav-open .mobile-nav { display: block; }
+        @media (min-width: 768px) { .mobile-nav { display: none !important; } }
+        .mobile-nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            gap: 0.5rem;
+        }
+        .mobile-nav .nav-link {
+            width: 100%;
+            justify-content: flex-start;
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            padding: 0.875rem 1rem;
+        }
+        .mobile-nav .nav-link:hover { background: #f6f8fa; }
+        .mobile-nav .nav-link.active {
+            background-color: #0366d6;
+            color: #fff;
+            border-color: #0366d6;
+        }
+        .mobile-nav .nav-link.has-badge { padding-right: 1rem; }
+        .mobile-nav .badge {
+            position: static;
+            transform: none;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* Dropdown */
         .dropdown { position: relative; }
         .dropdown-content {
             display: none;
@@ -209,7 +345,7 @@
             border-radius: 14px;
             padding: 1.25rem;
             position: sticky;
-            top: calc(var(--header-height) + 64px);
+            top: calc(var(--header-height-current) + 64px);
         }
         .applicants-title {
             font-size: 1rem;
@@ -537,29 +673,13 @@
         .btn-secondary { background-color: #586069; color: #fff; font-size: 20px; padding: 15px 60px; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
 
-        @media (max-width: 920px) {
-            .header-content { height: var(--header-height-mobile); }
-            .nav-links { position: static; left: auto; transform: none; justify-content: flex-start; }
-            .user-menu { position: static; transform: none; margin-left: auto; }
-            .main-content { padding: 1.5rem; }
-            .meta { grid-template-columns: 1fr; }
-            .actions .btn { width: 100%; }
-            .layout { flex-direction: column; }
-            .jobs, .applicants { width: 100%; }
-            .applicants { position: static; top: auto; }
-        }
-        @media (max-width: 1200px) {
-            .nav-links { gap: 1rem; }
-            .nav-link { font-size: 0.95rem; padding: 0.6rem 0.9rem; }
-            .nav-link.has-badge { padding-right: 2.6rem; }
-        }
     /* Centered tab bar styling to mimic freelancer view (inside style tag) */
     .tabs-bar {
         background-color: #ffffff;
         border-bottom: 1px solid #e1e4e8;
-        padding: 0 3rem;
+        padding: 0 var(--header-padding-x);
         position: sticky;
-        top: var(--header-height);
+        top: var(--header-height-current);
         z-index: 99;
     }
     .tabs-container {
@@ -590,50 +710,10 @@
         background-color: transparent;
     }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo" aria-hidden="true">
-                <div class="logo-text">複業AI</div>
-            </div>
-            <nav class="nav-links">
-                <a href="{{ route('company.freelancers.index') }}" class="nav-link">フリーランス一覧</a>
-                <a href="{{ route('company.jobs.index') }}" class="nav-link">案件一覧</a>
-                @php
-                    $appUnread = ($unreadApplicationCount ?? 0);
-                    $scoutUnread = ($unreadScoutCount ?? 0);
-                @endphp
-                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $appUnread > 0 ? 'has-badge' : '' }} active">
-                    応募された案件
-                    @if($appUnread > 0)
-                        <span class="badge">{{ $appUnread }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $scoutUnread > 0 ? 'has-badge' : '' }}">
-                    スカウト
-                    @if($scoutUnread > 0)
-                        <span class="badge">{{ $scoutUnread }}</span>
-                    @endif
-                </a>
-            </nav>
-            <div class="user-menu">
-                <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">{{ $userInitial ?? '企' }}</button>
-                    <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
-                        <a href="{{ route('company.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.company-header')
     <!-- Tabs Bar -->
     <div class="tabs-bar">
         <div class="tabs-container">
@@ -644,7 +724,7 @@
         </div>
     </div>
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
         <div class="content-area">
             @php
                 $applicationItems = $applications instanceof \Illuminate\Pagination\AbstractPaginator
@@ -687,22 +767,22 @@
                     ->values();
             @endphp
 
-            <div class="view-tabs" aria-label="表示切替">
+            <div class="view-tabs flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4" aria-label="表示切替">
                 <span class="total-unread" id="totalUnread" data-total-unread="{{ $totalUnreadOnPage }}">未読 {{ $totalUnreadOnPage }}</span>
-                <div class="tab-group" role="tablist" aria-label="表示タブ">
+                <div class="tab-group flex flex-wrap gap-2 md:gap-3" role="tablist" aria-label="表示タブ">
                     <button type="button" class="view-tab active" id="tabJobs" data-view-tab="jobs" aria-selected="true">案件一覧</button>
                     <button type="button" class="view-tab" id="tabFreelancers" data-view-tab="freelancers" aria-selected="false">フリーランス一覧</button>
                 </div>
-                <button type="button" class="filter-btn" id="filterBtn" aria-pressed="false">未読のみ</button>
+                <button type="button" class="filter-btn w-full md:w-auto" id="filterBtn" aria-pressed="false">未読のみ</button>
             </div>
 
             @if($jobGroups->count() === 0)
-                <div class="empty-state">
-                    <p style="font-size: 1.05rem; font-weight: 900;">応募がありません</p>
+                <div class="empty-state rounded-2xl bg-white border border-slate-200 shadow-sm p-8 md:p-10 text-center text-slate-600">
+                    <p class="text-base md:text-lg font-black">応募がありません</p>
                 </div>
             @else
-                <div class="layout active" id="jobView">
-                    <section class="jobs" id="jobs" aria-label="案件一覧">
+                <div class="layout active flex flex-col lg:flex-row gap-5 lg:gap-6" id="jobView">
+                    <section class="jobs w-full lg:w-2/3" id="jobs" aria-label="案件一覧">
                         @foreach($jobGroups as $group)
                             @php
                                 $job = $group->job;
@@ -717,14 +797,14 @@
                                 $workTimeText = $job->work_time_text ?? '';
                             @endphp
 
-                            <div class="job-card" data-job-key="{{ $group->key }}" data-unread-count="{{ $group->unreadCount }}" role="button" tabindex="0">
+                            <div class="job-card rounded-2xl bg-white border border-slate-200 shadow-sm p-5 md:p-6" data-job-key="{{ $group->key }}" data-unread-count="{{ $group->unreadCount }}" role="button" tabindex="0">
                                 <div class="job-title">{{ $job->title ?? '案件名不明' }}</div>
                                 <div class="job-sub">{{ $company->name ?? '企業名不明' }}</div>
                                 <div class="job-meta">
                                     @if($rewardText)<span>報酬：{{ $rewardText }}</span>@endif
                                     @if($workTimeText)<span>稼働：{{ $workTimeText }}</span>@endif
                                 </div>
-                                <div class="job-footer">
+                                <div class="job-footer flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3">
                                     <span style="font-weight:900;">応募者 {{ $group->applications->count() }}名</span>
                                     <span class="badge-pill {{ $group->unreadCount === 0 ? 'gray' : '' }}">未読 {{ $group->unreadCount }}</span>
                                 </div>
@@ -732,7 +812,7 @@
                         @endforeach
                     </section>
 
-                    <aside class="applicants" id="applicants" aria-label="応募者一覧">
+                    <aside class="applicants w-full lg:w-1/3 lg:sticky lg:top-[calc(var(--header-height-current)+64px)]" id="applicants" aria-label="応募者一覧">
                         @foreach($jobGroups as $group)
                             @php $job = $group->job; @endphp
                             <div class="job-applicants" data-job-key="{{ $group->key }}" style="display:none;">
@@ -791,7 +871,7 @@
                                             </div>
                                             <div class="message">{{ Str::limit($application->message ?? ($job->description ?? ''), 38) }}</div>
                                             <div class="time">{{ $timeText }}</div>
-                                            <div class="freelancer-actions" aria-label="操作">
+                                            <div class="freelancer-actions flex flex-wrap items-center gap-2" aria-label="操作">
                                                 @if($application->is_unread ?? false)
                                                     <span class="badge-pill">未読</span>
                                                 @endif
@@ -810,7 +890,7 @@
                 </div>
 
                 <div id="freelancerView" aria-label="フリーランス一覧">
-                    <div class="list">
+                    <div class="list grid grid-cols-1 gap-5 lg:gap-6">
                         @foreach($freelancerRows as $application)
                             @php
                                 $job = $application->job;
@@ -824,7 +904,7 @@
                                     ? route('company.threads.show', ['thread' => $application->thread])
                                     : null;
                             @endphp
-                            <div class="card">
+                            <div class="card rounded-2xl bg-white border border-slate-200 shadow-sm p-5 md:p-6 relative overflow-hidden">
                                 @if($chatUrl)
                                     <a href="{{ $chatUrl }}" class="freelancer-row freelancer-link" data-unread="{{ ($application->is_unread ?? false) ? '1' : '0' }}" data-job-key="{{ $jobGroupKey }}">
                                 @else
@@ -857,7 +937,7 @@
             @endif
 
             @if($applications->hasPages())
-                <div style="margin-top: 2rem; display: flex; justify-content: center;">
+                <div class="mt-8 flex justify-center">
                     {{ $applications->links() }}
                 </div>
             @endif

@@ -278,50 +278,15 @@
             transform: translateY(-1px);
         }
 
-        /* レスポンシブ */
-        @media (max-width: 900px) {
-            .register-card {
-                padding: 40px 32px;
-                max-width: 720px;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .register-card {
-                padding: 32px 24px;
-            }
-
-            .two-col {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .register-card {
-                max-width: 100%;
-                padding: 28px 20px;
-            }
-
-            .form-input,
-            .form-textarea {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-
-            .btn {
-                font-size: 13px;
-                padding: 12px 20px;
-            }
-        }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <div class="background"></div>
 
-    <div class="container">
-        <div class="register-card">
-            <div class="page-title">企業プロフィール登録</div>
+    <div class="container px-4 md:px-6 lg:px-8 py-8 md:py-12">
+        <div class="register-card w-full max-w-2xl bg-white/90 backdrop-blur-xl border border-white/70 rounded-xl p-6 md:p-10 lg:p-12 shadow-[0_25px_70px_rgba(30,136,229,0.18)]">
+            <div class="page-title text-lg md:text-xl font-black text-center">企業プロフィール登録</div>
             @include('partials.error-panel')
 
             @if (session('success'))
@@ -366,7 +331,7 @@
                     @enderror
                 </div>
 
-                <div class="two-col">
+                <div class="two-col grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
                         <label class="label" for="contact_name">担当者名（任意）</label>
                         <input
@@ -409,9 +374,9 @@
                     <div class="help">登録後は「プロフィール設定」から更新できます</div>
                 </div>
 
-                <div class="btn-row">
-                    <a class="btn btn-secondary" href="{{ url()->previous() }}">戻る</a>
-                    <button class="btn btn-primary" type="submit">登録</button>
+                <div class="btn-row flex flex-col md:flex-row gap-3">
+                    <a class="btn btn-secondary w-full md:flex-1" href="{{ url()->previous() }}">戻る</a>
+                    <button class="btn btn-primary w-full md:flex-1" type="submit">登録</button>
                 </div>
             </form>
         </div>

@@ -4,8 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>案件 新規登録（企業）- AITECH</title>
+    @include('partials.company-header-style')
     <style>
-        :root { --header-height: 104px; --header-height-mobile: 91px; }
+        :root {
+            --header-height: 104px;           /* md 基本高さ */
+            --header-height-mobile: 91px;     /* xs / mobile */
+            --header-height-sm: 96px;         /* sm */
+            --header-height-md: 104px;        /* md */
+            --header-height-lg: 112px;        /* lg */
+            --header-height-xl: 120px;        /* xl */
+            --header-height-current: var(--header-height-mobile);
+            --header-padding-x: 1rem;
+        }
+
+        /* Breakpoint: sm (>=640px) */
+        @media (min-width: 640px) {
+            :root {
+                --header-padding-x: 1.5rem;
+                --header-height-current: var(--header-height-sm);
+            }
+        }
+
+        /* Breakpoint: md (>=768px) -- デスクトップの基本 */
+        @media (min-width: 768px) {
+            :root {
+                --header-padding-x: 2rem;
+                --header-height-current: var(--header-height-md);
+            }
+        }
+
+        /* Breakpoint: lg (>=1024px) */
+        @media (min-width: 1024px) {
+            :root {
+                --header-padding-x: 2.5rem;
+                --header-height-current: var(--header-height-lg);
+            }
+        }
+
+        /* Breakpoint: xl (>=1280px) */
+        @media (min-width: 1280px) {
+            :root {
+                --header-padding-x: 3rem;
+                --header-height-current: var(--header-height-xl);
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 97.5%; }
         body {
@@ -14,49 +57,108 @@
             color: #24292e;
             line-height: 1.5;
         }
+
+        /* Header (4 breakpoints: sm/md/lg/xl) */
         .header {
             background-color: #ffffff;
             border-bottom: 1px solid #e1e4e8;
-            padding: 0 3rem;
+            padding: 0 var(--header-padding-x);
             position: sticky;
             top: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            min-height: var(--header-height-current);
         }
         .header-content {
             max-width: 1600px;
             margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto; /* mobile: ロゴ / 右側 */
             align-items: center;
-            height: var(--header-height);
+            gap: 0.5rem;
+            height: var(--header-height-current);
             position: relative;
+            min-width: 0;
+            padding: 0.25rem 0; /* 縦余白を確保 */
         }
-        .logo { display: flex; align-items: center; }
+
+        /* md以上: ロゴ / 中央ナビ / 右側 (ユーザー) */
+        @media (min-width: 768px) {
+            .header-content { grid-template-columns: auto 1fr auto; gap: 1rem; }
+        }
+
+        /* lg: より広く間隔を取る */
+        @media (min-width: 1024px) {
+            .header-content { gap: 1.5rem; padding: 0.5rem 0; }
+        }
+
+        .header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .header-right { display: flex; align-items: center; justify-content: flex-end; min-width: 0; gap: 0.75rem; }
+
+        /* ロゴ（左） */
+        .logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .logo-text {
             font-weight: 900;
-            font-size: 20px;
-            margin-left: 20px;
+            font-size: 18px;
+            margin-left: 0;
             color: #111827;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
-        .nav-links {
-            display: flex;
-            gap: 3rem;
+        @media (min-width: 640px) { .logo-text { font-size: 20px; } }
+        @media (min-width: 768px) { .logo-text { font-size: 22px; } }
+        @media (min-width: 1024px) { .logo-text { font-size: 24px; } }
+        @media (min-width: 1280px) { .logo-text { font-size: 26px; } }
+        .logo-badge {
+            background: #0366d6;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Mobile nav toggle */
+        .nav-toggle {
+            display: inline-flex;
             align-items: center;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #e1e4e8;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 0 0 auto;
+        }
+        .nav-toggle:hover { background: #f6f8fa; }
+        .nav-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.15); }
+        .nav-toggle svg { width: 22px; height: 22px; color: #24292e; }
+        @media (min-width: 768px) { .nav-toggle { display: none; } }
+
+        .nav-links {
+            display: none; /* mobile: hidden (use hamburger) */
+            align-items: center;
             justify-content: center;
             flex-wrap: nowrap;
+            min-width: 0;
+            overflow: hidden;
+            gap: 1.25rem;
         }
+        @media (min-width: 640px) { .nav-links { display: none; } } /* smではまだ省スペースにすることが多い */
+        @media (min-width: 768px) { .nav-links { display: flex; gap: 1.25rem; } }
+        @media (min-width: 1024px) { .nav-links { gap: 2rem; } }
+        @media (min-width: 1280px) { .nav-links { gap: 3rem; } }
+
         .nav-link {
             text-decoration: none;
             color: #586069;
             font-weight: 500;
-            font-size: 1.1rem;
-            padding: 0.75rem 1.25rem;
+            font-size: 1.05rem;
+            padding: 0.6rem 1rem;
             border-radius: 8px;
             transition: all 0.15s ease;
             position: relative;
@@ -65,41 +167,107 @@
             align-items: center;
             white-space: nowrap;
         }
+        @media (min-width: 768px) { .nav-link { font-size: 1.1rem; padding: 0.75rem 1.25rem; } }
+        @media (min-width: 1280px) { .nav-link { font-size: 1.15rem; } }
         .nav-link.has-badge { padding-right: 3rem; }
         .nav-link:hover { background-color: #f6f8fa; color: #24292e; }
-        .nav-link.active { background-color: #0366d6; color: white; box-shadow: 0 2px 8px rgba(3, 102, 214, 0.3); }
+        .nav-link.active {
+            background-color: #0366d6;
+            color: white;
+            box-shadow: 0 2px 8px rgba(3, 102, 214, 0.3);
+        }
         .badge {
-            background-color: #d73a49; color: white; border-radius: 50%;
-            padding: 0.15rem 0.45rem; font-size: 0.7rem; font-weight: 600;
-            min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
+            background-color: #d73a49;
+            color: white;
+            border-radius: 50%;
+            padding: 0.15rem 0.45rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 1px 3px rgba(209, 58, 73, 0.3);
-            position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
         }
-        .user-menu { display: flex; align-items: center; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
-        .user-avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 600; cursor: pointer; transition: all 0.15s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: none; padding: 0; appearance: none;
+        .user-menu { display: flex; align-items: center; position: static; transform: none; }
+
+        /* Mobile nav menu */
+        .mobile-nav {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-bottom: 1px solid #e1e4e8;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+            padding: 0.75rem var(--header-padding-x);
+            display: none;
+            z-index: 110;
         }
-        .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .header.is-mobile-nav-open .mobile-nav { display: block; }
+        @media (min-width: 768px) { .mobile-nav { display: none !important; } }
+        .mobile-nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            gap: 0.5rem;
+        }
+        .mobile-nav .nav-link {
+            width: 100%;
+            justify-content: flex-start;
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            padding: 0.875rem 1rem;
+        }
+        .mobile-nav .nav-link:hover { background: #f6f8fa; }
+        .mobile-nav .nav-link.active {
+            background-color: #0366d6;
+            color: #fff;
+            border-color: #0366d6;
+        }
+        .mobile-nav .nav-link.has-badge { padding-right: 1rem; }
+        .mobile-nav .badge {
+            position: static;
+            transform: none;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* Dropdown */
         .dropdown { position: relative; }
         .dropdown-content {
-            display: none; position: absolute; right: 0; top: 100%;
-            background-color: white; min-width: 240px;
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            min-width: 240px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-            border-radius: 12px; z-index: 1000; border: 1px solid #e1e4e8; margin-top: 0.5rem;
+            border-radius: 12px;
+            z-index: 1000;
+            border: 1px solid #e1e4e8;
+            margin-top: 0.5rem;
         }
         .dropdown.is-open .dropdown-content { display: block; }
         .dropdown-item {
-            display: block; padding: 0.875rem 1.25rem; text-decoration: none; color: #586069;
-            transition: all 0.15s ease; border-radius: 6px; margin: 0.25rem; white-space: nowrap;
+            display: block;
+            padding: 0.875rem 1.25rem;
+            text-decoration: none;
+            color: #586069;
+            transition: all 0.15s ease;
+            border-radius: 6px;
+            margin: 0.25rem;
+            white-space: nowrap;
         }
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
+        /* Layout (ページ固有のスタイルを以下に継承) */
         .main-content { max-width: 900px; margin: 0 auto; padding: 3rem; }
         .page-title { font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
         .panel {
@@ -146,20 +314,6 @@
         .btn-secondary { background-color: #586069; color: #fff; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
 
-        @media (max-width: 920px) {
-            .header-content { height: var(--header-height-mobile); }
-            .nav-links { position: static; left: auto; transform: none; justify-content: flex-start; }
-            .user-menu { position: static; transform: none; margin-left: auto; }
-            .main-content { padding: 1.5rem; }
-            .grid { grid-template-columns: 1fr; }
-            .grid-3 { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 1200px) {
-            .nav-links { gap: 1rem; }
-            .nav-link { font-size: 0.95rem; padding: 0.6rem 0.9rem; }
-            .nav-link.has-badge { padding-right: 2.6rem; }
-        }
-
         .error-panel {
             margin: 0 auto 1.5rem auto;
             background-color: rgb(255, 255, 255);
@@ -186,65 +340,26 @@
             margin-bottom: 0;
         }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="logo" aria-hidden="true">
-                <div class="logo-text">複業AI</div>
-            </div>
-            <nav class="nav-links">
-                <a href="{{ route('company.freelancers.index') }}" class="nav-link">フリーランス一覧</a>
-                <a href="{{ route('company.jobs.index') }}" class="nav-link active">案件一覧</a>
-                @php
-                    $appUnread = ($unreadApplicationCount ?? 0);
-                    $scoutUnread = ($unreadScoutCount ?? 0);
-                @endphp
-                <a href="{{ route('company.applications.index') }}" class="nav-link {{ $appUnread > 0 ? 'has-badge' : '' }}">
-                    応募された案件
-                    @if($appUnread > 0)
-                        <span class="badge">{{ $appUnread }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('company.scouts.index') }}" class="nav-link {{ $scoutUnread > 0 ? 'has-badge' : '' }}">
-                    スカウト
-                    @if($scoutUnread > 0)
-                        <span class="badge">{{ $scoutUnread }}</span>
-                    @endif
-                </a>
-            </nav>
-            <div class="user-menu">
-                <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">企</button>
-                    <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
-                        <a href="{{ route('company.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="dropdown-item" role="menuitem" style="width: 100%; text-align: left; background: none; border: none; padding: 0.875rem 1.25rem; color: #586069; cursor: pointer; font-size: inherit; font-family: inherit;">ログアウト</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.company-header')
 
-    <main class="main-content">
-        <h1 class="page-title">案件 新規登録</h1>
+    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+        <h1 class="page-title text-2xl md:text-3xl font-black tracking-tight">案件 新規登録</h1>
         
         @include('partials.error-panel')
 
         @if (session('success'))
-            <div class="panel" style="margin-bottom: 1.5rem; background-color: #d4edda; border-color: #28a745;">
+            <div class="panel mb-6" style="background-color: #d4edda; border-color: #28a745;">
                 <div style="color: #155724; font-weight: 700;">{{ session('success') }}</div>
             </div>
         @endif
 
-        <div class="panel">
+        <div class="panel p-5 md:p-8">
             <form action="{{ route('company.jobs.store') }}" method="post">
                 @csrf
-                <div class="grid">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                     <div class="field">
                         <label for="title">タイトル（必須）</label>
                         <input id="title" name="title" class="input @error('title') is-invalid @enderror" type="text" placeholder="例: ECサイト機能拡張プロジェクト" value="{{ old('title') }}">
@@ -279,7 +394,7 @@
                     @enderror
                 </div>
 
-                <div class="grid-3">
+                <div class="grid-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                     <div class="field">
                         <label for="reward_type">報酬タイプ（必須）</label>
                         <select id="reward_type" name="reward_type" class="select @error('reward_type') is-invalid @enderror">
@@ -330,9 +445,9 @@
                     @enderror
                 </div>
 
-                <div class="btn-row">
-                    <a class="btn btn-secondary" href="{{ route('company.jobs.index') }}">キャンセル</a>
-                    <button class="btn btn-primary" type="submit">登録</button>
+                <div class="btn-row flex flex-col md:flex-row gap-3 md:gap-4">
+                    <a class="btn btn-secondary w-full md:flex-1" href="{{ route('company.jobs.index') }}">キャンセル</a>
+                    <button class="btn btn-primary w-full md:flex-1" type="submit">登録</button>
                 </div>
             </form>
         </div>

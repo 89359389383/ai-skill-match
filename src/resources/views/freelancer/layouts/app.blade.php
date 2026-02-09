@@ -133,7 +133,7 @@
         }
     </style>
     @yield('head')
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <header class="header" role="banner">

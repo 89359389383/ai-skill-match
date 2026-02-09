@@ -286,78 +286,15 @@
             text-decoration: underline;
         }
 
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .login-card {
-                padding: 40px 32px;
-                max-width: 480px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .login-card {
-                padding: 32px 24px;
-                max-width: 100%;
-            }
-
-            .logo-text {
-                font-size: 20px;
-            }
-        }
-
-        @media (min-width: 1400px) and (max-width: 1540px) {
-            .login-card {
-                max-width: 640px;
-                padding: 56px 76px;
-            }
-
-            .logo-text {
-                font-size: 24px;
-            }
-
-            .form-input {
-                font-size: 15px;
-            }
-
-            .login-button {
-                font-size: 15px;
-                padding: 14px 28px;
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 850px) {
-            .login-card {
-                max-width: 500px;
-                padding: 42px 40px;
-            }
-        }
-
-        @media (max-width: 767px) {
-            .login-card {
-                max-width: 100%;
-                padding: 28px 20px;
-                box-shadow: 0 12px 32px rgba(33, 150, 243, .18);
-            }
-
-            .form-input {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-
-            .login-button {
-                padding: 12px 20px;
-                font-size: 13px;
-            }
-        }
     </style>
-    @include('partials.aitech-responsive')
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
     <div class="background"></div>
 
-    <div class="container">
-        <div class="login-card">
+    <div class="container px-4 md:px-6 lg:px-8 py-10">
+        <div class="login-card p-6 md:p-10 lg:p-12">
             <div class="page-title">複業AI</div>
             @include('partials.error-panel')
 
@@ -431,7 +368,7 @@
                 </button>
 
                 <div class="register-links">
-                    <a href="{{ route('password.request') }}">パスワードを忘れたことはこちら</a>
+                    <a href="{{ route('password.request') }}">パスワードを忘れた方はこちら</a>
                     <a href="{{ route('auth.register.freelancer.form') }}">フリーランスとして新規登録</a>
                     <a href="{{ route('auth.register.company.form') }}">企業として新規登録</a>
                 </div>
