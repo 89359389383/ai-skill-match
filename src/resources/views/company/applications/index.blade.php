@@ -347,6 +347,20 @@
             position: sticky;
             top: calc(var(--header-height-current) + 64px);
         }
+        .job-applicants-placeholder { display: none; }
+
+        /* 1024px以下: 応募者（紐付フリーランス）を「クリックした案件カード直下」に表示する */
+        @media (max-width: 1024px) {
+            #applicants { display: none; } /* 旧：ページ下部に出る領域は隠す（中身はJSで移動） */
+            .jobs { width: 100%; }
+            .job-applicants {
+                background: #fff;
+                border: 1px solid #e1e4e8;
+                border-radius: 14px;
+                padding: 1.25rem;
+                margin: 0 0 1rem;
+            }
+        }
         .applicants-title {
             font-size: 1rem;
             font-weight: 900;
@@ -815,6 +829,7 @@
                     <aside class="applicants w-full lg:w-1/3 lg:sticky lg:top-[calc(var(--header-height-current)+64px)]" id="applicants" aria-label="応募者一覧">
                         @foreach($jobGroups as $group)
                             @php $job = $group->job; @endphp
+                            <div class="job-applicants-placeholder" data-job-key="{{ $group->key }}" aria-hidden="true"></div>
                             <div class="job-applicants" data-job-key="{{ $group->key }}" style="display:none;">
                                 <div class="applicants-title">{{ $job->title ?? '案件名不明' }}</div>
                                 @foreach($group->applications as $application)
@@ -977,14 +992,58 @@
             const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
             const jobCards = () => qsa('.job-card');
             const jobApplicantsPanels = () => qsa('.job-applicants');
+            const jobApplicantsPlaceholders = () => qsa('.job-applicants-placeholder');
             const allFreelancerRows = () => qsa('.freelancer-row');
+            const applicantsAside = document.getElementById('applicants');
 
-            function setActiveJob(jobKey) {
+            const isNarrowLayout = () => window.matchMedia('(max-width: 1024px)').matches;
+
+            function findJobCard(jobKey) {
+                return jobCards().find(c => c.dataset.jobKey === jobKey) || null;
+            }
+
+            function restorePanelToAside(panel) {
+                if (!panel || !panel.dataset || !panel.dataset.jobKey) return;
+                const ph = jobApplicantsPlaceholders().find(p => p.dataset.jobKey === panel.dataset.jobKey) || null;
+                if (ph && ph.parentElement) {
+                    ph.insertAdjacentElement('afterend', panel);
+                } else if (applicantsAside) {
+                    applicantsAside.appendChild(panel);
+                }
+            }
+
+            function ensurePanelsInAside() {
+                if (!applicantsAside) return;
+                jobApplicantsPanels().forEach(p => {
+                    // 既に aside 配下ならそのまま
+                    if (applicantsAside.contains(p)) return;
+                    restorePanelToAside(p);
+                });
+            }
+
+            function placeApplicantsPanel(jobKey, selectedCardEl = null) {
+                // 1200以下…ではなく、この画面は 1024 以下が対象
+                if (!jobKey) return;
+                const panel = jobApplicantsPanels().find(p => p.dataset.jobKey === jobKey) || null;
+                if (!panel) return;
+
+                if (!isNarrowLayout()) {
+                    ensurePanelsInAside();
+                    return;
+                }
+
+                const card = selectedCardEl || findJobCard(jobKey);
+                if (!card) return;
+                card.insertAdjacentElement('afterend', panel);
+            }
+
+            function setActiveJob(jobKey, selectedCardEl = null) {
                 currentJobKey = jobKey;
                 jobCards().forEach(c => c.classList.toggle('active', c.dataset.jobKey === jobKey));
                 jobApplicantsPanels().forEach(p => {
                     p.style.display = (p.dataset.jobKey === jobKey ? '' : 'none');
                 });
+                placeApplicantsPanel(jobKey, selectedCardEl);
                 applyUnreadFilter();
             }
 
@@ -1034,6 +1093,11 @@
                     }
                 }
 
+                // 1024px以下では、アクティブ案件のパネルがカード直下に居ることを保証
+                if (currentJobKey) {
+                    placeApplicantsPanel(currentJobKey);
+                }
+
                 // 上部の総未読（ページ内）表示は固定値（サーバー計算）でOK
                 if (totalUnreadEl) {
                     const total = totalUnreadEl.dataset.totalUnread || '0';
@@ -1074,7 +1138,7 @@
             // 案件選択（クリック + Enter/Space）
             jobCards().forEach(card => {
                 const key = card.dataset.jobKey;
-                const onSelect = () => setActiveJob(key);
+                const onSelect = () => setActiveJob(key, card);
                 card.addEventListener('click', onSelect);
                 card.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -1088,6 +1152,20 @@
             const initKey = firstVisibleJobKey();
             if (initKey) setActiveJob(initKey);
             showJobs();
+
+            // リサイズで 1024px を跨いだら、応募者パネルの配置を戻す/差し込む
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(() => {
+                    if (!currentJobKey) return;
+                    if (!isNarrowLayout()) {
+                        ensurePanelsInAside();
+                    } else {
+                        placeApplicantsPanel(currentJobKey);
+                    }
+                }, 80);
+            });
         })();
     </script>
 </body>

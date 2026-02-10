@@ -295,28 +295,51 @@
         /* Layout */
         .main-content {
             display: flex;
+            flex-direction: column;
             max-width: 1600px;
             margin: 0 auto;
-            padding: 3rem;
-            gap: 3rem;
+            padding: 1.25rem;
+            gap: 1.25rem;
         }
-        .sidebar:not(.right) {
-            width: 320px;
+        @media (min-width: 768px) {
+            .main-content { padding: 1.5rem; gap: 1.5rem; }
+        }
+
+        /*
+          1200px以下: 1024px以下と同様に「検索 → 一覧 → 選択中」を1列表示にする
+          1201px以上: 3列（検索 / 一覧 / 選択中）を横並び + サイドバー追従
+        */
+        @media (min-width: 1201px) {
+            .main-content {
+                flex-direction: row;
+                padding: 3rem;
+                gap: 3rem;
+                align-items: flex-start;
+            }
+        }
+
+        .sidebar {
+            width: 100%;
             flex-shrink: 0;
-            /* 左サイドバー（デスクトップは追従、モバイルは通常フロー） */
-            position: sticky;
-            top: calc(var(--header-height-current) + 1.5rem);
-            align-self: flex-start;
+            /* 1200px以下は通常フロー（固定/追従しない） */
+            position: static;
+            top: auto;
+            align-self: auto;
             z-index: 50;
         }
-        .sidebar.right {
-            width: 380px;
-            flex-shrink: 0;
-            /* 右サイドバー（デスクトップは追従、モバイルは通常フロー） */
-            position: sticky;
-            top: calc(var(--header-height-current) + 1.5rem);
-            align-self: flex-start;
-            z-index: 50;
+        @media (min-width: 1201px) {
+            .sidebar:not(.right) {
+                width: 320px;
+                position: sticky;
+                top: calc(var(--header-height-current) + 1.5rem);
+                align-self: flex-start;
+            }
+            .sidebar.right {
+                width: 380px;
+                position: sticky;
+                top: calc(var(--header-height-current) + 1.5rem);
+                align-self: flex-start;
+            }
         }
         .content-area {
             flex: 1;
@@ -513,6 +536,11 @@
             display: flex;
             flex-direction: column;
         }
+        /* 1200px以下では「カード直下に全幅表示」なので、パネル内スクロールは不要 */
+        @media (max-width: 1200px) {
+            #detailPanel { max-height: none; overflow: visible; }
+            #detailSidebar { display: none; } /* 右サイドバーは非表示（中身はJSでカード直下へ移動） */
+        }
         #detailPanel h3 {
             /* タイトルは固定 */
             flex-shrink: 0;
@@ -552,8 +580,8 @@
 <body>
     @include('partials.company-header')
 
-    <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-6 lg:gap-8">
-        <aside class="sidebar w-full lg:w-80">
+    <main class="main-content">
+        <aside class="sidebar">
             <div class="panel">
                 <h3>検索条件</h3>
                 <form method="GET" action="{{ route('company.freelancers.index') }}">
@@ -646,46 +674,48 @@
             @endif
         </section>
 
-        <aside class="sidebar right w-full lg:w-[380px]">
-            <div class="panel" id="detailPanel" aria-live="polite">
-                <h3>選択中のフリーランス</h3>
-                <div id="detailContent" style="display: none;">
-                    <div class="row">
-                        <div class="avatar" id="dAvatar" aria-hidden="true"></div>
-                        <div style="min-width:0; flex: 1; overflow: hidden;">
-                            <div class="name" id="dName"></div>
-                            <div class="sub" id="dRole"></div>
+        <aside class="sidebar right" id="detailSidebar">
+            <div id="detailSidebarHost">
+                <div class="panel" id="detailPanel" aria-live="polite">
+                    <h3>選択中のフリーランス</h3>
+                    <div id="detailContent" style="display: none;">
+                        <div class="row">
+                            <div class="avatar" id="dAvatar" aria-hidden="true"></div>
+                            <div style="min-width:0; flex: 1; overflow: hidden;">
+                                <div class="name" id="dName"></div>
+                                <div class="sub" id="dRole"></div>
+                            </div>
+                        </div>
+
+                        <div class="detail-title">自己紹介</div>
+                        <div class="desc" id="dBio"></div>
+
+                        <div class="detail-title">スキル</div>
+                        <div class="tags" id="dSkills"></div>
+
+                        <div class="meta" id="dMeta"></div>
+
+                        <div class="detail-title">ポートフォリオ</div>
+                        <div class="desc" id="dPortfolio" style="word-break: break-all; overflow-wrap: break-word;"></div>
+
+                        <div class="detail-title">経験企業</div>
+                        <div class="desc" id="dExperienceCompanies"></div>
+
+                        <div class="detail-actions">
+                            @php
+                                $firstFreelancer = $freelancers->first();
+                                $firstThreadId = $firstFreelancer ? ($scoutThreadMap[$firstFreelancer->id] ?? null) : null;
+                            @endphp
+                            @if($firstThreadId)
+                                <a class="btn btn-secondary" id="dScoutLink" href="{{ route('company.threads.show', ['thread' => $firstThreadId]) }}">スカウト済み</a>
+                            @else
+                                <a class="btn btn-primary" id="dScoutLink" href="{{ $firstFreelancer ? route('company.scouts.create', ['freelancer_id' => $firstFreelancer->id]) : '#' }}">スカウト</a>
+                            @endif
                         </div>
                     </div>
-
-                    <div class="detail-title">自己紹介</div>
-                    <div class="desc" id="dBio"></div>
-
-                    <div class="detail-title">スキル</div>
-                    <div class="tags" id="dSkills"></div>
-
-                    <div class="meta" id="dMeta"></div>
-
-                    <div class="detail-title">ポートフォリオ</div>
-                    <div class="desc" id="dPortfolio" style="word-break: break-all; overflow-wrap: break-word;"></div>
-
-                    <div class="detail-title">経験企業</div>
-                    <div class="desc" id="dExperienceCompanies"></div>
-
-                    <div class="detail-actions">
-                        @php
-                            $firstFreelancer = $freelancers->first();
-                            $firstThreadId = $firstFreelancer ? ($scoutThreadMap[$firstFreelancer->id] ?? null) : null;
-                        @endphp
-                        @if($firstThreadId)
-                            <a class="btn btn-secondary" id="dScoutLink" href="{{ route('company.threads.show', ['thread' => $firstThreadId]) }}">スカウト済み</a>
-                        @else
-                            <a class="btn btn-primary" id="dScoutLink" href="{{ $firstFreelancer ? route('company.scouts.create', ['freelancer_id' => $firstFreelancer->id]) : '#' }}">スカウト</a>
-                        @endif
+                    <div id="detailEmpty" style="text-align: center; padding: 2rem; color: #586069;">
+                        <p>フリーランスを選択してください</p>
                     </div>
-                </div>
-                <div id="detailEmpty" style="text-align: center; padding: 2rem; color: #586069;">
-                    <p>フリーランスを選択してください</p>
                 </div>
             </div>
         </aside>
@@ -751,6 +781,8 @@
             const freelancerData = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
 
             const list = document.getElementById('freelancerList');
+            const detailPanel = document.getElementById('detailPanel');
+            const detailSidebarHost = document.getElementById('detailSidebarHost');
             const detailContent = document.getElementById('detailContent');
             const detailEmpty = document.getElementById('detailEmpty');
             const dAvatar = document.getElementById('dAvatar');
@@ -763,7 +795,7 @@
             const dExperienceCompanies = document.getElementById('dExperienceCompanies');
             const dScoutLink = document.getElementById('dScoutLink');
             
-            if (!list || !detailContent || !detailEmpty || !dAvatar || !dName || !dRole || !dBio || !dSkills || !dMeta || !dPortfolio || !dExperienceCompanies || !dScoutLink) return;
+            if (!list || !detailPanel || !detailContent || !detailEmpty || !dAvatar || !dName || !dRole || !dBio || !dSkills || !dMeta || !dPortfolio || !dExperienceCompanies || !dScoutLink) return;
 
             // データをIDでマッピング
             const dataMap = {};
@@ -859,12 +891,45 @@
                 card.classList.add('is-selected');
                 card.setAttribute('aria-pressed', 'true');
                 render(parseInt(card.getAttribute('data-id')));
+                placeDetailPanel(card);
+            };
+
+            const isNarrowLayout = () => window.matchMedia('(max-width: 1200px)').matches;
+
+            // 1200px以下: クリックしたカードの直下に「選択中」パネルを全幅で差し込む
+            // 1201px以上: 右サイドバーに戻す
+            const placeDetailPanel = (card) => {
+                if (!detailPanel) return;
+
+                if (!isNarrowLayout()) {
+                    if (detailSidebarHost && detailPanel.parentElement !== detailSidebarHost) {
+                        detailSidebarHost.appendChild(detailPanel);
+                    }
+                    return;
+                }
+
+                if (card && card.insertAdjacentElement) {
+                    card.insertAdjacentElement('afterend', detailPanel);
+                    // 画面外に出ている場合のみ、見える位置へ（過度なスクロールを避ける）
+                    const rect = detailPanel.getBoundingClientRect();
+                    if (rect.top > window.innerHeight || rect.bottom < 0) {
+                        detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    return;
+                }
+
+                // カードが無いケース（検索結果0件など）
+                if (list && list.parentElement) {
+                    list.parentElement.insertBefore(detailPanel, list);
+                }
             };
 
             // 初期表示：最初のカードを選択
             const firstCard = list.querySelector('.card');
             if (firstCard) {
                 selectCard(firstCard);
+            } else {
+                placeDetailPanel(null);
             }
 
             list.addEventListener('click', (e) => {
@@ -882,6 +947,16 @@
                 if (!card) return;
                 e.preventDefault();
                 selectCard(card);
+            });
+
+            // リサイズで 1200px を跨いだ場合に配置を戻す/差し込む
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(() => {
+                    const selected = list.querySelector('.card.is-selected');
+                    placeDetailPanel(selected);
+                }, 50);
             });
         })();
     </script>
