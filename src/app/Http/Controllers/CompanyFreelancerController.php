@@ -29,6 +29,18 @@ class CompanyFreelancerController extends Controller
 
         // 検索キーワードを取得する（keywordはGETクエリ）
         $keyword = $request->query('keyword');
+        // 希望単価（万円）の検索レンジ（GETクエリ）
+        $rateMinRaw = $request->query('rate_min');
+        $rateMaxRaw = $request->query('rate_max');
+
+        $rateMin = (is_numeric($rateMinRaw) ? (int)$rateMinRaw : null);
+        $rateMax = (is_numeric($rateMaxRaw) ? (int)$rateMaxRaw : null);
+
+        // 両方入っている時だけレンジとして扱う（HTML側でrequiredにしているが、サーバ側でも安全に）
+        if ($rateMin !== null && $rateMax !== null && $rateMin > $rateMax) {
+            // 下限/上限が逆なら入れ替える（ユーザー入力ミス耐性）
+            [$rateMin, $rateMax] = [$rateMax, $rateMin];
+        }
 
         // フリーランスをベースに検索クエリを作る（プロフィール全体を検索）
         $query = Freelancer::query()->with(['skills', 'customSkills', 'portfolios']);
@@ -58,6 +70,34 @@ class CompanyFreelancerController extends Controller
                         $cq->where('name', 'like', '%' . $keyword . '%');
                     });
             });
+        }
+
+        // 希望単価検索（端を含む「重なり」判定 / 片側入力にも対応）
+        // - 例: 20〜30万の人は、30〜40 / 10〜20 でも「30」「20」で一致として表示する（端一致OK）
+        // - 条件（両方指定）: freelancer_max >= rateMin かつ freelancer_min <= rateMax
+        // - 片側指定:
+        //   - 下限のみ: freelancer_max >= rateMin
+        //   - 上限のみ: freelancer_min <= rateMax
+        // - 検索が行われた場合、希望単価が未設定（min/maxとも0/NULL）のプロフィールは除外する
+        $hasRateFilter = ($rateMin !== null || $rateMax !== null);
+        if ($hasRateFilter) {
+            // 未設定（両方0/NULL）を除外
+            $query->where(function ($q) {
+                $q->where(function ($qq) {
+                    $qq->whereNotNull('min_rate')->where('min_rate', '>', 0);
+                })->orWhere(function ($qq) {
+                    $qq->whereNotNull('max_rate')->where('max_rate', '>', 0);
+                });
+            });
+
+            if ($rateMin !== null && $rateMax !== null) {
+                $query->whereRaw('COALESCE(NULLIF(max_rate, 0), NULLIF(min_rate, 0)) >= ?', [$rateMin])
+                    ->whereRaw('COALESCE(NULLIF(min_rate, 0), NULLIF(max_rate, 0)) <= ?', [$rateMax]);
+            } elseif ($rateMin !== null) {
+                $query->whereRaw('COALESCE(NULLIF(max_rate, 0), NULLIF(min_rate, 0)) >= ?', [$rateMin]);
+            } else { // $rateMax !== null
+                $query->whereRaw('COALESCE(NULLIF(min_rate, 0), NULLIF(max_rate, 0)) <= ?', [$rateMax]);
+            }
         }
 
         // 一覧はページングで取得する
@@ -108,6 +148,9 @@ class CompanyFreelancerController extends Controller
             'freelancers' => $freelancers,
             // 検索キーワードを保持する
             'keyword' => $keyword,
+            // 希望単価レンジを保持する
+            'rateMin' => $rateMinRaw,
+            'rateMax' => $rateMaxRaw,
             // スカウト済みフリーランスのスレッドIDマップ
             'scoutThreadMap' => $scoutThreadMap,
             // ヘッダー用未読数

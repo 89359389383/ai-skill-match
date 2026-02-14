@@ -288,6 +288,17 @@
         }
         .textarea { min-height: 160px; resize: vertical; }
         .input:focus, .textarea:focus { outline: none; border-color: #0366d6; box-shadow: 0 0 0 3px rgba(3,102,214,0.1); background-color: #fff; }
+        .input.is-invalid, .textarea.is-invalid {
+            border-color: rgba(239, 68, 68, 0.8);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+        }
+        .error-message {
+            display: block;
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #dc2626;
+        }
         .help { margin-top: 0.5rem; color: #6a737d; font-weight: 800; font-size: 0.85rem; line-height: 1.5; }
         .btn-row { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
         .btn-row .btn { flex: 1; }

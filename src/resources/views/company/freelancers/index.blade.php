@@ -418,13 +418,50 @@
             cursor: pointer;
             transition: all 0.15s ease;
             font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
         .search-btn:hover {
             background-color: #0256cc;
             box-shadow: 0 2px 8px rgba(3, 102, 214, 0.3);
         }
+        .clear-btn {
+            background-color: #6a737d; /* gray */
+            margin-top: 0.75rem;
+        }
+        .clear-btn:hover {
+            background-color: #586069;
+            box-shadow: 0 2px 8px rgba(106, 115, 125, 0.25);
+        }
         .btn-secondary { background-color: #586069; color: white; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
+
+        /* Search: rate range inputs (万円) */
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+        .input-group .input {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .unit {
+            font-weight: 800;
+            color: #6a737d;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            padding-left: 0.25rem;
+        }
+        .range-sep {
+            font-weight: 900;
+            color: #6a737d;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
 
         /* Cards */
         .page-title {
@@ -587,9 +624,44 @@
                 <form method="GET" action="{{ route('company.freelancers.index') }}">
                     <div class="field">
                         <label for="keyword">フリーワード</label>
-                        <input id="keyword" name="keyword" class="input" type="text" placeholder="職種 / スキル / 自己紹介 / 希望単価 など" value="{{ old('keyword', $keyword ?? '') }}">
+                        <input id="keyword" name="keyword" class="input" type="text" placeholder="名前 / 職種 / スキル" value="{{ old('keyword', $keyword ?? '') }}">
+                    </div>
+                    <div class="field">
+                        <label for="rate_min">希望単価</label>
+                        <div class="input-group" aria-label="希望単価（下限〜上限）">
+                            <div class="input-group" style="flex: 1 1 0;">
+                                <input
+                                    id="rate_min"
+                                    name="rate_min"
+                                    class="input"
+                                    type="number"
+                                    inputmode="numeric"
+                                    min="0"
+                                    step="1"
+                                    placeholder="下限"
+                                    value="{{ old('rate_min', $rateMin ?? '') }}"
+                                >
+                                <span class="unit">万</span>
+                            </div>
+                            <span class="range-sep">〜</span>
+                            <div class="input-group" style="flex: 1 1 0;">
+                                <input
+                                    id="rate_max"
+                                    name="rate_max"
+                                    class="input"
+                                    type="number"
+                                    inputmode="numeric"
+                                    min="0"
+                                    step="1"
+                                    placeholder="上限"
+                                    value="{{ old('rate_max', $rateMax ?? '') }}"
+                                >
+                                <span class="unit">万</span>
+                            </div>
+                        </div>
                     </div>
                     <button class="search-btn" type="submit">検索</button>
+                    <button class="search-btn clear-btn" type="button" onclick="window.location='{{ route('company.freelancers.index') }}'">クリア</button>
                 </form>
             </div>
         </aside>

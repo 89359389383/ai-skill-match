@@ -33,13 +33,13 @@ class FreelancerRegisterRequest extends FormRequest
 
             // その他（任意）
             'experience_companies' => ['nullable', 'string', 'max:5000'],
-            'icon' => ['required', 'file', 'image', 'max:5120'],
+            'icon' => ['nullable', 'file', 'image', 'max:5120'],
 
             // スキル関連（任意）
-            'skills' => ['sometimes', 'array'],
+            'skills' => ['sometimes', 'array', 'min:1'],
             'skills.*' => ['integer'],
-            'custom_skills' => ['sometimes', 'array'],
-            'custom_skills.*' => ['nullable', 'string', 'max:255'],
+            'custom_skills' => ['required_without:skills', 'array', 'min:1'],
+            'custom_skills.*' => ['required', 'string', 'max:255'],
 
             // ポートフォリオURL（任意）
             'portfolio_urls' => ['sometimes', 'array'],
@@ -56,22 +56,39 @@ class FreelancerRegisterRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $merge = [];
+
         $min = $this->input('min_rate');
         $max = $this->input('max_rate');
 
         if ($min === null && $max === null) {
-            $this->merge(['min_rate' => 0, 'max_rate' => 0]);
-            return;
+            $merge['min_rate'] = 0;
+            $merge['max_rate'] = 0;
+        } elseif ($min === null && $max !== null) {
+            $merge['min_rate'] = $max;
+        } elseif ($max === null && $min !== null) {
+            $merge['max_rate'] = $min;
         }
 
-        if ($min === null && $max !== null) {
-            $this->merge(['min_rate' => $max]);
-            return;
+        // custom_skills[] は空欄が複数送られてくるので、空文字を除去してからバリデーションする
+        $customSkills = $this->input('custom_skills');
+        if (is_array($customSkills)) {
+            $normalized = [];
+            foreach ($customSkills as $skill) {
+                if (!is_string($skill)) {
+                    continue;
+                }
+                $skill = trim($skill);
+                if ($skill === '') {
+                    continue;
+                }
+                $normalized[] = $skill;
+            }
+            $merge['custom_skills'] = $normalized;
         }
 
-        if ($max === null && $min !== null) {
-            $this->merge(['max_rate' => $min]);
-            return;
+        if (!empty($merge)) {
+            $this->merge($merge);
         }
     }
 
@@ -123,7 +140,6 @@ class FreelancerRegisterRequest extends FormRequest
             'experience_companies.string' => '経験企業は文字列で入力してください。',
             'experience_companies.max' => '経験企業は5000文字以内で入力してください。',
 
-            'icon.required' => 'アイコン画像を選択してください。',
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',
             'icon.max' => 'アイコン画像は5MB以下のファイルを選択してください。',
@@ -132,8 +148,11 @@ class FreelancerRegisterRequest extends FormRequest
             'skills.*.integer' => 'スキルの指定が不正です。',
 
             'custom_skills.array' => '自由入力スキルは配列形式で送信してください。',
-            'custom_skills.*.string' => '自由入力スキルは文字列で入力してください。',
-            'custom_skills.*.max' => '自由入力スキルは255文字以内で入力してください。（空欄も可）',
+            'custom_skills.required_without' => 'スキルを1つ以上入力してください。',
+            'custom_skills.min' => 'スキルを1つ以上入力してください。',
+            'custom_skills.*.required' => 'スキルを入力してください。',
+            'custom_skills.*.string' => 'スキルは文字列で入力してください。',
+            'custom_skills.*.max' => 'スキルは255文字以内で入力してください。',
 
             'portfolio_urls.array' => 'ポートフォリオURLは配列形式で送信してください。',
             'portfolio_urls.*.string' => 'ポートフォリオURLは文字列で入力してください。',

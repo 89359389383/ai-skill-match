@@ -15,6 +15,23 @@
             line-height: 1.5;
         }
 
+        /* Tailwind utility equivalents (for partials.error-panel) */
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .border { border: 1px solid transparent; }
+        .border-red-200 { border-color: #fecaca; }
+        .bg-red-50 { background-color: #fef2f2; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-red-800 { color: #991b1b; }
+        .font-extrabold { font-weight: 800; }
+        .font-bold { font-weight: 700; }
+        .list-disc { list-style-type: disc; }
+        .pl-5 { padding-left: 1.25rem; }
+        .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+
 
         /* Layout */
         .main-content {
@@ -352,11 +369,16 @@
 
                     <div class="panel-title" style="margin-bottom:1rem;">スキル / 実績</div>
                     <div class="row">
-                        <label class="label">スキル（自由入力・必須）</label>
+                        <label class="label">スキル（1つ以上必須）</label>
                         <div class="help">複数入力できます。</div>
+                        @php
+                            // custom_skills 未入力時に入力欄を赤枠にする
+                            // （min/required_without のエラーは custom_skills に乗る想定）
+                            $skillsInvalid = $errors->has('custom_skills');
+                        @endphp
                         <div class="skills-container" id="skills-container">
                             <div class="skill-input-row">
-                                <input class="input skill-input" name="custom_skills[]" type="text" value="{{ old('custom_skills.0') }}" placeholder="例: Laravel">
+                                <input class="input skill-input {{ $skillsInvalid ? 'is-invalid' : '' }}" name="custom_skills[]" type="text" value="{{ old('custom_skills.0') }}" placeholder="例: Laravel">
                                 <input class="input skill-input" name="custom_skills[]" type="text" value="{{ old('custom_skills.1') }}" placeholder="例: Vue.js">
                             </div>
                             <div class="skill-input-row">
@@ -365,6 +387,9 @@
                             </div>
                         </div>
                         <button type="button" class="btn btn-outline" id="add-skill-btn" style="margin-top:0.75rem;">追加する</button>
+                        @error('custom_skills')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
                         @error('custom_skills.*')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -417,10 +442,16 @@
                                         <div class="row" style="gap:0.4rem;">
                                             <input class="input @error('min_hours_per_week') is-invalid @enderror" name="min_hours_per_week" type="number" value="{{ old('min_hours_per_week') }}" placeholder="例: 20">
                                             <div class="help" style="margin:0; font-size:0.8rem;">週間の最小稼働時間（時間）</div>
+                                            @error('min_hours_per_week')
+                                            <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                         <div class="row" style="gap:0.4rem;">
                                             <input class="input @error('max_hours_per_week') is-invalid @enderror" name="max_hours_per_week" type="number" value="{{ old('max_hours_per_week') }}" placeholder="例: 40">
                                             <div class="help" style="margin:0; font-size:0.8rem;">週間の最大稼働時間（時間）</div>
+                                            @error('max_hours_per_week')
+                                            <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -430,25 +461,19 @@
                                         <div class="row" style="gap:0.4rem;">
                                             <input class="input @error('hours_per_day') is-invalid @enderror" name="hours_per_day" type="number" value="{{ old('hours_per_day') }}" placeholder="例: 8">
                                             <div class="help" style="margin:0; font-size:0.8rem;">1日あたりの稼働時間（時間）</div>
+                                            @error('hours_per_day')
+                                            <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                         <div class="row" style="gap:0.4rem;">
                                             <input class="input @error('days_per_week') is-invalid @enderror" name="days_per_week" type="number" value="{{ old('days_per_week') }}" placeholder="例: 5">
                                             <div class="help" style="margin:0; font-size:0.8rem;">1週間あたりの稼働日数（日）</div>
+                                            @error('days_per_week')
+                                            <span class="error-message">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
-                                @error('min_hours_per_week')
-                                <span class="error-message">{{ $message }}</span>
-                                @enderror
-                                @error('max_hours_per_week')
-                                <span class="error-message">{{ $message }}</span>
-                                @enderror
-                                @error('hours_per_day')
-                                <span class="error-message">{{ $message }}</span>
-                                @enderror
-                                @error('days_per_week')
-                                <span class="error-message">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
                     </div>
@@ -462,12 +487,12 @@
                     </div>
 
                     <div class="row" style="margin-top:1.25rem;">
-                        <label class="label" for="icon">ユーザーアイコン <span class="required">必須</span></label>
+                        <label class="label" for="icon">ユーザーアイコン（任意）</label>
                         <input class="input @error('icon') is-invalid @enderror" id="icon" name="icon" type="file" accept="image/*">
                         @error('icon')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
-                        <div class="help">画像を選択してください（最大5MB）。</div>
+                        <div class="help">画像を選択してください（最大5MB）。未設定でも登録できます。</div>
                     </div>
 
                     <div class="actions">

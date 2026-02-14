@@ -20,13 +20,13 @@
                 $appUnread = ($unreadApplicationCount ?? 0);
                 $scoutUnread = ($unreadScoutCount ?? 0);
             @endphp
-            <a href="{{ route('company.applications.index') }}" class="nav-link {{ ($appUnread > 0 ? 'has-badge' : '') }} {{ (request()->routeIs('company.applications.*') || request()->routeIs('company.threads.*') || request()->routeIs('company.messages.*')) ? 'active' : '' }}">
+            <a href="{{ route('company.applications.index') }}" class="nav-link {{ ($appUnread > 0 ? 'has-badge' : '') }} {{ (request()->routeIs('company.applications.*') || (request()->routeIs('company.threads.*') && empty($scout))) ? 'active' : '' }}">
                 応募された案件
                 @if($appUnread > 0)
                     <span class="badge">{{ $appUnread }}</span>
                 @endif
             </a>
-            <a href="{{ route('company.scouts.index') }}" class="nav-link {{ ($scoutUnread > 0 ? 'has-badge' : '') }} {{ request()->routeIs('company.scouts.*') ? 'active' : '' }}">
+            <a href="{{ route('company.scouts.index') }}" class="nav-link {{ ($scoutUnread > 0 ? 'has-badge' : '') }} {{ (request()->routeIs('company.scouts.*') || (request()->routeIs('company.threads.*') && !empty($scout))) ? 'active' : '' }}">
                 スカウト
                 @if($scoutUnread > 0)
                     <span class="badge">{{ $scoutUnread }}</span>
