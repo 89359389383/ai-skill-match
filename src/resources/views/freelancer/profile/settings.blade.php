@@ -229,12 +229,12 @@
     <style>
         /* 元の settings.css をそのまま保持します（ヘッダーは共通レイアウトに移動） */
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;
+            --header-height-mobile: 72px;
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;        /* md */
+            --header-height-lg: 72px;        /* lg */
+            --header-height-xl: 72px;        /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
         }
@@ -272,8 +272,8 @@
         }
 
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
+            --header-height: 72px;
+            --header-height-mobile: 72px;
             --container-max-width: 1600px;
             --main-padding: 3rem;
             --sidebar-width: 320px;
@@ -432,6 +432,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.5rem;
+            /* 左カラム(表示名)のエラーメッセージで行の高さが増えても、
+               右カラム(職種)が同じ高さに引き伸ばされないようにする */
+            align-items: start;
         }
         .row {
             display: grid;

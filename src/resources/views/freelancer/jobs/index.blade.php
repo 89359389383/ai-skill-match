@@ -228,12 +228,12 @@
     </style>
     <style>
         :root {
-            --header-height: 104px;       /* 80px * 1.3 */
-            --header-height-mobile: 91px; /* 70px * 1.3 */
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;       /* 80px * 1.3 */
+            --header-height-mobile: 72px; /* 70px * 1.3 */
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;        /* md */
+            --header-height-lg: 72px;        /* lg */
+            --header-height-xl: 72px;        /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
             --container-max-width: 1600px;

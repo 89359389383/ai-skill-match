@@ -1,7 +1,7 @@
 <style>
     :root {
-        --header-height: 104px;
-        --header-height-mobile: 91px;
+        --header-height: 72px;
+        --header-height-mobile: 72px;
         --header-height-current: var(--header-height-mobile);
         --header-padding-x: 1rem;
     }
@@ -204,8 +204,8 @@
 </style>
 <style>
     :root {
-        --header-height: 104px;
-        --header-height-mobile: 91px;
+        --header-height: 72px;
+        --header-height-mobile: 72px;
         --header-height-current: var(--header-height-mobile);
         --header-padding-x: 1rem;
     }

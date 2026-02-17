@@ -229,12 +229,12 @@
     <style>
         /* 元のページ内スタイル（そのまま保持） */
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;
+            --header-height-mobile: 72px;
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;        /* md */
+            --header-height-lg: 72px;        /* lg */
+            --header-height-xl: 72px;        /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
         }
@@ -272,8 +272,8 @@
         }
 
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
+            --header-height: 72px;
+            --header-height-mobile: 72px;
             --bg: #f6f8fb;
             --surface: #ffffff;
             --surface-2: #fbfcfe;

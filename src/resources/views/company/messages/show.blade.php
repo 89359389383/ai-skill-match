@@ -7,12 +7,12 @@
     @include('partials.company-header-style')
     <style>
         :root {
-            --header-height: 104px;           /* md 基本高さ */
-            --header-height-mobile: 91px;     /* xs / mobile */
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;           /* md 基本高さ */
+            --header-height-mobile: 72px;     /* xs / mobile */
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;        /* md */
+            --header-height-lg: 72px;        /* lg */
+            --header-height-xl: 72px;        /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
 
@@ -375,11 +375,6 @@
 
         .bubble-row { display: flex; align-items: flex-end; gap: 0.75rem; }
         .bubble-row.me { justify-content: flex-end; }
-        .bubble-row.first-message {
-            justify-content: flex-end;
-            width: 100%;
-            margin-left: auto;
-        }
         .bubble {
             max-width: 74%;
             width: 80%;
@@ -397,30 +392,6 @@
             border-color: #cfe4ff;
             width: 80%;
             padding: 20px;
-        }
-        .bubble.first-message {
-            max-width: 74%;
-            width: 80%;
-            padding: 20px;
-            border-radius: 16px;
-            border-color: #cfe4ff;
-            background: linear-gradient(180deg, rgba(241,248,255,0.98) 0%, rgba(236,246,255,0.98) 100%);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-        }
-        .bubble.first-message::before {
-            display: none;
-            content: "";
-        }
-        .bubble.first-message p {
-            color: var(--text);
-            font-size: 0.95rem;
-            line-height: 1.7;
-            white-space: pre-wrap;
-        }
-        .bubble.first-message small {
-            color: var(--muted);
-            font-weight: 800;
         }
         .bubble p { color: var(--text); font-size: 0.95rem; line-height: 1.7; white-space: pre-wrap; }
         .bubble small {
@@ -554,49 +525,28 @@
                 @forelse($activeMessages as $message)
                     @php
                         $isMe = $message->sender_type === 'company';
-                        $isFirst = $loop->first;
                         $sentAt = $message->sent_at ? $message->sent_at->format('Y/m/d H:i') : '';
                         $isLatest = $latestMessage && $latestMessage->id === $message->id;
                         $canDelete = $isMe && $isLatest;
                     @endphp
 
-                    @if($isFirst)
-                        <div class="bubble-row first-message {{ $isMe ? 'me' : '' }}">
-                            <div class="bubble first-message">
-                                <p>{{ $message->body }}</p>
-                                <small>
-                                    {{ $sentAt }}
-                                    @if($canDelete)
-                                        <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
-                                            </form>
-                                        </span>
-                                    @endif
-                                </small>
-                            </div>
+                    <div class="bubble-row {{ $isMe ? 'me' : '' }}">
+                        <div class="bubble {{ $isMe ? 'me' : '' }}">
+                            <p>{{ $message->body }}</p>
+                            <small>
+                                {{ $sentAt }}
+                                @if($canDelete)
+                                    <span style="margin-left:0.75rem;">
+                                        <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
+                                        </form>
+                                    </span>
+                                @endif
+                            </small>
                         </div>
-                    @else
-                        <div class="bubble-row {{ $isMe ? 'me' : '' }}">
-                            <div class="bubble {{ $isMe ? 'me' : '' }}">
-                                <p>{{ $message->body }}</p>
-                                <small>
-                                    {{ $sentAt }}
-                                    @if($canDelete)
-                                        <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('company.messages.destroy', ['message' => $message]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
-                                            </form>
-                                        </span>
-                                    @endif
-                                </small>
-                            </div>
-                        </div>
-                    @endif
+                    </div>
                 @empty
                     <div style="text-align: center; padding: 2rem; color: #6a737d;">
                         <p>メッセージがありません。</p>
@@ -606,7 +556,7 @@
 
             <form class="composer" method="POST" action="{{ route('company.threads.messages.store', ['thread' => $thread]) }}" id="messageForm">
                 @csrf
-                <textarea class="input @error('content') is-invalid @enderror" id="messageInput" name="content" placeholder="メッセージを入力（クローズ時は送信不可）" aria-label="メッセージ入力"></textarea>
+                <textarea class="input @error('content') is-invalid @enderror" id="messageInput" name="content" placeholder="メッセージを入力" aria-label="メッセージ入力"></textarea>
                 @error('content')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
@@ -633,17 +583,7 @@
         (function () {
             const status = document.getElementById('statusSelect');
             const statusForm = document.getElementById('statusForm');
-            const input = document.getElementById('messageInput');
-            const btn = document.getElementById('sendBtn');
-            if (!status || !input || !btn) return;
-
-            const apply = () => {
-                const closed = status.value === '2';
-                input.disabled = closed;
-                btn.disabled = closed;
-                btn.style.opacity = closed ? '0.5' : '1';
-                btn.style.pointerEvents = closed ? 'none' : 'auto';
-            };
+            if (!status) return;
             
             // ステータス変更時に自動送信
             if (statusForm) {
@@ -651,8 +591,6 @@
                     statusForm.submit();
                 });
             }
-            
-            apply();
         })();
     </script>
     <script>

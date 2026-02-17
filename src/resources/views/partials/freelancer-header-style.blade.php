@@ -1,11 +1,11 @@
 <style>
     :root {
-        --header-height: 104px;
-        --header-height-mobile: 91px;
-        --header-height-sm: 96px;
-        --header-height-md: 104px;
-        --header-height-lg: 112px;
-        --header-height-xl: 120px;
+        --header-height: 72px;
+        --header-height-mobile: 72px;
+        --header-height-sm: 72px;
+        --header-height-md: 72px;
+        --header-height-lg: 72px;
+        --header-height-xl: 72px;
         --header-height-current: var(--header-height-mobile);
         --header-padding-x: 1rem;
     }

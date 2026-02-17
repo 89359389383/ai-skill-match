@@ -7,8 +7,8 @@
     {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
+            --header-height: 72px;
+            --header-height-mobile: 72px;
         }
         .header {
             background-color: #ffffff;

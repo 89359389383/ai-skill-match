@@ -229,12 +229,12 @@
     <style>
         /* 元のスカウト詳細ページのスタイルをそのまま保持します */
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;
+            --header-height-mobile: 72px;
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;        /* md */
+            --header-height-lg: 72px;        /* lg */
+            --header-height-xl: 72px;        /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
         }
@@ -272,8 +272,8 @@
         }
 
         :root {
-            --header-height: 104px;
-            --header-height-mobile: 91px;
+            --header-height: 72px;
+            --header-height-mobile: 72px;
             --bg: #f6f8fb;
             --surface: #ffffff;
             --surface-2: #fbfcfe;
@@ -396,6 +396,7 @@
         }
         .bubble-row { display: flex; align-items: flex-end; gap: 0.75rem; }
         .bubble-row.me { justify-content: flex-end; }
+        .bubble-row.is-first { margin-top: 0.85rem; }
         .bubble-row.first-message {
             /* 固定表示を解除：他のメッセージと同様のフローにする */
             justify-content: flex-end;
@@ -645,33 +646,23 @@
                         $isLatest = $loop->last;
                         $canDelete = $isMe && $message->sender_type === 'freelancer';
                     @endphp
-                    @if($isFirst)
-                        <div class="bubble-row first-message">
-                            <div class="bubble first-message">
-                                <p>{{ $message->body }}</p>
-                                <small>{{ $sentAt }}</small>
-                            </div>
+                    <div class="bubble-row {{ $isMe ? 'me' : '' }} {{ $isFirst ? 'is-first' : '' }}">
+                        <div class="bubble {{ $isMe ? 'me' : '' }}">
+                            <p>{{ $message->body }}</p>
+                            <small>
+                                {{ $sentAt }}
+                                @if($canDelete && $isLatest)
+                                    <span style="margin-left:0.75rem;">
+                                        <form action="{{ route('freelancer.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
+                                        </form>
+                                    </span>
+                                @endif
+                            </small>
                         </div>
-                    @endif
-                    @if(!$isFirst)
-                        <div class="bubble-row {{ $isMe ? 'me' : '' }}">
-                            <div class="bubble {{ $isMe ? 'me' : '' }}">
-                                <p>{{ $message->body }}</p>
-                                <small>
-                                    {{ $sentAt }}
-                                    @if($canDelete && $isLatest)
-                                        <span style="margin-left:0.75rem;">
-                                            <form action="{{ route('freelancer.messages.destroy', ['message' => $message->id]) }}" method="POST" style="display:inline;" class="delete-form" data-message-id="{{ $message->id }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="delete-trigger" style="background:none;border:none;color:#d73a49;font-weight:900;cursor:pointer;">削除</button>
-                                            </form>
-                                        </span>
-                                    @endif
-                                </small>
-                            </div>
-                        </div>
-                    @endif
+                    </div>
                 @empty
                     <div style="text-align: center; padding: 2rem; color: #6a737d;">
                         <p>メッセージがありません。</p>

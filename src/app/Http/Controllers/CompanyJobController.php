@@ -35,6 +35,23 @@ class CompanyJobController extends Controller
         // フィルタ用のクエリを取得する（status/keyword は任意）
         $status = $request->query('status');
         $keyword = $request->query('keyword');
+        // 報酬（万）の検索レンジ（GETクエリ）
+        $rewardMinRaw = $request->query('reward_min');
+        $rewardMaxRaw = $request->query('reward_max');
+
+        // フォームからは「万」単位で受け取る -> サーバ側では円に変換して比較する
+        $rewardMinWan = (is_numeric($rewardMinRaw) ? (int)$rewardMinRaw : null);
+        $rewardMaxWan = (is_numeric($rewardMaxRaw) ? (int)$rewardMaxRaw : null);
+
+        // 両方入っている時だけレンジとして扱う（サーバ側でも安全に）
+        if ($rewardMinWan !== null && $rewardMaxWan !== null && $rewardMinWan > $rewardMaxWan) {
+            // 下限/上限が逆なら入れ替える（ユーザー入力ミス耐性）
+            [$rewardMinWan, $rewardMaxWan] = [$rewardMaxWan, $rewardMinWan];
+        }
+
+        // 万 -> 円 に変換（DBの単位が円のため）
+        $rewardMin = ($rewardMinWan !== null ? $rewardMinWan * 10000 : null);
+        $rewardMax = ($rewardMaxWan !== null ? $rewardMaxWan * 10000 : null);
 
         // 自社案件のみ対象にする
         $query = Job::query()->where('company_id', $company->id);
@@ -70,6 +87,23 @@ class CompanyJobController extends Controller
             });
         }
 
+        // 報酬検索（端を含む「重なり」判定 / 片側入力にも対応）
+        // - 条件（両方指定）: job_max >= rewardMin かつ job_min <= rewardMax
+        // - 片側指定:
+        //   - 下限のみ: job_max >= rewardMin
+        //   - 上限のみ: job_min <= rewardMax
+        $hasRewardFilter = ($rewardMin !== null || $rewardMax !== null);
+        if ($hasRewardFilter) {
+            if ($rewardMin !== null && $rewardMax !== null) {
+                $query->where('max_rate', '>=', $rewardMin)
+                    ->where('min_rate', '<=', $rewardMax);
+            } elseif ($rewardMin !== null) {
+                $query->where('max_rate', '>=', $rewardMin);
+            } else { // $rewardMax !== null
+                $query->where('min_rate', '<=', $rewardMax);
+            }
+        }
+
         // 自社案件一覧をページングして取得する
         $jobs = $query->orderByDesc('id')->paginate(20)->withQueryString();
 
@@ -103,6 +137,9 @@ class CompanyJobController extends Controller
             'status' => $status,
             // フィルタ保持用
             'keyword' => $keyword,
+            // 報酬レンジを保持する
+            'rewardMin' => $rewardMinRaw,
+            'rewardMax' => $rewardMaxRaw,
             // 企業情報
             'company' => $company,
             // ヘッダー用未読数

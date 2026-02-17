@@ -7,12 +7,12 @@
     @include('partials.company-header-style')
     <style>
         :root {
-            --header-height: 104px;           /* md 基本高さ */
-            --header-height-mobile: 91px;     /* xs / mobile */
-            --header-height-sm: 96px;         /* sm */
-            --header-height-md: 104px;        /* md */
-            --header-height-lg: 112px;        /* lg */
-            --header-height-xl: 120px;        /* xl */
+            --header-height: 72px;           /* md 基本高さ */
+            --header-height-mobile: 72px;     /* xs / mobile */
+            --header-height-sm: 72px;         /* sm */
+            --header-height-md: 72px;         /* md */
+            --header-height-lg: 72px;         /* lg */
+            --header-height-xl: 72px;         /* xl */
             --header-height-current: var(--header-height-mobile);
             --header-padding-x: 1rem;
         }
@@ -329,6 +329,31 @@
         .btn-danger { background-color: #d73a49; color: #fff; font-size: 20px; padding: 15px 60px; max-height: 60px; }
         .btn-danger:hover { background-color: #c62f3c; transform: translateY(-1px); }
 
+        /* Search: reward range inputs (円) */
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+        .input-group .input {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .unit {
+            font-weight: 800;
+            color: #6a737d;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            padding-left: 0.25rem;
+        }
+        .range-sep {
+            font-weight: 900;
+            color: #6a737d;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
         .page-title {
             font-size: 2rem;
             font-weight: 900;
@@ -628,10 +653,42 @@
                         <label for="keyword">キーワード</label>
                         <input id="keyword" name="keyword" class="input" type="text" placeholder="タイトル / 概要 / スキル など" value="{{ old('keyword', $keyword ?? '') }}">
                     </div>
+                    <div class="field">
+                        <label for="reward_min">報酬</label>
+                        <div class="input-group" aria-label="報酬（下限〜上限）">
+                            <div class="input-group" style="flex: 1 1 0;">
+                                <input
+                                    id="reward_min"
+                                    name="reward_min"
+                                    class="input"
+                                    type="number"
+                                    inputmode="numeric"
+                                    min="0"
+                                    step="1"
+                                    placeholder="下限"
+                                    value="{{ old('reward_min', $rewardMin ?? '') }}"
+                                >
+                                <span class="unit">万</span>
+                            </div>
+                            <span class="range-sep">〜</span>
+                            <div class="input-group" style="flex: 1 1 0;">
+                                <input
+                                    id="reward_max"
+                                    name="reward_max"
+                                    class="input"
+                                    type="number"
+                                    inputmode="numeric"
+                                    min="0"
+                                    step="1"
+                                    placeholder="上限"
+                                    value="{{ old('reward_max', $rewardMax ?? '') }}"
+                                >
+                                <span class="unit">万</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn btn-primary w-full" type="submit">検索</button>
-                    @if(isset($keyword) && $keyword !== '')
-                        <a href="{{ route('company.jobs.index') }}" class="btn btn-secondary w-full mt-2" style="display: block; text-align: center;">リセット</a>
-                    @endif
+                    <button class="btn btn-secondary w-full mt-2" type="button" onclick="window.location='{{ route('company.jobs.index') }}'">クリア</button>
                 </form>
             </div>
         </aside>
