@@ -522,6 +522,34 @@
         .btn-secondary { background-color: #586069; color: white; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
 
+        .btn-outline {
+            background-color: transparent;
+            color: #0366d6;
+            border: 2px solid #0366d6;
+            padding: 8px 14px;
+            font-size: 16px;
+        }
+        .btn-outline:hover {
+            background-color: #f1f8ff;
+            color: #0256cc;
+            border-color: #0256cc;
+        }
+
+        .skills-container {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .skill-input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 768px) {
+            .skill-input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -725,21 +753,39 @@
                     </div>
 
                     <div class="row">
-                        <div class="label">スキル（カンマ区切りで複数入力）</div>
+                        <div class="label">スキル（1つ以上推奨・複数入力）</div>
+                        <div class="help">複数入力できます。</div>
                         @php
-                            $skillNames = [];
-                            if (isset($freelancer) && $freelancer) {
-                                if ($freelancer->skills) {
-                                    $skillNames = array_merge($skillNames, $freelancer->skills->pluck('name')->toArray());
-                                }
-                                if ($freelancer->customSkills) {
-                                    $skillNames = array_merge($skillNames, $freelancer->customSkills->pluck('name')->toArray());
+                            $skillsInvalid = $errors->has('custom_skills');
+                            $customSkillValues = old('custom_skills');
+                            if (!is_array($customSkillValues)) {
+                                $customSkillValues = [];
+                                if (isset($freelancer) && $freelancer && $freelancer->customSkills) {
+                                    $customSkillValues = $freelancer->customSkills->pluck('name')->toArray();
                                 }
                             }
-                            $skillInputValue = old('skills', implode(', ', $skillNames));
+                            $minSlots = 4;
+                            if (count($customSkillValues) < $minSlots) {
+                                $customSkillValues = array_pad($customSkillValues, $minSlots, null);
+                            }
                         @endphp
-                        <input class="input @error('skills') is-invalid @enderror" id="skills" name="skills" type="text" value="{{ $skillInputValue }}" placeholder="例: PHP, Laravel, JavaScript">
-                        @error('skills')
+
+                        <div class="skills-container" id="skills-container">
+                            @for($i = 0; $i < count($customSkillValues); $i += 2)
+                                <div class="skill-input-row">
+                                    <input class="input skill-input {{ $skillsInvalid ? 'is-invalid' : '' }}" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i] ?? '' }}" placeholder="例: Laravel">
+                                    <input class="input skill-input" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i + 1] ?? '' }}" placeholder="例: Vue.js">
+                                </div>
+                            @endfor
+                        </div>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.75rem;">
+                            <button type="button" class="btn btn-outline" id="add-skill-btn">追加する</button>
+                            <button type="button" class="btn btn-outline" id="remove-skill-btn" aria-label="スキル入力欄を減らす">×</button>
+                        </div>
+                        @error('custom_skills')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        @error('custom_skills.*')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
@@ -892,13 +938,16 @@
         (function () {
             const displayName = document.getElementById('display_name');
             const jobTitle = document.getElementById('job_title');
-            const skills = document.getElementById('skills');
             const minRate = document.getElementById('min_rate');
             const maxRate = document.getElementById('max_rate');
             const minHours = document.getElementById('min_hours_per_week');
             const maxHours = document.getElementById('max_hours_per_week');
             const hoursPerDay = document.getElementById('hours_per_day');
             const daysPerWeek = document.getElementById('days_per_week');
+            const addSkillBtn = document.getElementById('add-skill-btn');
+            const removeSkillBtn = document.getElementById('remove-skill-btn');
+            const skillsContainer = document.getElementById('skills-container');
+            const MIN_SKILL_SLOTS = 4;
 
             const previewName = document.getElementById('preview-name');
             const previewHeadline = document.getElementById('preview-headline');
@@ -907,6 +956,17 @@
             const previewHours = document.getElementById('preview-hours');
             const previewDays = document.getElementById('preview-days');
 
+            function getSkillSlotCount() {
+                return document.querySelectorAll('input[name="custom_skills[]"]').length;
+            }
+
+            function syncRemoveButton() {
+                if (!removeSkillBtn) return;
+                const canRemove = getSkillSlotCount() > MIN_SKILL_SLOTS;
+                removeSkillBtn.disabled = !canRemove;
+                removeSkillBtn.setAttribute('aria-disabled', String(!canRemove));
+            }
+
             function updatePreview() {
                 if (displayName && previewName) {
                     previewName.textContent = displayName.value || '未入力';
@@ -914,18 +974,17 @@
                 if (jobTitle && previewHeadline) {
                     previewHeadline.textContent = jobTitle.value || '未入力';
                 }
-                if (skills && previewSkills) {
-                    const skillText = skills.value;
+                if (previewSkills) {
                     previewSkills.innerHTML = '';
-                    if (skillText.trim()) {
-                        const skillArray = skillText.split(',').map(s => s.trim()).filter(s => s);
-                        skillArray.forEach(skill => {
-                            const tag = document.createElement('span');
-                            tag.className = 'skill-tag';
-                            tag.textContent = skill;
-                            previewSkills.appendChild(tag);
-                        });
-                    }
+                    const skillInputs = document.querySelectorAll('input[name="custom_skills[]"]');
+                    skillInputs.forEach(input => {
+                        const value = (input.value || '').trim();
+                        if (!value) return;
+                        const tag = document.createElement('span');
+                        tag.className = 'skill-tag';
+                        tag.textContent = value;
+                        previewSkills.appendChild(tag);
+                    });
                 }
                 if (minRate && maxRate && previewRate) {
                     const min = minRate.value;
@@ -963,12 +1022,79 @@
             }
 
             // イベントリスナーを追加
-            [displayName, jobTitle, skills, minRate, maxRate, minHours, maxHours, hoursPerDay, daysPerWeek].forEach(el => {
+            [displayName, jobTitle, minRate, maxRate, minHours, maxHours, hoursPerDay, daysPerWeek].forEach(el => {
                 if (el) el.addEventListener('input', updatePreview);
+            });
+
+            // スキル入力欄追加機能（corporate/settings と同様）
+            if (addSkillBtn && skillsContainer) {
+                addSkillBtn.addEventListener('click', function() {
+                    const lastRow = skillsContainer.lastElementChild;
+                    const inputsInLastRow = lastRow ? lastRow.querySelectorAll('.skill-input') : [];
+
+                    if (lastRow && inputsInLastRow.length < 2) {
+                        const newInput = document.createElement('input');
+                        newInput.className = 'input skill-input';
+                        newInput.name = 'custom_skills[]';
+                        newInput.type = 'text';
+                        newInput.placeholder = '例: スキル名';
+                        lastRow.appendChild(newInput);
+                        newInput.addEventListener('input', updatePreview);
+                        newInput.addEventListener('change', updatePreview);
+                    } else {
+                        const newRow = document.createElement('div');
+                        newRow.className = 'skill-input-row';
+
+                        const newInput = document.createElement('input');
+                        newInput.className = 'input skill-input';
+                        newInput.name = 'custom_skills[]';
+                        newInput.type = 'text';
+                        newInput.placeholder = '例: スキル名';
+                        newRow.appendChild(newInput);
+                        skillsContainer.appendChild(newRow);
+
+                        newInput.addEventListener('input', updatePreview);
+                        newInput.addEventListener('change', updatePreview);
+                    }
+                    syncRemoveButton();
+                });
+            }
+
+            // スキル入力欄削除（×ボタンは1つ、最小4つ）
+            if (removeSkillBtn && skillsContainer) {
+                removeSkillBtn.addEventListener('click', function () {
+                    if (getSkillSlotCount() <= MIN_SKILL_SLOTS) {
+                        syncRemoveButton();
+                        return;
+                    }
+
+                    const inputs = skillsContainer.querySelectorAll('input[name="custom_skills[]"]');
+                    const lastInput = inputs[inputs.length - 1];
+                    if (!lastInput) return;
+
+                    const row = lastInput.closest('.skill-input-row');
+                    lastInput.remove();
+
+                    if (row) {
+                        const remaining = row.querySelectorAll('input[name="custom_skills[]"]').length;
+                        if (remaining === 0) row.remove();
+                    }
+
+                    updatePreview();
+                    syncRemoveButton();
+                });
+            }
+
+            // 既存スキル入力にもプレビュー更新を紐づけ
+            const skillInputs = document.querySelectorAll('input[name="custom_skills[]"]');
+            skillInputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
             });
 
             // 初期表示
             updatePreview();
+            syncRemoveButton();
         })();
     </script>
 </body>
