@@ -7,6 +7,22 @@
 
 ---
 
+# 0. 共通部品（ログイン不要画面）
+
+**`layouts/public.blade.php`**
+
+ログイン不要画面用の共通レイアウト（Tailwind CDN / body / header / footer / @yield）。
+
+**`partials/public-header.blade.php`**
+
+ログイン不要画面用の共通ヘッダー（提供HTMLを部品化）。
+
+**`partials/public-footer.blade.php`**
+
+ログイン不要画面用の共通フッター（提供HTMLを部品化）。
+
+---
+
 # ① トップページ
 
 **`top/index.blade.php`**

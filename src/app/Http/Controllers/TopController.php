@@ -15,8 +15,7 @@ class TopController extends Controller
      */
     public function index(Request $request)
     {
-        // 将来: view('top.index') を作ったらここを差し替える
-        return view('welcome');
+        return view('top.index');
     }
 }
 
