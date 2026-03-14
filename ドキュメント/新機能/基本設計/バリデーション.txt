@@ -1,0 +1,133 @@
+# 新機能：バリデーション（FormRequest）
+
+`src/app/Http/Requests` に新機能用の FormRequest を追加し、
+Controller では `$request->validated()` を使う方針に統一する。
+
+---
+
+## ① スキル出品
+
+### StoreSkillListingRequest.php（スキル出品登録）
+
+**対象画面**
+- スキル出品画面
+
+**フォーム**
+- タイトル
+    - ルール：`required | string | max:100`
+- 説明
+    - ルール：`required | string`
+- 価格
+    - ルール：`required | integer | min:0`
+- 価格タイプ
+    - ルール：`nullable | in:fixed,hourly`
+- サムネイルURL
+    - ルール：`nullable | url`
+- 目安納期（日）
+    - ルール：`nullable | integer | min:1`
+- スキルID（複数）
+    - ルール：`nullable | array`
+    - 各要素：`integer | exists:skills,id`
+- 添付（画像/ファイル）
+    - ルール：`nullable | array`
+    - type：`nullable | in:image,file`
+    - url：`required_with:assets | string`
+
+🔹理由
+- 出品は「一覧/詳細」に即反映されるため、最低限の型・範囲を保証する。
+
+---
+
+## ② 記事
+
+### StoreArticleRequest.php（記事投稿）
+
+**対象画面**
+- 記事投稿画面
+
+**フォーム**
+- タイトル
+    - ルール：`required | string | max:255`
+- 概要
+    - ルール：`required | string | max:200`
+- カテゴリー
+    - ルール：`required | string | max:50`
+- アイキャッチ画像URL
+    - ルール：`nullable | url`
+- 記事構造（大項目/中項目）
+    - ルール：`nullable | array`
+- タグ
+    - ルール：`nullable | array`
+    - 各要素：`string | max:50`
+
+🔹理由
+- 記事は「一覧検索」「詳細表示」で使うため、必須項目と最大長を固定する。
+
+---
+
+### UpdateArticleRequest.php（投稿記事更新）
+
+**対象画面**
+- 投稿記事編集画面
+
+**フォーム**
+- StoreArticleRequest と同等
+- タグのみ：`max:5`
+
+🔹理由
+- UI側のタグチップ表示の破綻防止（上限を固定）。
+
+---
+
+## ③ 質問
+
+### StoreQuestionRequest.php（質問投稿）
+
+**対象画面**
+- 質問投稿画面
+
+**フォーム**
+- タイトル
+    - ルール：`required | string | max:255`
+- 本文
+    - ルール：`required | string`
+- カテゴリー
+    - ルール：`nullable | string | max:50`
+- タグ
+    - ルール：`nullable | array`
+    - 各要素：`string | max:50`
+
+🔹理由
+- 質問詳細の表示・検索の基礎となるため、必須項目を固定する。
+
+---
+
+### StoreAnswerRequest.php（回答投稿）
+
+**対象画面**
+- 質問詳細画面（回答投稿フォーム）
+
+**フォーム**
+- 回答本文
+    - ルール：`required | string | max:5000`
+
+🔹理由
+- 空回答を禁止しつつ、長文でも投稿できる上限を確保。
+
+---
+
+## ④ スキル問い合わせ
+
+### SkillInquiryRequest.php（問い合わせ送信）
+
+**対象画面**
+- スキル販売詳細（問い合わせフォーム想定）
+
+**フォーム**
+- 問い合わせ本文
+    - ルール：`required | string | max:2000`
+
+🔹理由
+- 空送信を防止し、将来DB保存/チャット連携の際も安全に扱えるようにする。
+
+

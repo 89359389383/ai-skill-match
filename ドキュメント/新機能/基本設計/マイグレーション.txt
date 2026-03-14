@@ -1,0 +1,319 @@
+# 新機能：マイグレーション（基本設計）
+
+※方針（重要）
+- 新規テーブル：新規マイグレーションファイルを作成
+- 既存テーブルの新規カラム：**別マイグレーションを作らず**、既存の `create_xxx_table.php` へ追記（今回は該当なし）
+
+---
+
+# ① skill_listings（スキル出品）
+
+```php
+<?php
+
+class CreateSkillListingsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('skill_listings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('freelancer_id')->constrained('freelancers')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('description');
+            $table->unsignedInteger('price');
+            $table->enum('pricing_type', ['fixed', 'hourly'])->default('fixed');
+            $table->string('thumbnail_url')->nullable();
+            $table->unsignedTinyInteger('status')->default(0);
+            $table->unsignedSmallInteger('delivery_days')->nullable();
+            $table->unsignedSmallInteger('reviews_count')->default(0);
+            $table->decimal('rating_average', 2, 1)->default(0);
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ② skill_listing_skill（スキル出品 × 共通スキル）
+
+```php
+<?php
+
+class CreateSkillListingSkillTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('skill_listing_skill', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_listing_id')->constrained('skill_listings')->cascadeOnDelete();
+            $table->foreignId('skill_id')->constrained('skills')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['skill_listing_id', 'skill_id']);
+        });
+    }
+}
+```
+
+---
+
+# ③ skill_listing_assets（出品画像/添付ファイル）
+
+```php
+<?php
+
+class CreateSkillListingAssetsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('skill_listing_assets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_listing_id')->constrained('skill_listings')->cascadeOnDelete();
+            $table->enum('type', ['image', 'file'])->default('image');
+            $table->string('url');
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ④ skill_orders（スキル購入）
+
+```php
+<?php
+
+class CreateSkillOrdersTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('skill_orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_listing_id')->constrained('skill_listings')->cascadeOnDelete();
+            $table->foreignId('buyer_user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedInteger('amount');
+            $table->enum('status', ['pending', 'paid', 'cancelled'])->default('pending');
+            $table->timestamp('purchased_at')->nullable();
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ⑤ skill_reviews（購入者レビュー）
+
+```php
+<?php
+
+class CreateSkillReviewsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('skill_reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_listing_id')->constrained('skill_listings')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedTinyInteger('rating');
+            $table->text('body')->nullable();
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ⑥ tags（記事/質問 共通タグ）
+
+```php
+<?php
+
+class CreateTagsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('tags', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ⑦ articles（記事）
+
+```php
+<?php
+
+class CreateArticlesTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('articles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->string('excerpt', 200);
+            $table->string('category');
+            $table->string('eyecatch_image_url')->nullable();
+            $table->json('structure')->nullable(); // 大項目/中項目の階層構造
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamp('published_at')->nullable();
+            $table->unsignedInteger('views_count')->default(0);
+            $table->unsignedInteger('likes_count')->default(0);
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ⑧ article_tag（記事 × タグ）
+
+```php
+<?php
+
+class CreateArticleTagTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('article_tag', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('article_id')->constrained('articles')->cascadeOnDelete();
+            $table->foreignId('tag_id')->constrained('tags')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['article_id', 'tag_id']);
+        });
+    }
+}
+```
+
+---
+
+# ⑨ article_likes（記事いいね）
+
+```php
+<?php
+
+class CreateArticleLikesTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('article_likes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('article_id')->constrained('articles')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['article_id', 'user_id']);
+        });
+    }
+}
+```
+
+---
+
+# ⑩ article_bookmarks（記事ブックマーク）
+
+```php
+<?php
+
+class CreateArticleBookmarksTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('article_bookmarks', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('article_id')->constrained('articles')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['article_id', 'user_id']);
+        });
+    }
+}
+```
+
+---
+
+# ⑪ questions（質問）
+
+```php
+<?php
+
+class CreateQuestionsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('questions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('content');
+            $table->string('category')->default('すべて');
+            $table->boolean('is_resolved')->default(false);
+            $table->text('ai_answer')->nullable();
+            $table->unsignedInteger('views_count')->default(0);
+            $table->unsignedInteger('answers_count')->default(0);
+            $table->unsignedBigInteger('accepted_answer_id')->nullable();
+            $table->timestamps();
+        });
+    }
+}
+```
+
+---
+
+# ⑫ question_tag（質問 × タグ）
+
+```php
+<?php
+
+class CreateQuestionTagTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('question_tag', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('question_id')->constrained('questions')->cascadeOnDelete();
+            $table->foreignId('tag_id')->constrained('tags')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['question_id', 'tag_id']);
+        });
+    }
+}
+```
+
+---
+
+# ⑬ answers（質問への回答）
+
+```php
+<?php
+
+class CreateAnswersTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('answers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('question_id')->constrained('questions')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->text('content');
+            $table->boolean('is_accepted')->default(false);
+            $table->unsignedInteger('reactions_naruhodo')->default(0);
+            $table->unsignedInteger('reactions_soudane')->default(0);
+            $table->unsignedInteger('reactions_arigatou')->default(0);
+            $table->unsignedInteger('likes_count')->default(0);
+            $table->timestamps();
+        });
+    }
+}
+```
+

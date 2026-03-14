@@ -58,6 +58,8 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        // freelancer / company など、複数ガードのどれかでログインしていれば通す
+        'auth.any' => \App\Http\Middleware\EnsureAuthenticatedAnyGuard::class,
         // フリーランスのみアクセス可能にする（role='freelancer'を想定）
         'freelancer' => \App\Http\Middleware\EnsureFreelancerRole::class,
         // 企業のみアクセス可能にする（role='company'を想定）

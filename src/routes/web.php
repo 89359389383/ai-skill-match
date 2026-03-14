@@ -14,6 +14,15 @@ use App\Http\Controllers\CompanyJobController;
 use App\Http\Controllers\ScoutController;
 use App\Http\Controllers\CompanyApplicationController;
 use App\Http\Controllers\CompanyMessageController;
+use App\Http\Controllers\TopController;
+use App\Http\Controllers\SkillListingController;
+use App\Http\Controllers\SkillOrderController;
+use App\Http\Controllers\SkillInquiryController;
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\MyArticleController;
+use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\AnswerController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +38,42 @@ use App\Http\Controllers\CompanyMessageController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// =========================
+// 新機能（トップ / スキル / 記事 / 質問 / プロフィール）
+// ※ Controller を実装し、ビューは存在する場合のみ利用（無ければ welcome へフォールバック）
+// =========================
+
+// トップページ
+Route::get('/top', [TopController::class, 'index'])->name('top');
+
+// スキル（販売一覧/詳細：閲覧はログイン不要）
+Route::get('/skills', [SkillListingController::class, 'index'])->name('skills.index');
+
+Route::get('/skills/{skill_listing}', [SkillListingController::class, 'show'])
+    ->whereNumber('skill_listing')
+    ->name('skills.show');
+
+// 記事（一覧/詳細：閲覧はログイン不要）
+Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+
+Route::get('/articles/{article}', [ArticleController::class, 'show'])
+    ->whereNumber('article')
+    ->name('articles.show');
+
+// 質問（一覧/詳細：閲覧はログイン不要）
+Route::get('/questions', [QuestionController::class, 'index'])->name('questions.index');
+
+Route::get('/questions/{question}', [QuestionController::class, 'show'])
+    ->whereNumber('question')
+    ->name('questions.show');
+
+// プロフィール（一覧/詳細：閲覧はログイン不要）
+Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.index');
+
+Route::get('/profiles/{user}', [ProfileController::class, 'show'])
+    ->whereNumber('user')
+    ->name('profiles.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -112,6 +157,10 @@ Route::middleware(['auth:freelancer', 'freelancer'])->group(function () {
 
     // スカウト一覧
     Route::get('/freelancer/scouts', [FreelancerScoutController::class, 'index'])->name('freelancer.scouts.index');
+
+    // スキル出品（フリーランスのみ）
+    Route::get('/skills/new', [SkillListingController::class, 'create'])->name('skills.create');
+    Route::post('/skills', [SkillListingController::class, 'store'])->name('skills.store');
 });
 
 Route::middleware(['auth:company', 'company'])->group(function () {
@@ -180,4 +229,35 @@ Route::middleware(['auth:company', 'company'])->group(function () {
 
     // 応募ステータス更新
     Route::patch('/company/threads/{thread}/application-status', [CompanyMessageController::class, 'updateApplicationStatus'])->name('company.threads.application-status.update');
+});
+
+// 記事投稿/質問投稿（ログイン必須：フリーランス/企業どちらでも可）
+Route::middleware(['auth.any:freelancer,company'])->group(function () {
+    // 記事投稿
+    Route::get('/articles/new', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+
+    // 投稿記事一覧/詳細/編集（投稿者本人チェックはController側で実装）
+    Route::get('/my-articles', [MyArticleController::class, 'index'])->name('my-articles.index');
+    Route::get('/my-articles/{article}', [MyArticleController::class, 'show'])->whereNumber('article')->name('my-articles.show');
+    Route::get('/my-articles/{article}/edit', [MyArticleController::class, 'edit'])->whereNumber('article')->name('my-articles.edit');
+    Route::match(['put', 'patch'], '/my-articles/{article}', [MyArticleController::class, 'update'])->whereNumber('article')->name('my-articles.update');
+
+    // 質問投稿
+    Route::get('/questions/new', [QuestionController::class, 'create'])->name('questions.create');
+    Route::post('/questions', [QuestionController::class, 'store'])->name('questions.store');
+
+    // 回答投稿（質問詳細から）
+    Route::post('/questions/{question}/answers', [AnswerController::class, 'store'])
+        ->whereNumber('question')
+        ->name('questions.answers.store');
+
+    // スキル購入/問い合わせ（将来想定：現時点はルートのみ）
+    Route::post('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'store'])
+        ->whereNumber('skill_listing')
+        ->name('skills.purchase');
+
+    Route::post('/skills/{skill_listing}/inquiry', [SkillInquiryController::class, 'store'])
+        ->whereNumber('skill_listing')
+        ->name('skills.inquiry');
 });
