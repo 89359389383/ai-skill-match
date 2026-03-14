@@ -1,0 +1,128 @@
+# 新機能：ビュー（基本設計）
+
+既存の `ドキュメント/基本設計/ビュー.txt` と同じ形式で、
+新機能で追加した画面のビューを整理する。
+
+※現時点は「中身は空」で作成（実装は次工程）
+
+---
+
+# ① トップページ
+
+**`top/index.blade.php`**
+
+トップページ表示（/top）。
+
+---
+
+# ② スキル販売一覧画面
+
+**`skills/index.blade.php`**
+
+スキル販売一覧（/skills）。
+
+---
+
+# ③ スキル販売詳細画面
+
+**`skills/show.blade.php`**
+
+スキル販売詳細（/skills/{id}）。
+
+---
+
+# ④ スキル出品画面
+
+**`skills/create.blade.php`**
+
+フリーランスがスキルを出品する入力画面（/skills/new）。
+
+---
+
+# ⑤ 記事一覧画面
+
+**`articles/index.blade.php`**
+
+記事一覧（/articles）。
+
+---
+
+# ⑥ 記事詳細画面
+
+**`articles/show.blade.php`**
+
+記事詳細（/articles/{id}）。
+
+---
+
+# ⑦ 記事投稿画面
+
+**`articles/create.blade.php`**
+
+記事投稿フォーム（/articles/new）※ログイン必須。
+
+---
+
+# ⑧ 投稿記事一覧画面
+
+**`my-articles/index.blade.php`**
+
+自分の投稿記事一覧（/my-articles）※ログイン必須。
+
+---
+
+# ⑨ 投稿記事詳細画面
+
+**`my-articles/show.blade.php`**
+
+自分の投稿記事詳細（/my-articles/{id}）※ログイン必須・本人のみ。
+
+---
+
+# ⑩ 投稿記事編集画面
+
+**`my-articles/edit.blade.php`**
+
+自分の投稿記事編集（/my-articles/{id}/edit）※ログイン必須・本人のみ。
+
+---
+
+# ⑪ 質問一覧画面
+
+**`questions/index.blade.php`**
+
+質問一覧（/questions）。
+
+---
+
+# ⑫ 質問詳細画面
+
+**`questions/show.blade.php`**
+
+質問詳細（/questions/{id}）。
+
+---
+
+# ⑬ 質問投稿画面
+
+**`questions/create.blade.php`**
+
+質問投稿フォーム（/questions/new）※ログイン必須。
+
+---
+
+# ⑭ プロフィール一覧画面
+
+**`profiles/index.blade.php`**
+
+プロフィール一覧（/profiles）。
+
+---
+
+# ⑮ プロフィール詳細画面
+
+**`profiles/show.blade.php`**
+
+プロフィール詳細（/profiles/{id}）。
+
+

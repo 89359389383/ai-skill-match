@@ -1,0 +1,254 @@
+# プロフィール一覧画面 機能要件
+
+## 概要
+AIスキルを持つフリーランス人材の一覧ページ。ログイン不要で閲覧可能。検索機能を備え、企業やクライアントが目的の人材を見つけやすくする。
+
+---
+
+## ① ヘッダーセクション
+
+### 目的
+- ページの目的を明確に伝える
+- 検索機能への導線
+
+### 表示項目
+- ページタイトル：「AIプロフェッショナル」
+  - **スタイル**: `text-4xl font-bold text-gray-900 mb-2`
+- サブタイトル：「経験豊富なAIスペシャリストと繋がろう」
+  - **スタイル**: `text-gray-600`
+- **マージン**: `mb-8`
+
+---
+
+## ② 検索セクション
+
+### 目的
+- ユーザーが目的の人材を効率的に検索できる
+
+### 表示項目
+
+#### 検索フォーム
+- **プレースホルダー**: 「名前、スキル、専門分野で検索...」
+- **アイコン**: Search (左端、`absolute left-4 top-1/2 transform -translate-y-1/2`)
+  - **スタイル**: `text-gray-400 w-5 h-5`
+- **入力欄スタイル**: 
+  - `w-full pl-12 pr-4 py-3`
+  - `border border-gray-300 rounded-xl`
+  - `focus:ring-2 focus:ring-orange-500 focus:border-transparent`
+  - `bg-white shadow-sm`
+
+### 操作
+- 検索フォーム入力時：リアルタイムでフィルタリング
+  - 名前（name）で部分一致検索
+  - 職種（role）で部分一致検索
+  - 自己紹介（bio）で部分一致検索
+- 大文字小文字を区別しない
+
+---
+
+## ③ プロフィール一覧グリッドセクション
+
+### 目的
+- フリーランス人材を視覚的に分かりやすく一覧表示
+
+### グリッドレイアウト
+- **デスクトップ（lg以上）**: `grid-cols-3` (3カラム)
+- **タブレット（md）**: `grid-cols-2` (2カラム)
+- **モバイル（sm以下）**: `grid-cols-1` (1カラム)
+- **ギャップ**: `gap-6`
+
+### プロフィールカード
+
+#### カード全体
+- **背景**: `bg-white`
+- **角丸**: `rounded-2xl`
+- **シャドウ**: `shadow-lg`
+- **ホバー**: `hover:shadow-2xl`
+- **トランジション**: `transition-all duration-300`
+- **ホバー移動**: `hover:-translate-y-2`
+- **オーバーフロー**: `overflow-hidden`
+
+#### ヘッダー部（グラデーション）
+- **高さ**: `h-24`
+- **背景グラデーション**: `bg-gradient-to-br from-orange-500 via-red-500 to-pink-500`
+
+#### プロフィールコンテンツ
+- **パディング**: `p-6`
+- **マージン**: `-mt-12` (アバターを上に重ねる)
+
+#### アバター画像
+- **サイズ**: `w-24 h-24`
+- **スタイル**: `rounded-full object-cover`
+- **ボーダー**: `border-4 border-white`
+- **シャドウ**: `shadow-lg`
+- **配置**: `mx-auto` (中央揃え)
+- **ホバー**: `group-hover:scale-110`
+- **トランジション**: `transition-transform duration-300`
+- **マージン**: `mb-4`
+
+#### 情報セクション
+- **テキスト整列**: `text-center`
+- **マージン**: `mb-4`
+
+##### 名前
+- **タイトル**: `h3` タグ
+- **スタイル**: `text-xl font-bold text-gray-900 mb-1`
+- **ホバー**: `group-hover:text-orange-600`
+- **トランジション**: `transition-colors`
+
+##### 職種
+- **ラベル**: 「職種: 」
+- **スタイル**: `text-sm text-gray-600 mb-2`
+
+##### 希望時給単価
+- **ラベル**: 「希望時給単価: 」
+- **スタイル**: `text-sm text-gray-700 font-semibold mb-3`
+- **金額部分**: `text-orange-600`
+
+##### 評価表示
+- **レイアウト**: `flex items-center justify-center gap-1`
+- **星アイコン**: Star (`w-4 h-4 text-yellow-400 fill-yellow-400`)
+- **評価値**: `font-semibold text-gray-900`
+- **レビュー件数**: `text-sm text-gray-500` + 括弧付き
+
+#### 自己紹介文
+- **スタイル**: `text-gray-600 text-sm mb-4`
+- **行制限**: `line-clamp-3`
+
+#### スキルタグ
+- **レイアウト**: `flex flex-wrap gap-2`
+- **表示件数**: 最初の3つ (`slice(0, 3)`)
+
+##### 各タグ
+- **スタイル**: 
+  - `px-3 py-1`
+  - `bg-orange-50 text-orange-600`
+  - `text-xs font-medium rounded-full`
+
+##### 残り件数バッジ
+- **条件**: スキルが3つ以上ある場合
+- **テキスト**: `+{skills.length - 3}`
+- **スタイル**: 
+  - `px-3 py-1`
+  - `bg-gray-100 text-gray-600`
+  - `text-xs font-medium rounded-full`
+
+### 操作・遷移
+- カード全体がリンク（`<Link to={`/profiles/${profile.id}`}>`）
+- カードクリック → `/profiles/{id}` へ遷移
+- カードホバー時：
+  - 影強調（`shadow-lg` → `shadow-2xl`）
+  - 上方向に移動（`-translate-y-2`）
+  - 名前の色変更（`text-gray-900` → `text-orange-600`）
+  - アバター拡大（`scale-110`）
+
+### 空状態（検索結果0件）
+
+#### 表示条件
+- `filteredProfiles.length === 0`
+
+#### 表示内容
+- **コンテナ**: `text-center py-16`
+- **アイコン**: Search (`w-16 h-16 text-gray-300 mx-auto mb-4`)
+- **メインメッセージ**: 「プロフィールが見つかりませんでした」
+  - **スタイル**: `text-xl font-bold text-gray-900 mb-2`
+- **サブメッセージ**: 「検索条件を変更してもう一度お試しください」
+  - **スタイル**: `text-gray-600 mb-6`
+
+---
+
+## ④ ページ全体構成
+
+### コンテナ
+- **最小高さ**: `min-h-screen`
+- **パディング**: `py-12`
+
+### 内側コンテナ
+- **最大幅**: `max-w-7xl mx-auto`
+- **パディング**: `px-4 sm:px-6 lg:px-8`
+
+---
+
+## ⑤ データ取得・フィルタリング
+
+### データソース
+- `mockProfiles` から全件取得
+
+### フィルタリングロジック
+```typescript
+const filteredProfiles = mockProfiles.filter((p) => {
+  const matchesSearch =
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.bio.toLowerCase().includes(searchTerm.toLowerCase());
+  return matchesSearch;
+});
+```
+
+### State管理
+- `searchTerm`: 検索キーワード（useState）
+- 検索フォーム入力時に`setSearchTerm`で更新
+
+---
+
+## ⑥ レスポンシブデザイン
+
+### デスクトップ（lg以上: 1024px~）
+- グリッド：3カラム
+- カード幅：自動調整
+
+### タブレット（md: 768px~1023px）
+- グリッド：2カラム
+- カード幅：自動調整
+
+### モバイル（~767px）
+- グリッド：1カラム
+- カード幅：100%
+
+---
+
+## ⑦ アクセス制御
+- **閲覧権限**：全ユーザー（ログイン不要）
+
+---
+
+## ⑧ カラー仕様
+
+### 主要カラー
+- **オレンジ**: `orange-500`, `orange-600`
+- **レッド**: `red-500`
+- **ピンク**: `pink-500`
+- **グレー**: `gray-50`, `gray-100`, `gray-300`, `gray-600`, `gray-900`
+- **イエロー**: `yellow-400` (評価星)
+- **ホワイト**: `white`
+
+### グラデーション
+- ヘッダーグラデーション：`from-orange-500 via-red-500 to-pink-500`
+
+---
+
+## ⑨ アニメーション
+
+### トランジション
+- カードホバー時：`transition-all duration-300`
+- アバターホバー時：`transition-transform duration-300`
+- 名前色変化：`transition-colors`
+
+### トランスフォーム
+- カードホバー：`-translate-y-2`
+- アバターホバー：`scale-110`
+
+---
+
+## ⑩ 将来的な拡張
+- スキルフィルター機能（複数選択可能）
+- 経験年数フィルター
+- 時給単価範囲フィルター（スライダー）
+- 評価フィルター（星4以上など）
+- 所在地フィルター
+- 稼働状況フィルター（即稼働可能、1ヶ月以内など）
+- 並び替え機能（評価順、時給単価順、経験年数順）
+- ページネーション機能
+- お気に入り機能
+- 比較機能（複数人材の比較）
+- 推薦機能（AIによるマッチング）
