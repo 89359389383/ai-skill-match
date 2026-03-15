@@ -41,13 +41,13 @@ class EnsureAuthenticatedAnyGuard
         }
 
         // ここまで来たら「どのガードでも未ログイン」
-        // - ブラウザアクセスはログイン画面へ誘導
+        // - ブラウザアクセスはログイン画面へ誘導（guest()で元のURLをセッションに保存し、ログイン後に戻れるようにする）
         // - APIアクセス（JSON期待）は 401 を返す
         if ($request->expectsJson()) {
             abort(401, 'Unauthenticated.');
         }
 
-        return redirect()->route('auth.login.form');
+        return redirect()->guest(route('auth.login.form'));
     }
 }
 

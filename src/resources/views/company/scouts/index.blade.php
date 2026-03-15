@@ -330,6 +330,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
+    @include('partials.public-header')
     @include('partials.company-header')
 
     <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">

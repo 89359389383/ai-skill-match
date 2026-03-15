@@ -18,9 +18,9 @@ class EnsureCompanyRole
         // このリクエストでは company guard を“標準”として扱う（Auth::user()等がズレないようにする）
         Auth::shouldUse('company');
 
-        // 未ログインなら、ログイン画面へ誘導する
+        // 未ログインなら、ログイン画面へ誘導する（guest()で元のURLを保存し、ログイン後に戻れるようにする）
         if (!auth('company')->check()) {
-            return redirect()->route('auth.login.form');
+            return redirect()->guest(route('auth.login.form'));
         }
 
         // roleがcompany以外なら、権限エラーとして拒否する

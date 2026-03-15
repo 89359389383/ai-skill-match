@@ -28,8 +28,12 @@ class StoreArticleRequest extends FormRequest
             // 画像URL（任意）
             'eyecatch_image_url' => ['nullable', 'url'],
 
-            // 記事の構造（大項目/中項目）: JSONとして保存するので配列を許可
+            // 記事の構造（大項目/中項目）
             'structure' => ['nullable', 'array'],
+            'structure.*.title' => ['nullable', 'string', 'max:255'],
+            'structure.*.subsections' => ['nullable', 'array'],
+            'structure.*.subsections.*.title' => ['nullable', 'string', 'max:255'],
+            'structure.*.subsections.*.content' => ['nullable', 'string'],
 
             // タグ（任意）
             'tags' => ['nullable', 'array'],

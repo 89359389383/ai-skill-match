@@ -37,15 +37,21 @@ class ProfileController extends Controller
     {
         // freelancer が無い場合（企業ユーザー等）は 404 扱いにする（仕様が固まったら調整）
         $freelancer = $user->freelancer()
-            ->with(['skills', 'customSkills', 'portfolios'])
+            ->with(['skills', 'customSkills', 'portfolios', 'skillListings' => fn($q) => $q->where('status', 1)])
             ->first();
 
         if (!$freelancer) {
             abort(404, 'プロフィールが見つかりません。');
         }
 
+        $articles = $user->articles()
+            ->where('status', 1)
+            ->orderByDesc('published_at')
+            ->take(10)
+            ->get();
+
         if (view()->exists('profiles.show')) {
-            return view('profiles.show', compact('user', 'freelancer'));
+            return view('profiles.show', compact('user', 'freelancer', 'articles'));
         }
 
         return view('welcome');

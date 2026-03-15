@@ -554,7 +554,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <header class="header" role="banner">
+    @include('partials.public-header')
+    <header class="header header-role" role="banner">
         <div class="header-content">
             <div class="header-left">
                 <div class="logo" aria-hidden="true">
@@ -609,6 +610,7 @@
                             @endif
                         </button>
                         <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                            <a href="{{ route('profiles.show', auth('freelancer')->user()) }}" class="dropdown-item" role="menuitem">プロフィール詳細</a>
                             <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
@@ -753,6 +755,41 @@
                     </div>
 
                     <div class="row">
+                        <div class="label">対応業務（任意）</div>
+                        <input class="input @error('services_offered') is-invalid @enderror" id="services_offered" name="services_offered" type="text" value="{{ old('services_offered', $freelancer->services_offered ?? '') }}" placeholder="例: Webアプリ開発、システム設計">
+                        @error('services_offered')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <p class="help">カンマ区切りで複数入力できます</p>
+                    </div>
+
+                    <div class="grid-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        <div class="row">
+                            <div class="label">得意業種（任意）</div>
+                            <input class="input @error('industry_specialties') is-invalid @enderror" id="industry_specialties" name="industry_specialties" type="text" value="{{ old('industry_specialties', $freelancer->industry_specialties ?? '') }}" placeholder="例: IT・Web、コンサルティング">
+                            @error('industry_specialties')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="row">
+                            <div class="label">在住都道府県（任意）</div>
+                            <input class="input @error('prefecture') is-invalid @enderror" id="prefecture" name="prefecture" type="text" value="{{ old('prefecture', $freelancer->prefecture ?? '') }}" placeholder="例: 東京都">
+                            @error('prefecture')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="label">資格（任意）</div>
+                        <textarea class="textarea @error('certifications') is-invalid @enderror" id="certifications" name="certifications" placeholder="例: AWS認定ソリューションアーキテクト&#10;基本情報技術者">{{ old('certifications', $freelancer->certifications ?? '') }}</textarea>
+                        @error('certifications')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <p class="help">1行に1つずつ入力してください</p>
+                    </div>
+
+                    <div class="row">
                         <div class="label">スキル（1つ以上推奨・複数入力）</div>
                         <div class="help">複数入力できます。</div>
                         @php
@@ -846,9 +883,35 @@
                         <div class="label">プロフィール画像</div>
                         <input type="file" class="file-input @error('icon') is-invalid @enderror" id="icon" name="icon" accept="image/*">
                         @if($freelancer && $freelancer->icon_path)
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #6a737d;">現在の画像を変更する場合のみ選択してください。</p>
+                            <p style="margin-top:0.5rem; font-size: 0.9rem; color: #6a737d;">現在の画像を変更する場合のみ選択してください。</p>
                         @endif
                         @error('icon')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="panel-title" style="margin-bottom:1rem;">連絡先（任意）</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        <div class="row">
+                            <div class="label">電話番号</div>
+                            <input class="input @error('phone') is-invalid @enderror" id="phone" name="phone" type="tel" value="{{ old('phone', $freelancer->phone ?? '') }}" placeholder="例: 090-1234-5678">
+                            @error('phone')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="row">
+                            <div class="label">LINE（友達追加URL）</div>
+                            <input class="input @error('line_id') is-invalid @enderror" id="line_id" name="line_id" type="text" value="{{ old('line_id', $freelancer->line_id ?? '') }}" placeholder="LINE友達追加URL（例: https://line.me/ti/p/~xxxx または https://lin.ee/xxxx）">
+                            @error('line_id')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="label">Twitter（プロフィールURL）</div>
+                        <input class="input @error('twitter_url') is-invalid @enderror" id="twitter_url" name="twitter_url" type="url" value="{{ old('twitter_url', $freelancer->twitter_url ?? '') }}" placeholder="TwitterプロフィールURL（例: https://twitter.com/username または https://x.com/username）">
+                        @error('twitter_url')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>

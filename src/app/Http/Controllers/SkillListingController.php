@@ -19,9 +19,10 @@ class SkillListingController extends Controller
      */
     public function index(\Illuminate\Http\Request $request)
     {
-        // まずは「一覧に出す最低限の情報」を取る
+        // 公開中（status=1）の出品のみ一覧に表示
         $query = SkillListing::query()
-            ->with(['freelancer'])
+            ->with(['freelancer.user', 'skills'])
+            ->where('status', 1)
             ->orderByDesc('id');
 
         // 将来: query, price_min/max, category(skill) などをここに追加

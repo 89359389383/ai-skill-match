@@ -33,6 +33,13 @@ class FreelancerProfileUpdateRequest extends FormRequest
 
             // その他（任意）
             'experience_companies' => ['nullable', 'string', 'max:5000'],
+            'services_offered' => ['nullable', 'string', 'max:500'],
+            'industry_specialties' => ['nullable', 'string', 'max:500'],
+            'prefecture' => ['nullable', 'string', 'max:50'],
+            'certifications' => ['nullable', 'string', 'max:2000'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\-\(\)\s]*$/'],
+            'line_id' => ['nullable', 'string', 'max:100', 'regex:/^(|https:\/\/(line\.me|lin\.ee)\/.*)$/'],
+            'twitter_url' => ['nullable', 'string', 'url', 'max:255', 'regex:/^(|https:\/\/(twitter\.com|x\.com)\/.*)$/'],
             'icon' => ['nullable', 'file', 'image', 'max:5120'],
 
              // スキル関連（任意）
@@ -137,6 +144,18 @@ class FreelancerProfileUpdateRequest extends FormRequest
 
             'experience_companies.string' => '経験企業は文字列で入力してください。',
             'experience_companies.max' => '経験企業は5000文字以内で入力してください。',
+
+            'services_offered.max' => '対応業務は500文字以内で入力してください。',
+            'industry_specialties.max' => '得意業種は500文字以内で入力してください。',
+            'prefecture.max' => '在住都道府県は50文字以内で入力してください。',
+            'certifications.max' => '資格は2000文字以内で入力してください。',
+            'phone.max' => '電話番号は20文字以内で入力してください。',
+            'phone.regex' => '電話番号は数字・ハイフン・括弧のみで入力してください。',
+            'line_id.max' => 'LINE友達追加URLは100文字以内で入力してください。',
+            'line_id.regex' => 'LINE友達追加URLの形式が正しくありません（https://line.me/ または https://lin.ee/ で始まるURLを入力してください）。',
+            'twitter_url.url' => 'TwitterプロフィールURLは正しいURL形式で入力してください。',
+            'twitter_url.max' => 'TwitterプロフィールURLは255文字以内で入力してください。',
+            'twitter_url.regex' => 'TwitterプロフィールURLの形式が正しくありません（https://twitter.com/ または https://x.com/ で始まるURLを入力してください）。',
 
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',

@@ -18,9 +18,9 @@ class EnsureFreelancerRole
         // このリクエストでは freelancer guard を“標準”として扱う（Auth::user()等がズレないようにする）
         Auth::shouldUse('freelancer');
 
-        // 未ログインなら、ログイン画面へ誘導する
+        // 未ログインなら、ログイン画面へ誘導する（guest()で元のURLを保存し、ログイン後に戻れるようにする）
         if (!auth('freelancer')->check()) {
-            return redirect()->route('auth.login.form');
+            return redirect()->guest(route('auth.login.form'));
         }
 
         // roleがfreelancer以外なら、権限エラーとして拒否する
