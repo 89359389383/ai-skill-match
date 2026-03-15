@@ -117,32 +117,26 @@ class FreelancerProfileService
 
             try {
                 $freelancer = Freelancer::create([
-                    // 紐づくユーザーID
                     'user_id' => $user->id,
-                    // 表示名
                     'display_name' => $payload['display_name'],
-                    // 職種（表示用）
                     'job_title' => $payload['job_title'],
-                    // 自己紹介
                     'bio' => $payload['bio'],
-                    // 週の最小稼働時間
                     'min_hours_per_week' => $payload['min_hours_per_week'],
-                    // 週の最大稼働時間
                     'max_hours_per_week' => $payload['max_hours_per_week'],
-                    // 1日の稼働時間
                     'hours_per_day' => $payload['hours_per_day'],
-                    // 週の稼働日数
                     'days_per_week' => $payload['days_per_week'],
-                    // 働き方テキスト（任意）
                     'work_style_text' => $payload['work_style_text'] ?? null,
-                    // 希望単価（下限・任意）
+                    'services_offered' => $payload['services_offered'] ?? null,
+                    'industry_specialties' => $payload['industry_specialties'] ?? null,
+                    'prefecture' => $payload['prefecture'] ?? null,
                     'min_rate' => $payload['min_rate'] ?? null,
-                    // 希望単価（上限・任意）
                     'max_rate' => $payload['max_rate'] ?? null,
-                    // 経験企業（任意）
                     'experience_companies' => $payload['experience_companies'] ?? null,
-                    // アイコン保存先（任意）
+                    'certifications' => $payload['certifications'] ?? null,
                     'icon_path' => $iconPath,
+                    'phone' => $payload['phone'] ?? null,
+                    'line_id' => $payload['line_id'] ?? null,
+                    'twitter_url' => $payload['twitter_url'] ?? null,
                 ]);
 
                 Log::info('【FreelancerProfileService::register】基本情報保存成功', [

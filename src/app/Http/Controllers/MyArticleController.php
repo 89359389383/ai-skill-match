@@ -75,6 +75,11 @@ class MyArticleController extends Controller
         // 更新の入力チェックは FormRequest 側へ移動。
         $validated = $request->validated();
 
+        // 編集画面では structure を送っていないため、既存の構造を保持する
+        if (!isset($validated['structure'])) {
+            $validated['structure'] = $article->structure;
+        }
+
         $service->update($article, $validated);
 
         return redirect()->route('my-articles.show', ['article' => $article->id]);

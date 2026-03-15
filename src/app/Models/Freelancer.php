@@ -22,10 +22,17 @@ class Freelancer extends Model
         'hours_per_day',
         'days_per_week',
         'work_style_text',
+        'services_offered',
+        'industry_specialties',
+        'prefecture',
         'min_rate',
         'max_rate',
         'experience_companies',
+        'certifications',
         'icon_path',
+        'phone',
+        'line_id',
+        'twitter_url',
     ];
 
     protected $casts = [

@@ -1,4 +1,4 @@
-<header class="header">
+<header class="header header-role">
     <div class="header-content">
         <div class="header-left">
             <button class="nav-toggle" id="mobileNavToggle" type="button" aria-label="メニューを開く" aria-haspopup="menu" aria-expanded="false" aria-controls="mobileNav">

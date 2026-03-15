@@ -574,7 +574,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <header class="header" role="banner">
+    @include('partials.public-header')
+    <header class="header header-role" role="banner">
         <div class="header-content">
             <div class="header-left">
                 <div class="logo" aria-hidden="true">
@@ -629,6 +630,7 @@
                             @endif
                         </button>
                         <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                            <a href="{{ route('profiles.show', auth('freelancer')->user()) }}" class="dropdown-item" role="menuitem">プロフィール詳細</a>
                             <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">

@@ -60,8 +60,8 @@ class AuthController extends Controller
             return redirect('/login')->withErrors(['email' => 'フリーランスアカウントではありません']);
         }
 
-        // フリーランスは案件一覧へ
-        return redirect('/freelancer/jobs');
+        // 元々アクセスしようとしていたURL（例: 質問投稿・記事投稿）があればそこへ、なければ案件一覧へ
+        return redirect()->intended(route('freelancer.jobs.index'));
     }
 
     /**
@@ -87,8 +87,8 @@ class AuthController extends Controller
             return redirect('/login')->withErrors(['email' => '企業アカウントではありません']);
         }
 
-        // 企業はフリーランス一覧へ
-        return redirect('/company/freelancers');
+        // 元々アクセスしようとしていたURL（例: 質問投稿・記事投稿）があればそこへ、なければフリーランス一覧へ
+        return redirect()->intended(route('company.freelancers.index'));
     }
 
     /**

@@ -293,8 +293,10 @@
             .btn { padding: 10px 14px; font-size: 16px; }
         }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
+    @include('partials.public-header')
     <main class="main-content">
         <!-- Sidebar preview -->
         <aside class="sidebar">
@@ -358,9 +360,71 @@
                     </div>
 
                     <div class="row">
+                        <label class="label" for="services_offered">対応業務（任意）</label>
+                        <input class="input @error('services_offered') is-invalid @enderror" id="services_offered" name="services_offered" type="text" value="{{ old('services_offered') }}" placeholder="例: Webアプリ開発、システム設計">
+                        @error('services_offered')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <div class="help">カンマ区切りで複数入力できます</div>
+                    </div>
+
+                    <div class="row">
+                        <label class="label" for="industry_specialties">得意業種（任意）</label>
+                        <input class="input @error('industry_specialties') is-invalid @enderror" id="industry_specialties" name="industry_specialties" type="text" value="{{ old('industry_specialties') }}" placeholder="例: IT・Web、コンサルティング">
+                        @error('industry_specialties')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <div class="help">カンマ区切りで複数入力できます</div>
+                    </div>
+
+                    <div class="row">
+                        <label class="label" for="prefecture">在住都道府県（任意）</label>
+                        <input class="input @error('prefecture') is-invalid @enderror" id="prefecture" name="prefecture" type="text" value="{{ old('prefecture') }}" placeholder="例: 東京都">
+                        @error('prefecture')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="row">
                         <label class="label" for="experience_companies">経験企業（任意）</label>
                         <textarea class="textarea @error('experience_companies') is-invalid @enderror" id="experience_companies" name="experience_companies" placeholder="例) 株式会社◯◯（2021-2023）&#10;株式会社△△（2019-2021）">{{ old('experience_companies') }}</textarea>
                         @error('experience_companies')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="row">
+                        <label class="label" for="certifications">資格（任意）</label>
+                        <textarea class="textarea @error('certifications') is-invalid @enderror" id="certifications" name="certifications" placeholder="例) AWS認定ソリューションアーキテクト&#10;基本情報技術者">{{ old('certifications') }}</textarea>
+                        @error('certifications')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <div class="help">1行に1つずつ入力してください</div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="panel-title" style="margin-bottom:1rem;">連絡先（任意）</div>
+                    <div class="grid-2">
+                        <div class="row">
+                            <label class="label" for="phone">電話番号</label>
+                            <input class="input @error('phone') is-invalid @enderror" id="phone" name="phone" type="tel" value="{{ old('phone') }}" placeholder="例: 090-1234-5678">
+                            @error('phone')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="row">
+                            <label class="label" for="line_id">LINE（友達追加URL）</label>
+                            <input class="input @error('line_id') is-invalid @enderror" id="line_id" name="line_id" type="text" value="{{ old('line_id') }}" placeholder="LINE友達追加URL（例: https://line.me/ti/p/~xxxx または https://lin.ee/xxxx）">
+                            @error('line_id')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="label" for="twitter_url">Twitter（プロフィールURL）</label>
+                        <input class="input @error('twitter_url') is-invalid @enderror" id="twitter_url" name="twitter_url" type="url" value="{{ old('twitter_url') }}" placeholder="TwitterプロフィールURL（例: https://twitter.com/username または https://x.com/username）">
+                        @error('twitter_url')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>

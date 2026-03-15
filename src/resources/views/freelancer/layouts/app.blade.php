@@ -136,7 +136,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <header class="header" role="banner">
+    @include('partials.public-header')
+    <header class="header header-role" role="banner">
         <div class="header-content">
             <div class="logo" aria-hidden="true">
                 <div class="logo-text">複業AI</div>
@@ -171,6 +172,7 @@
                         @endif
                     </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                        <a href="{{ route('profiles.show', auth('freelancer')->user()) }}" class="dropdown-item" role="menuitem">プロフィール詳細</a>
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
                         <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
