@@ -28,13 +28,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
-                <div class="mt-5 rounded-lg border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm font-bold">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
+            @include('partials.error-panel')
 
             <form method="POST" action="{{ route('password.email') }}" class="mt-6 space-y-4">
                 @csrf
@@ -43,9 +37,13 @@
                     <input
                         type="email"
                         name="email"
-                        class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                        value="{{ old('email') }}"
+                        class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 @error('email') border-red-500 @enderror"
                         placeholder="メールアドレス"
                         required>
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <button type="submit" class="w-full rounded-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm md:text-base font-extrabold text-white shadow hover:shadow-md active:shadow">

@@ -9,6 +9,7 @@
 
         <form action="{{ route('questions.store') }}" method="POST" class="space-y-6">
             @csrf
+            @include('partials.error-panel')
 
             <div class="bg-white rounded-2xl shadow-lg p-8">
                 <div class="mb-6">
@@ -17,7 +18,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('title') border-red-500 @enderror"
                         placeholder="質問のタイトルを入力してください">
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -27,7 +28,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('content') border-red-500 @enderror"
                         placeholder="質問の内容を詳しく入力してください">{{ old('content') }}</textarea>
                     @error('content')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -45,7 +46,7 @@
                         <option value="その他" {{ old('category') === 'その他' ? 'selected' : '' }}>その他</option>
                     </select>
                     @error('category')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 

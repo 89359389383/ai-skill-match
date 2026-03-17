@@ -41,6 +41,7 @@
 
         <form id="articleForm" action="{{ route('articles.store') }}" method="POST" class="space-y-6">
             @csrf
+            @include('partials.error-panel')
 
             <!-- Basic Info -->
             <div class="bg-white rounded-2xl shadow-lg p-8">
@@ -54,7 +55,7 @@
                     <input type="text" name="title" id="title" value="{{ old('title') }}" placeholder="記事のタイトルを入力してください" maxlength="255"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('title') border-red-500 @enderror" required>
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -66,7 +67,7 @@
                     <textarea name="excerpt" id="excerpt" placeholder="記事の概要を入力してください（2-3文程度）" rows="3" maxlength="200"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none @error('excerpt') border-red-500 @enderror" required>{{ old('excerpt') }}</textarea>
                     @error('excerpt')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -82,7 +83,7 @@
                         <option value="その他" {{ old('category', '') === 'その他' ? 'selected' : '' }}>その他</option>
                     </select>
                     @error('category')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -112,7 +113,7 @@
                     </div>
                     <div id="imagePreviewContainer"></div>
                     @error('eyecatch_image_url')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
             </div>

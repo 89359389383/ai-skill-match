@@ -1,0 +1,53 @@
+// このファイルはデータベース（マイグレーション）に関する実装メモです。
+// 以下は各処理が何を目的としているかの説明（日本語コメント）。
+// - transaction_status:
+//   取引の進行状態を管理するカラムです。
+//   値: in_progress（取引中）、delivered（出品者が納品済み）、completed（購入者が承認して取引完了）。
+// - delivered_at:
+//   出品者が「納品」ボタンを押した日時を記録します。納品時に system メッセージを自動生成します。
+// - completed_at:
+//   購入者が「承認する」（評価を送信）して取引が完了した日時を記録します。完了時にレビュー保存と完了メッセージを追加します。
+// - skill_order_messages（新規テーブル）:
+//   取引単位のチャットを保持するためのテーブルです。text/file/system のメッセージを保存し、
+//   system メッセージは sender_user_id が null になります（例: 「納品されました」等）。
+//
+本ファイルは「取引管理・チャット機能仕様書(支払い未実装)」に基づく実装メモです。
+支払い処理は実装せず、購入後〜完了まで（取引状態/チャット/評価）に必要なDB変更のみ記載します。
+
+============================================================
+1) 既存マイグレーション修正（新規ファイル作成ではなく追記）
+============================================================
+対象:
+`src/database/migrations/2026_03_15_000004_create_skill_orders_table.php`
+
+追記したカラム:
+- transaction_status: enum('in_progress','delivered','completed') default 'in_progress'
+- delivered_at: timestamp nullable
+- completed_at: timestamp nullable
+
+追記したindex:
+- index(buyer_user_id, transaction_status)
+- index(skill_listing_id, transaction_status)
+
+============================================================
+2) 新規マイグレーション追加（取引チャット用）
+============================================================
+対象:
+`src/database/migrations/2026_03_16_000001_create_skill_order_messages_table.php`
+
+作成テーブル:
+`skill_order_messages`
+
+主なカラム:
+- skill_order_id (FK -> skill_orders.id)
+- sender_user_id (FK -> users.id, nullable, systemメッセージはnull)
+- message_type enum('text','file','system')
+- body text nullable
+- file_name string nullable
+- file_path string nullable
+- sent_at timestamp
+
+index:
+- index(skill_order_id, sent_at)
+- index(sender_user_id, sent_at)
+

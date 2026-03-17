@@ -18,6 +18,7 @@ use App\Http\Controllers\TopController;
 use App\Http\Controllers\SkillListingController;
 use App\Http\Controllers\SkillOrderController;
 use App\Http\Controllers\SkillInquiryController;
+use App\Http\Controllers\SkillTransactionController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\MyArticleController;
 use App\Http\Controllers\QuestionController;
@@ -260,4 +261,29 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::post('/skills/{skill_listing}/inquiry', [SkillInquiryController::class, 'store'])
         ->whereNumber('skill_listing')
         ->name('skills.inquiry');
+
+    // =========================
+    // スキル購入後（取引管理・チャット）
+    // =========================
+    Route::get('/purchased-skills', [SkillTransactionController::class, 'purchasedSkills'])
+        ->name('purchased-skills.index');
+
+    Route::get('/sales-performance', [SkillTransactionController::class, 'salesPerformance'])
+        ->name('sales-performance.index');
+
+    Route::get('/transactions/{skill_order}', [SkillTransactionController::class, 'show'])
+        ->whereNumber('skill_order')
+        ->name('transactions.show');
+
+    Route::post('/transactions/{skill_order}/messages', [SkillTransactionController::class, 'storeMessage'])
+        ->whereNumber('skill_order')
+        ->name('transactions.messages.store');
+
+    Route::post('/transactions/{skill_order}/deliver', [SkillTransactionController::class, 'deliver'])
+        ->whereNumber('skill_order')
+        ->name('transactions.deliver');
+
+    Route::post('/transactions/{skill_order}/complete', [SkillTransactionController::class, 'complete'])
+        ->whereNumber('skill_order')
+        ->name('transactions.complete');
 });

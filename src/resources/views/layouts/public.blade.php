@@ -24,6 +24,11 @@
         @include('partials.freelancer-header-style')
     @endauth
 
+    {{-- 企業ログイン時：専用ヘッダーのスタイル --}}
+    @auth('company')
+        @include('partials.company-header-style')
+    @endauth
+
     {{-- 画面ごとの追加CSS（top/index など） --}}
     @stack('styles')
 </head>
@@ -31,13 +36,18 @@
     {{-- ログイン不要画面用：共通ヘッダー（固定） --}}
     @include('partials.public-header')
 
-    {{-- フリーランスログイン時：専用ヘッダー（スキル販売・記事などでも表示維持） --}}
+    {{-- フリーランスログイン時：専用ヘッダー（スキル販売・記事・取引などでも表示維持） --}}
     @auth('freelancer')
         @include('partials.freelancer-header')
     @endauth
 
-    {{-- 固定ヘッダー分の余白（フリーランス時は2段ヘッダー分 + 8px余裕） --}}
-    <main class="@auth('freelancer') pt-[var(--main-pt-freelancer)] @else pt-16 @endauth">
+    {{-- 企業ログイン時：専用ヘッダー（スキル購入・取引などでも表示維持） --}}
+    @auth('company')
+        @include('partials.company-header')
+    @endauth
+
+    {{-- 固定ヘッダー分の余白（ログイン時は2段ヘッダー分 + 8px余裕、未ログイン時は1段のみ） --}}
+    <main class="@if(auth('freelancer')->check() || auth('company')->check()) pt-[var(--main-pt-freelancer)] @else pt-16 @endif">
         @yield('content')
     </main>
 

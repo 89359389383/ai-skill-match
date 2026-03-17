@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Freelancer;
 use App\Models\SkillListing;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class SkillListingService
@@ -19,9 +20,15 @@ class SkillListingService
      */
     public function store(Freelancer $freelancer, array $data): SkillListing
     {
+        Log::info('[SkillListingService::store] スキル保存処理 開始', [
+            'freelancer_id' => $freelancer->id,
+            'title' => $data['title'] ?? null,
+        ]);
+
         // まずは「必須の前提」が崩れていないかをチェックしておく
         // （Controller でも validate するが、二重防御しておくと安心）
         if (!isset($data['title']) || trim((string) $data['title']) === '') {
+            Log::warning('[SkillListingService::store] タイトル未入力のためバリデーションエラー');
             throw ValidationException::withMessages(['title' => 'タイトルは必須です']);
         }
 
@@ -34,10 +41,18 @@ class SkillListingService
                 'price' => (int) ($data['price'] ?? 0),
                 'pricing_type' => $data['pricing_type'] ?? 'fixed',
                 'thumbnail_url' => $data['thumbnail_url'] ?? null,
-                // 初期は「下書き」でも良いが、まずは公開導線を優先して1にする場合もある
-                // 今回は “仕様が固まるまで安全側” に寄せ、下書き(0)で作成する
-                'status' => 0,
+                // 出品完了時は公開状態（1）で作成し、一覧・トップに表示する
+                'status' => 1,
                 'delivery_days' => $data['delivery_days'] ?? null,
+            ]);
+
+            Log::info('[SkillListingService::store] スキルレコード作成完了', [
+                'listing_id' => $listing->id,
+                'title' => $listing->title,
+                'status' => $listing->status,
+                'freelancer_id' => $listing->freelancer_id,
+                'price' => $listing->price,
+                'created_at' => $listing->created_at?->toIso8601String(),
             ]);
 
             // 2) 共通スキルを紐付ける（複数可）
@@ -45,6 +60,10 @@ class SkillListingService
             $skillIds = $data['skill_ids'] ?? [];
             if (is_array($skillIds) && count($skillIds) > 0) {
                 $listing->skills()->sync($skillIds);
+                Log::info('[SkillListingService::store] スキル紐付け完了', [
+                    'listing_id' => $listing->id,
+                    'skill_ids' => $skillIds,
+                ]);
             }
 
             // 3) 添付（画像/ファイル）を登録する
@@ -63,6 +82,11 @@ class SkillListingService
                     ]);
                 }
             }
+
+            Log::info('[SkillListingService::store] スキル保存処理 終了', [
+                'listing_id' => $listing->id,
+                'status' => $listing->status,
+            ]);
 
             return $listing;
         });

@@ -12,6 +12,7 @@
 
         <nav class="nav-links" role="navigation" aria-label="フリーランスナビゲーション">
             <a href="{{ route('freelancer.jobs.index') }}" class="nav-link {{ request()->routeIs('freelancer.jobs.*') ? 'active' : '' }}">案件一覧</a>
+            <a href="{{ route('sales-performance.index') }}" class="nav-link {{ request()->routeIs('sales-performance.*') || request()->routeIs('transactions.*') ? 'active' : '' }}">販売実績</a>
             <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ request()->routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $appUnread > 0 ? 'has-badge' : '' }}">
                 応募した案件
                 @if($appUnread > 0)
@@ -69,6 +70,7 @@
     <div class="mobile-nav" id="freelancerMobileNav" role="menu" aria-label="モバイルナビゲーション">
         <div class="mobile-nav-inner">
             <a href="{{ route('freelancer.jobs.index') }}" class="nav-link {{ request()->routeIs('freelancer.jobs.*') ? 'active' : '' }}">案件一覧</a>
+            <a href="{{ route('sales-performance.index') }}" class="nav-link {{ request()->routeIs('sales-performance.*') || request()->routeIs('transactions.*') ? 'active' : '' }}">販売実績</a>
             <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ request()->routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $appUnread > 0 ? 'has-badge' : '' }}">
                 応募した案件
                 @if($appUnread > 0)

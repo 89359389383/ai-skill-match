@@ -1,0 +1,51 @@
+// このファイルはルーティング（URLとコントローラー対応）に関する実装メモです。
+// 以下は追加した各ルートが何をするためのものか（日本語コメント）。
+// - GET /purchased-skills:
+//   購入者が自分の購入したスキルの取引一覧を確認する画面（現在取引中 / 過去取引をタブで分ける）。
+// - GET /sales-performance:
+//   出品者（フリーランス）が自分の販売実績（総売上・完了件数・平均評価など）を確認する画面。
+// - GET /transactions/{skill_order}:
+//   取引ごとのチャット画面。購入者または出品者のみアクセス可能。
+// - POST /transactions/{skill_order}/messages:
+//   取引チャットにメッセージを送信するエンドポイント（完了済は送信不可）。
+// - POST /transactions/{skill_order}/deliver:
+//   出品者が「納品」を実行するエンドポイント（in_progress -> delivered、systemメッセージ追加）。
+// - POST /transactions/{skill_order}/complete:
+//   購入者が承認と評価を行うエンドポイント（delivered -> completed、レビュー保存・完了メッセージ追加）。
+//
+本ファイルは「取引管理・チャット機能仕様書(支払い未実装)」に基づく実装メモです。
+支払い処理は実装せず、購入後〜完了までのルーティング追加のみ記載します。
+
+対象ファイル:
+`src/routes/web.php`
+
+追加内容（auth.any:freelancer,company グループ内）:
+
+- GET  /purchased-skills
+  - SkillTransactionController@purchasedSkills
+  - name: purchased-skills.index
+
+- GET  /sales-performance
+  - SkillTransactionController@salesPerformance
+  - name: sales-performance.index
+
+- GET  /transactions/{skill_order}
+  - SkillTransactionController@show
+  - name: transactions.show
+
+- POST /transactions/{skill_order}/messages
+  - SkillTransactionController@storeMessage
+  - name: transactions.messages.store
+
+- POST /transactions/{skill_order}/deliver
+  - SkillTransactionController@deliver
+  - name: transactions.deliver
+
+- POST /transactions/{skill_order}/complete
+  - SkillTransactionController@complete
+  - name: transactions.complete
+
+補足:
+- 既存の購入ルート `/skills/{skill_listing}/purchase` はそのまま利用し、
+  購入後のリダイレクト先を `/transactions/{skill_order}` に変更しています（コントローラー側で対応）。
+

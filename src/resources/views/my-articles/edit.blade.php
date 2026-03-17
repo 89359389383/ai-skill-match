@@ -19,6 +19,7 @@
         <form action="{{ route('my-articles.update', ['article' => $article->id]) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
+            @include('partials.error-panel')
 
             <div class="bg-white rounded-2xl shadow-lg p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">基本情報</h2>
@@ -29,7 +30,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('title') border-red-500 @enderror"
                         placeholder="記事のタイトルを入力してください">
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -39,7 +40,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('excerpt') border-red-500 @enderror"
                         placeholder="記事の概要を入力してください">{{ old('excerpt', $article->excerpt) }}</textarea>
                     @error('excerpt')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -53,7 +54,7 @@
                         <option value="その他" {{ old('category', $article->category) === 'その他' ? 'selected' : '' }}>その他</option>
                     </select>
                     @error('category')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -67,7 +68,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="例: ChatGPT, 業務効率化, AI活用">
                     @error('tags')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -77,7 +78,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="https://example.com/image.jpg">
                     @error('eyecatch_image_url')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
