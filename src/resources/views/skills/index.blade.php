@@ -29,6 +29,12 @@
             </div>
         </div>
 
+        @if (session('success'))
+            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800 font-bold">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <div class="text-sm text-gray-600 mb-4">
             {{ $listings->total() }} 件中 {{ $listings->firstItem() ?? 0 }} - {{ $listings->lastItem() ?? 0 }} 件表示
         </div>

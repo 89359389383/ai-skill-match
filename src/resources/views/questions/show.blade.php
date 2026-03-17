@@ -108,13 +108,14 @@
             <h3 class="text-xl font-bold text-gray-900 mb-4">回答を投稿する</h3>
             <form action="{{ route('questions.answers.store', $question) }}" method="POST" class="space-y-4">
                 @csrf
+                @include('partials.error-panel')
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">回答内容 <span class="text-red-500">*</span></label>
                     <textarea name="content" rows="6" required maxlength="5000"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('content') border-red-500 @enderror"
                         placeholder="回答を入力してください">{{ old('content') }}</textarea>
                     @error('content')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                     <p class="mt-1 text-xs text-gray-500">5000文字以内</p>
                 </div>

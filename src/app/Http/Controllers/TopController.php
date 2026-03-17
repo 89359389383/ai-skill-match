@@ -7,6 +7,7 @@ use App\Models\Freelancer;
 use App\Models\Question;
 use App\Models\SkillListing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TopController extends Controller
 {
@@ -18,6 +19,8 @@ class TopController extends Controller
      */
     public function index(Request $request)
     {
+        Log::info('[TopController::index] トップページ表示 開始');
+
         $freelancers = Freelancer::query()
             ->with(['user', 'skills', 'customSkills'])
             ->orderByDesc('id')
@@ -33,9 +36,28 @@ class TopController extends Controller
         $listings = SkillListing::query()
             ->with(['freelancer.user', 'skills'])
             ->where('status', 1)
-            ->orderByDesc('reviews_count')
+            ->orderByDesc('id')
             ->limit(6)
             ->get();
+
+        Log::info('[TopController::index] トップページ用スキル一覧取得完了', [
+            'listings_count' => $listings->count(),
+            'query' => 'status=1, orderByDesc(id), limit(6)',
+        ]);
+
+        foreach ($listings as $i => $l) {
+            Log::info("[TopController::index] トップ表示スキル #{$l->id}", [
+                'index' => $i + 1,
+                'id' => $l->id,
+                'title' => $l->title,
+                'status' => $l->status,
+                'freelancer_id' => $l->freelancer_id,
+                'price' => $l->price,
+                'created_at' => $l->created_at?->toIso8601String(),
+            ]);
+        }
+
+        Log::info('[TopController::index] トップページ表示 終了');
 
         $articles = Article::query()
             ->with(['user', 'tags'])

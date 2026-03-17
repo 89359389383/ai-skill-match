@@ -65,13 +65,17 @@
             <div class="lg:col-span-3">
                 <form id="skillForm" action="{{ route('skills.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                     @csrf
+                    @include('partials.error-panel')
                     <!-- Basic Info Section -->
                     <div class="bg-white rounded-lg shadow-sm p-6" id="basicInfo">
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">基本情報</h2>
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">サービスタイトル <span class="text-red-500">*</span></label>
-                                <input type="text" id="title" name="title" placeholder="例：ChatGPTを活用した業務効率化コンサルティング" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
+                                <input type="text" id="title" name="title" value="{{ old('title') }}" placeholder="例：ChatGPTを活用した業務効率化コンサルティング" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('title') border-red-500 @enderror" required>
+                                @error('title')
+                                    <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                                @enderror
                                 <p class="text-sm text-gray-500 mt-1">50文字以内で、サービスの内容が分かりやすいタイトルをつけましょう</p>
                             </div>
                             <div>
@@ -95,7 +99,10 @@
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">詳細説明</h2>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">サービス内容 <span class="text-red-500">*</span></label>
-                            <textarea id="description" name="description" placeholder="サービスの内容を詳しく説明してください。&#10;&#10;・提供する内容&#10;・どんな課題を解決できるか&#10;・対象となる方&#10;・納品物の詳細&#10;など" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none" required></textarea>
+                            <textarea id="description" name="description" placeholder="サービスの内容を詳しく説明してください。&#10;&#10;・提供する内容&#10;・どんな課題を解決できるか&#10;・対象となる方&#10;・納品物の詳細&#10;など" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none @error('description') border-red-500 @enderror" required>{{ old('description') }}</textarea>
+                            @error('description')
+                                <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                            @enderror
                             <p class="text-sm text-gray-500 mt-1">購入者が理解しやすいよう、具体的に記載しましょう</p>
                         </div>
                     </div>
@@ -106,13 +113,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">料金 <span class="text-red-500">*</span></label>
-                                <input type="text" id="price" name="price" placeholder="例：¥30,000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
-                                <p class="text-sm text-gray-500 mt-1">¥記号を含めて入力してください</p>
+                                <input type="text" id="price" name="price" value="{{ old('price') }}" placeholder="例：30000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('price') border-red-500 @enderror" required>
+                                @error('price')
+                                    <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                                @enderror
+                                <p class="text-sm text-gray-500 mt-1">数値で入力してください（例：30000）</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">納期 <span class="text-red-500">*</span></label>
-                                <input type="text" id="duration" name="delivery_days" placeholder="例：3日以内" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
-                                <p class="text-sm text-gray-500 mt-1">納品までの目安の日数を入力してください</p>
+                                <input type="text" id="duration" name="delivery_days" value="{{ old('delivery_days') }}" placeholder="例：3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('delivery_days') border-red-500 @enderror" required>
+                                @error('delivery_days')
+                                    <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                                @enderror
+                                <p class="text-sm text-gray-500 mt-1">納品までの目安の日数を数値で入力してください</p>
                             </div>
                         </div>
                     </div>
@@ -140,6 +153,9 @@
                                 </div>
                                 <input type="file" id="imageInput" name="thumbnail" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
                             </label>
+                            @error('thumbnail')
+                                <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                            @enderror
                             <p class="text-sm text-gray-500 mt-2">サービスの内容が伝わる魅力的な画像を選びましょう</p>
                         </div>
                     </div>

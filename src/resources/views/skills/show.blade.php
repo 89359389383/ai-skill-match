@@ -13,6 +13,8 @@
             <span class="font-bold text-gray-900">{{ Str::limit($listing->title, 40) }}</span>
         </nav>
 
+        @include('partials.error-panel')
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-2xl overflow-hidden shadow-xl mb-6">
@@ -92,20 +94,30 @@
                             @endif
                         </div>
 
-                        <form action="{{ route('skills.purchase', ['skill_listing' => $listing->id]) }}" method="POST" class="mb-4">
-                            @csrf
-                            <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                                購入する
-                            </button>
-                        </form>
+                        @php
+                            $isOwnListing = auth('freelancer')->check()
+                                && auth('freelancer')->user()->freelancer
+                                && (int) auth('freelancer')->user()->freelancer->id === (int) $listing->freelancer_id;
+                        @endphp
 
-                        <form action="{{ route('skills.inquiry', ['skill_listing' => $listing->id]) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                                問い合わせる
-                            </button>
-                        </form>
+                        @if (!$isOwnListing)
+                            <form action="{{ route('skills.purchase', ['skill_listing' => $listing->id]) }}" method="POST" class="mb-4">
+                                @csrf
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                    購入する
+                                </button>
+                            </form>
+
+                            <form action="{{ route('skills.inquiry', ['skill_listing' => $listing->id]) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                                    問い合わせる
+                                </button>
+                            </form>
+                        @else
+                            <p class="text-center text-gray-500 font-medium py-4">あなたの出品です</p>
+                        @endif
                     </div>
                 </div>
             </div>

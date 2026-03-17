@@ -32,9 +32,10 @@ class SkillOrderController extends Controller
             'confirm' => ['nullable', 'boolean'],
         ]);
 
-        $service->purchase($user, $skill_listing);
+        $order = $service->purchase($user, $skill_listing);
 
-        return redirect()->route('skills.show', ['skill_listing' => $skill_listing->id]);
+        // 購入後は取引（チャット）画面へ遷移する
+        return redirect()->route('transactions.show', ['skill_order' => $order->id]);
     }
 }
 

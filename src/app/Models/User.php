@@ -85,4 +85,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Answer::class);
     }
+
+    /**
+     * ????????????????????
+     */
+    public function skillOrders(): HasMany
+    {
+        return $this->hasMany(SkillOrder::class, 'buyer_user_id');
+    }
+
+    /**
+     * ??????????????????????????
+     */
+    public function skillOrderMessages(): HasMany
+    {
+        return $this->hasMany(SkillOrderMessage::class, 'sender_user_id');
+    }
 }

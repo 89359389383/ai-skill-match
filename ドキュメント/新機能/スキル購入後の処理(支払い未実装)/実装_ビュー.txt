@@ -1,0 +1,27 @@
+// このファイルは「ビュー（Blade）」に関する実装メモです。
+// 今回は「中身は空でOK」なので、まずはファイルだけ作成しています。
+//
+// ■ 目的
+// ルーティングとコントローラーは作ったので、次は画面（Blade）を置く場所を用意します。
+// コントローラー側では View::exists() で存在確認をしているため、
+// ファイルが無いと welcome にフォールバックしてしまいます。
+//
+// ■ 作成したビュー（空ファイル）
+// - resources/views/transactions/purchased_skills.blade.php
+//   購入者向け「購入したスキル（取引一覧）」の画面
+//
+// - resources/views/transactions/sales_performance.blade.php
+//   出品者向け「販売実績（取引一覧＋統計）」の画面
+//
+// - resources/views/transactions/show.blade.php
+//   取引チャット画面（納品ボタン／承認ボタン／メッセージ送信フォームなどを置く予定）
+//
+// ■ 実装済み（レイアウト・ヘッダー）
+// - layouts.public: 企業ログイン時に company-header-style と company-header を表示
+// - AppServiceProvider: 企業ログイン時も unreadApplicationCount / unreadScoutCount を View に共有
+// - freelancer-header: 「販売実績」リンクを追加（取引画面への導線）
+// - company-header: 「購入したスキル」リンクを追加（取引画面への導線）
+//
+// ■ 今後の実装イメージ（次にやること）
+// - ファイル添付: チャットのファイル添付は未実装（ボタンは disabled）
+

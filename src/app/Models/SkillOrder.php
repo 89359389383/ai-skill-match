@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SkillOrder extends Model
 {
@@ -16,11 +17,16 @@ class SkillOrder extends Model
         'amount',
         'status',
         'purchased_at',
+        'transaction_status',
+        'delivered_at',
+        'completed_at',
     ];
 
     protected $casts = [
         'amount' => 'integer',
         'purchased_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     /**
@@ -40,6 +46,14 @@ class SkillOrder extends Model
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_user_id');
+    }
+
+    /**
+     * 取引（スキル購入）チャットのメッセージ一覧。
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(SkillOrderMessage::class)->orderBy('sent_at');
     }
 }
 

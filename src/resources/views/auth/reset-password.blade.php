@@ -15,13 +15,7 @@
         <div class="w-full max-w-md md:max-w-lg bg-white/90 backdrop-blur-xl border border-white/70 rounded-xl shadow-xl p-6 md:p-10">
             <h1 class="text-center text-xl md:text-2xl font-black tracking-tight text-slate-900">パスワード再設定</h1>
 
-            @if ($errors->any())
-                <div class="mt-5 rounded-lg border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm font-bold">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
+            @include('partials.error-panel')
 
             <form class="mt-6 space-y-4" method="POST" action="{{ route('password.update') }}">
                 @csrf
@@ -33,9 +27,12 @@
                     <input
                         type="password"
                         name="password"
-                        class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                        class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 @error('password') border-red-500 @enderror"
                         placeholder="新しいパスワード"
                         required>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
