@@ -54,6 +54,9 @@
                         @endif
                     </button>
                     <div class="dropdown-content" id="freelancerUserDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                        <a href="{{ route('purchased-skills.index') }}" class="dropdown-item" role="menuitem">購入したスキル</a>
+                        <a href="{{ route('sales-performance.index') }}" class="dropdown-item" role="menuitem">購入されたスキル</a>
+                        <div class="dropdown-divider"></div>
                         <a href="{{ route('profiles.show', auth('freelancer')->user()) }}" class="dropdown-item" role="menuitem">プロフィール詳細</a>
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
