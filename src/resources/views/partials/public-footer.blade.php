@@ -76,11 +76,6 @@
                 <p class="text-gray-300 text-sm">
                     © <span id="publicCurrentYear"></span> AIスキルマッチ. All rights reserved.
                 </p>
-                <div class="flex gap-6 text-sm text-gray-300">
-                    <a href="#" class="hover:text-white">利用規約</a>
-                    <a href="https://aitech-japan.co.jp/3" target="_blank" class="hover:text-white">プライバシーポリシー</a>
-                    <a href="#" class="hover:text-white">特定商取引法</a>
-                </div>
             </div>
         </div>
     </div>

@@ -1118,7 +1118,7 @@ section {
                             <span class="category-badge">{{ $q->category ?? 'その他' }}</span>
                             <div class="answer-count">
                                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                {{ $q->answers_count ?? 0 }}
+                                回答数 {{ $q->answers_count ?? 0 }}
                             </div>
                         </div>
                         <h3 class="question-title">{{ Str::limit($q->title, 60) }}</h3>

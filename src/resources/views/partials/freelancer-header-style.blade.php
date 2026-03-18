@@ -211,28 +211,123 @@
         display: none;
         position: absolute;
         right: 0;
-        top: 100%;
-        background-color: white;
-        min-width: 240px;
+        top: calc(100% + 0.5rem);
+        background-color: #ffffff;
+        min-width: 300px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
         border-radius: 12px;
         z-index: 1000;
-        border: 1px solid #e1e4e8;
-        margin-top: 0.5rem;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
     }
     .dropdown.is-open .dropdown-content { display: block; }
-    .dropdown-item {
-        display: block;
-        padding: 0.875rem 1.25rem;
-        text-decoration: none;
-        color: #586069;
-        transition: all 0.15s ease;
-        border-radius: 6px;
-        margin: 0.25rem;
-        white-space: nowrap;
+
+    /* ドロップダウン：プロフィールヘッダー */
+    .dropdown-profile {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        background: #fff;
+        border-bottom: 1px solid #f3f4f6;
     }
-    .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
-    .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
+    .dropdown-profile-avatar {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .dropdown-profile-avatar-initial {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        flex-shrink: 0;
+    }
+    .dropdown-profile-info { min-width: 0; }
+    .dropdown-profile-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        line-height: 1.3;
+    }
+    .dropdown-profile-role {
+        font-size: 0.8125rem;
+        color: #6b7280;
+        margin-top: 0.125rem;
+    }
+
+    /* ドロップダウン：ナビゲーション */
+    .dropdown-nav { padding: 0.5rem 0; }
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0.75rem;
+        padding: 0.75rem 1.25rem;
+        text-decoration: none;
+        color: #374151;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        font-size: 0.9375rem;
+        font-weight: 500;
+    }
+    .dropdown-item:hover { background-color: #f9fafb; color: #111827; }
+    .dropdown-item-icon {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        flex-shrink: 0;
+        color: #6b7280;
+    }
+    .dropdown-item:hover .dropdown-item-icon { color: #374151; }
+    .dropdown-item-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dropdown-item-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+    .dropdown-item-badge-green { background: #22c55e; color: white; }
+    .dropdown-item-badge-blue { background: #3b82f6; color: white; }
+    .dropdown-item-badge-purple { background: #8b5cf6; color: white; }
+
+    .dropdown-divider {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 0.5rem 1rem;
+    }
+
+    /* ログアウト（赤） */
+    .dropdown-item-form { display: block; }
+    .dropdown-item-logout {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        cursor: pointer;
+        font-size: inherit;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 0.75rem;
+        white-space: nowrap;
+        color: #dc2626 !important;
+    }
+    .dropdown-item-logout:hover { background-color: #fef2f2 !important; color: #b91c1c !important; }
+    .dropdown-item-logout .dropdown-item-icon { color: #dc2626; }
 
     .user-avatar {
         width: 36px;
@@ -250,6 +345,7 @@
         border: none;
         padding: 0;
         appearance: none;
+        overflow: hidden;
     }
     .user-avatar:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
 </style>

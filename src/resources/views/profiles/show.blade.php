@@ -290,7 +290,12 @@
                                 <span class="text-sm text-gray-500">未登録</span>
                             @endif
                         </div>
-                        @guest
+                        @php
+                            $isGuest = !auth()->check() && !auth('freelancer')->check() && !auth('company')->check();
+                            $currentUserId = auth()->id() ?? auth('freelancer')->id() ?? auth('company')->id();
+                            $isOwnProfile = $currentUserId && $currentUserId === $user->id;
+                        @endphp
+                        @if($isGuest && !$isOwnProfile)
                         <p class="text-sm text-gray-500">連絡するにはログインが必要です。</p>
                         <a href="{{ route('auth.login.form') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,7 +303,7 @@
                             </svg>
                             ログインして連絡する
                         </a>
-                        @endguest
+                        @endif
                     </div>
                 </div>
 

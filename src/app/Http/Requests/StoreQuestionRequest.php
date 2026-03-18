@@ -24,8 +24,8 @@ class StoreQuestionRequest extends FormRequest
             // カテゴリー（任意：未指定なら Service 側でデフォルトに寄せる）
             'category' => ['nullable', 'string', 'max:50'],
 
-            // タグ（任意）
-            'tags' => ['nullable', 'array'],
+            // タグ（任意・4〜10個）
+            'tags' => ['nullable', 'array', 'max:10'],
             'tags.*' => ['string', 'max:50'],
         ];
     }

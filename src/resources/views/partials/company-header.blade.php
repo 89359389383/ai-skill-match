@@ -62,36 +62,49 @@
             const mobileNavInner = document.getElementById('mobileNavInner');
             const desktopNav = document.getElementById('desktopNav');
 
-            if (!header || !toggleBtn || !mobileNav || !mobileNavInner || !desktopNav) return;
+            if (header && toggleBtn && mobileNav && mobileNavInner && desktopNav) {
+                mobileNavInner.innerHTML = desktopNav.innerHTML;
 
-            mobileNavInner.innerHTML = desktopNav.innerHTML;
+                const open = () => {
+                    header.classList.add('is-mobile-nav-open');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                    toggleBtn.setAttribute('aria-label', 'メニューを閉じる');
+                };
+                const close = () => {
+                    header.classList.remove('is-mobile-nav-open');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    toggleBtn.setAttribute('aria-label', 'メニューを開く');
+                };
+                const isOpen = () => header.classList.contains('is-mobile-nav-open');
 
-            const open = () => {
-                header.classList.add('is-mobile-nav-open');
-                toggleBtn.setAttribute('aria-expanded', 'true');
-                toggleBtn.setAttribute('aria-label', 'メニューを閉じる');
-            };
-            const close = () => {
-                header.classList.remove('is-mobile-nav-open');
-                toggleBtn.setAttribute('aria-expanded', 'false');
-                toggleBtn.setAttribute('aria-label', 'メニューを開く');
-            };
-            const isOpen = () => header.classList.contains('is-mobile-nav-open');
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    isOpen() ? close() : open();
+                });
 
-            toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                isOpen() ? close() : open();
-            });
+                mobileNav.addEventListener('click', (e) => e.stopPropagation());
 
-            mobileNav.addEventListener('click', (e) => e.stopPropagation());
+                document.addEventListener('click', () => { if (isOpen()) close(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) close(); });
 
-            document.addEventListener('click', () => { if (isOpen()) close(); });
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) close(); });
+                const mq = window.matchMedia('(min-width: 768px)');
+                const onChange = () => { if (mq.matches) close(); };
+                if (mq.addEventListener) mq.addEventListener('change', onChange);
+                else mq.addListener(onChange);
+            }
 
-            const mq = window.matchMedia('(min-width: 768px)');
-            const onChange = () => { if (mq.matches) close(); };
-            if (mq.addEventListener) mq.addEventListener('change', onChange);
-            else mq.addListener(onChange);
+            const dropdown = document.getElementById('userDropdown');
+            const dropdownToggle = document.getElementById('userDropdownToggle');
+            const dropdownMenu = document.getElementById('userDropdownMenu');
+
+            if (dropdown && dropdownToggle && dropdownMenu) {
+                const open = () => { dropdown.classList.add('is-open'); dropdownToggle.setAttribute('aria-expanded', 'true'); };
+                const close = () => { dropdown.classList.remove('is-open'); dropdownToggle.setAttribute('aria-expanded', 'false'); };
+                const isOpen = () => dropdown.classList.contains('is-open');
+                dropdownToggle.addEventListener('click', (e) => { e.stopPropagation(); isOpen() ? close() : open(); });
+                document.addEventListener('click', (e) => { if (!dropdown.contains(e.target)) close(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+            }
         })();
     </script>
 </header>

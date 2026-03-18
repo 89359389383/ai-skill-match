@@ -1,24 +1,675 @@
-スキル出品画面仕様
+# スキル出品画面 機能要件
 
-概要:
- フリーランスが自分のスキルを出品するための画面。
+## 概要
+スキル・サービスを出品するための入力フォーム画面。ログイン機能想定（現在はフロントエンドのみ）。サービスタイトル、説明、価格、納期、画像などを入力してスキルを出品する。
 
-目的:
- スキルの登録を簡潔かつミスなく行えること。
+---
 
-主な機能要件:
-- タイトル入力
-- カテゴリ選択（複数可）
-- 価格設定（固定／時間単位）
-- 説明文（リッチテキスト）
-- サンプル画像/ファイルのアップロード
+## ① ヘッダーセクション
 
-バリデーション:
-- タイトル必須、最大100文字
-- 価格は数値、0以上
+### 目的
+- スキル一覧への戻るリンクを提供
 
-API:
-- POST /api/skills (payload: title, categories, price, description, files)
+### 表示項目
+- 戻るリンク：「スキル一覧に戻る」
+  - アイコン：左向き矢印（ArrowLeft）
+  - 色：グレー600
+  - ホバー：グレー900
+  - マージン下：mb-6
 
-備考:
- UIはモバイル優先で、ドラフト保存をサポートする。
+---
+
+## ② レイアウト構造
+
+### グリッドレイアウト
+- グリッド：1カラム（lg:4カラム）
+- 間隔：gap-6
+- 左サイドバー：1カラム（lg:col-span-1）
+- メインコンテンツ：3カラム（lg:col-span-3）
+
+---
+
+## ③ 左サイドバー
+
+### 目的
+- ページ内ナビゲーションと出品アクションを提供
+
+### 表示項目
+- 背景：白
+- 角丸：lg
+- シャドウ：sm
+- オーバーフロー：非表示
+- Sticky：top-24（スクロール時に固定）
+
+#### サイドバーヘッダー
+- 背景：オレンジ500
+- テキスト：白
+- パディング：px-6 py-4
+- タイトル：
+  - テキスト：「スキル出品」
+  - フォント：太字・中央揃え
+
+#### ナビゲーションメニュー
+- ボーダー下：1px
+
+**メニュー項目（4項目）**
+1. 基本情報
+2. 詳細説明
+3. 料金・納期
+4. 画像
+
+**各項目のスタイル**
+- 幅：100%
+- テキスト整列：左
+- パディング：px-6 py-3
+- フォント：小
+- ボーダー下：1px（最後の項目以外）
+- 通常状態：
+  - テキスト：グレー700
+  - ホバー：グレー50背景
+- トランジション：colors
+
+**操作**
+- クリック時：該当セクションへスムーズスクロール
+- JavaScript関数：`scrollToSection(sectionId)`
+
+#### アクションボタンセクション（p-6）
+- レイアウト：縦積み・間隔3
+
+**プレビューボタン**
+- テキスト：「プレビュー」
+- 幅：100%
+- パディング：py-3
+- ボーダー：2px・オレンジ500
+- テキスト：オレンジ600
+- 角丸：lg
+- フォント：太字
+- アイコン：Eye（w-5 h-5）
+- レイアウト：中央揃え・横並び・間隔2
+- ホバー：オレンジ50背景
+- onclick：`handlePreview()`
+
+**出品ボタン**
+- テキスト：「出品する」
+- 幅：100%
+- パディング：py-3
+- 背景：オレンジ500
+- テキスト：白
+- 角丸：lg
+- フォント：太字
+- シャドウ：md
+- アイコン：Save（w-5 h-5）
+- レイアウト：中央揃え・横並び・間隔2
+- ホバー：shadow-lg
+- onclick：`handleSubmit()`
+
+---
+
+## ④ メインコンテンツエリア
+
+### フォーム構造
+- ID：skillForm
+- レイアウト：縦積み・間隔6
+
+### セクション共通スタイル
+- 背景：白
+- 角丸：lg
+- シャドウ：sm
+- パディング：p-6
+
+---
+
+## ⑤ 基本情報セクション
+
+### 表示項目（id="basicInfo"）
+- セクションタイトル：「基本情報」
+  - フォント：`text-xl font-bold`
+  - カラー：オレンジ600
+  - マージン下：mb-4
+  - 下ボーダー：2px・オレンジ600・pb-2
+
+#### サービスタイトル
+- ラベル：「サービスタイトル」（小・太字・グレー700・mb-2）
+  - 必須マーク：赤500（*）
+- 入力フィールド：
+  - ID：title
+  - タイプ：text
+  - プレースホルダー：「例：ChatGPTを活用した業務効率化コンサルティング」
+  - スタイル：
+    - 幅：100%
+    - パディング：px-4 py-3
+    - ボーダー：グレー300
+    - 角丸：lg
+    - フォーカス：ring-2 ring-orange-500
+  - 必須：required
+- ヘルプテキスト：
+  - テキスト：「50文字以内で、サービスの内容が分かりやすいタイトルをつけましょう」
+  - フォント：小・グレー500
+  - マージン上：mt-1
+
+#### タグ
+- ラベル：「タグ」（小・太字・グレー700・mb-2）
+- 入力フィールド + 追加ボタン：
+  - レイアウト：横並び・間隔2・mb-2
+  - 入力：
+    - ID：tagInput
+    - プレースホルダー：「タグを入力してEnter」
+    - スタイル：
+      - flex：1
+      - パディング：px-4 py-2
+      - ボーダー：グレー300
+      - 角丸：lg
+      - フォーカス：ring-2 ring-orange-500
+  - ボタン：
+    - テキスト：なし（アイコンのみ）
+    - アイコン：Plus（w-5 h-5）
+    - パディング：px-4 py-2
+    - 背景：オレンジ500
+    - テキスト：白
+    - 角丸：lg
+    - ホバー：shadow-md
+    - onclick：`addTag()`
+
+- タグコンテナ：
+  - ID：tagsContainer
+  - レイアウト：横並び・折り返し・間隔2・mb-2
+
+**タグバッジ（動的生成）**
+- 背景：オレンジ100
+- テキスト：オレンジ700・小・太字
+- スタイル：角丸full・px-3 py-1
+- レイアウト：横並び・間隔2
+- 削除ボタン：
+  - アイコン：×（X・w-3 h-3）
+  - ホバー：オレンジ900
+  - onclick：`removeTag(tag)`
+
+- ヘルプテキスト：
+  - テキスト：「例：ChatGPT、プロンプト、業務効率化」
+  - フォント：小・グレー500
+  - マージン上：mt-1
+
+---
+
+## ⑥ 詳細説明セクション
+
+### 表示項目（id="details"）
+- セクションタイトル：「詳細説明」
+  - フォント：`text-xl font-bold`
+  - カラー：オレンジ600
+  - マージン下：mb-4
+  - 下ボーダー：2px・オレンジ600・pb-2
+
+#### サービス内容
+- ラベル：「サービス内容」（小・太字・グレー700・mb-2）
+  - 必須マーク：赤500（*）
+- テキストエリア：
+  - ID：description
+  - 行数：12
+  - プレースホルダー：
+```
+サービスの内容を詳しく説明してください。
+
+・提供する内容
+・どんな課題を解決できるか
+・対象となる方
+・納品物の詳細
+など
+```
+  - スタイル：
+    - 幅：100%
+    - パディング：px-4 py-3
+    - ボーダー：グレー300
+    - 角丸：lg
+    - フォーカス：ring-2 ring-orange-500
+    - リサイズ：不可（resize-none）
+  - 必須：required
+
+- ヘルプテキスト：
+  - テキスト：「購入者が理解しやすいよう、具体的に記載しましょう」
+  - フォント：小・グレー500
+  - マージン上：mt-1
+
+---
+
+## ⑦ 料金・納期セクション
+
+### 表示項目（id="pricing"）
+- セクションタイトル：「料金・納期」
+  - フォント：`text-xl font-bold`
+  - カラー：オレンジ600
+  - マージン下：mb-4
+  - 下ボーダー：2px・オレンジ600・pb-2
+
+#### グリッドレイアウト
+- レイアウト：1カラム（md:2カラム）
+- 間隔：gap-4
+
+#### 料金
+- ラベル：「料金」（小・太字・グレー700・mb-2）
+  - 必須マーク：赤500（*）
+- 入力フィールド：
+  - ID：price
+  - タイプ：text
+  - プレースホルダー：「例：¥30,000」
+  - スタイル：
+    - 幅：100%
+    - パディング：px-4 py-3
+    - ボーダー：グレー300
+    - 角丸：lg
+    - フォーカス：ring-2 ring-orange-500
+  - 必須：required
+- ヘルプテキスト：
+  - テキスト：「¥記号を含めて入力してください」
+  - フォント：小・グレー500
+  - マージン上：mt-1
+
+#### 納期
+- ラベル：「納期」（小・太字・グレー700・mb-2）
+  - 必須マーク：赤500（*）
+- 入力フィールド：
+  - ID：duration
+  - タイプ：text
+  - プレースホルダー：「例：3日以内」
+  - スタイル：
+    - 幅：100%
+    - パディング：px-4 py-3
+    - ボーダー：グレー300
+    - 角丸：lg
+    - フォーカス：ring-2 ring-orange-500
+  - 必須：required
+- ヘルプテキスト：
+  - テキスト：「納品までの目安の日数を入力してください」
+  - フォント：小・グレー500
+  - マージン上：mt-1
+
+---
+
+## ⑧ サービス画像セクション
+
+### 表示項目（id="image"）
+- セクションタイトル：「サービス画像」
+  - フォント：`text-xl font-bold`
+  - カラー：オレンジ600
+  - マージン下：mb-4
+  - 下ボーダー：2px・オレンジ600・pb-2
+
+#### メイン画像
+- ラベル：「メイン画像」（小・太字・グレー700・mb-2）
+
+**プレビュー表示（条件付き）**
+- ID：imagePreview
+- 初期状態：非表示（display: none）
+- マージン下：mb-4
+- 相対位置：relative
+
+- 画像：
+  - ID：previewImg
+  - アスペクト比：16:9（aspect-video）
+  - 幅：100%
+  - オブジェクトフィット：cover
+  - 角丸：lg
+
+- 削除ボタン：
+  - 位置：絶対（absolute・top-2 right-2）
+  - パディング：p-2
+  - 背景：レッド500
+  - テキスト：白
+  - 角丸：full
+  - アイコン：×（X・w-5 h-5）
+  - ホバー：レッド600
+  - onclick：`removeImage()`
+
+**アップロードラベル**
+- ID：uploadLabel
+- レイアウト：縦フレックス・中央揃え・両端揃え
+- 幅：100%
+- アスペクト比：16:9（aspect-video）
+- ボーダー：2px破線・グレー300
+- 角丸：lg
+- カーソル：pointer
+- ホバー：オレンジ500ボーダー
+- 背景：グレー50
+
+**アップロードエリア内容**
+- レイアウト：縦フレックス・中央揃え
+- パディング：pt-5 pb-6
+
+- アイコン：Upload（w-12 h-12・グレー400・mb-3）
+- メインテキスト：
+  - 「クリックして画像をアップロード」（小・グレー500・mb-2）
+  - 「クリックして」部分：太字
+- サブテキスト：
+  - 「PNG, JPG, GIF (推奨サイズ: 1280x720px)」（極小・グレー500）
+
+**ファイル入力**
+- ID：imageInput
+- タイプ：file
+- 非表示：hidden
+- 受付形式：image/*
+- onchange：`handleImageUpload(event)`
+
+- ヘルプテキスト：
+  - テキスト：「サービスの内容が伝わる魅力的な画像を選びましょう」
+  - フォント：小・グレー500
+  - マージン上：mt-2
+
+---
+
+## ⑨ このサービスの特徴セクション
+
+### 表示項目
+- セクションタイトル：「このサービスの特徴」
+  - フォント：`text-xl font-bold`
+  - カラー：オレンジ600
+  - マージン下：mb-4
+  - 下ボーダー：2px・オレンジ600・pb-2
+
+#### 特徴グリッド
+- レイアウト：1カラム（md:2カラム）
+- 間隔：gap-4
+
+**特徴カード（4個）**
+- レイアウト：横並び・間隔3
+- パディング：p-4
+- 背景：オレンジ50
+- 角丸：lg
+
+**構造**
+- チェックボックス：
+  - ID：feature1〜feature4
+  - サイズ：w-5 h-5
+  - カラー：オレンジ600
+  - ボーダー：グレー300
+  - 角丸：標準
+  - フォーカス：ring-orange-500
+- ラベル：
+  - For：feature1〜feature4
+  - フォント：太字・グレー900
+
+特徴一覧：
+1. 即レス対応
+2. 修正無制限
+3. 商用利用可
+4. 著作権譲渡
+
+---
+
+## ⑩ アクションボタンセクション（モバイル用）
+
+### 表示項目
+- 表示条件：lg未満（lg:hidden）
+- 背景：白
+- 角丸：lg
+- シャドウ：sm
+- パディング：p-6
+
+#### ボタン配置
+- レイアウト：縦積み・間隔3
+
+**プレビューボタン**
+- 幅：100%
+- パディング：py-3
+- ボーダー：2px・オレンジ500
+- テキスト：オレンジ600
+- 角丸：lg
+- フォント：太字
+- アイコン：Eye（w-5 h-5）
+- レイアウト：中央揃え・横並び・間隔2
+- ホバー：オレンジ50背景
+- onclick：`handlePreview()`
+
+**出品ボタン**
+- タイプ：submit
+- 幅：100%
+- パディング：py-3
+- 背景：オレンジ500
+- テキスト：白
+- 角丸：lg
+- フォント：太字
+- シャドウ：md
+- アイコン：Save（w-5 h-5）
+- レイアウト：中央揃え・横並び・間隔2
+- ホバー：shadow-lg
+
+---
+
+## JavaScript機能
+
+### 状態管理
+```javascript
+let tags = [];
+let imageData = null;
+```
+
+### スムーズスクロール
+```javascript
+function scrollToSection(sectionId) {
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+```
+
+### タグ管理
+```javascript
+function addTag() {
+  const input = document.getElementById('tagInput');
+  const tag = input.value.trim();
+  if (tag && !tags.includes(tag)) {
+    tags.push(tag);
+    renderTags();
+    input.value = '';
+  }
+}
+
+function removeTag(tag) {
+  tags = tags.filter(t => t !== tag);
+  renderTags();
+}
+
+function renderTags() {
+  const container = document.getElementById('tagsContainer');
+  container.innerHTML = tags.map(tag => `
+    <span class="px-3 py-1 bg-orange-100 text-orange-700 text-sm font-medium rounded-full flex items-center gap-2">
+      ${tag}
+      <button type="button" onclick="removeTag('${tag}')" class="hover:text-orange-900">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </span>
+  `).join('');
+}
+```
+
+### 画像アップロード
+```javascript
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imageData = e.target.result;
+      document.getElementById('previewImg').src = imageData;
+      document.getElementById('imagePreview').style.display = 'block';
+      document.getElementById('uploadLabel').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeImage() {
+  imageData = null;
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('uploadLabel').style.display = 'flex';
+  document.getElementById('imageInput').value = '';
+}
+```
+
+### プレビュー機能
+```javascript
+function handlePreview() {
+  console.log('プレビュー:', {
+    title: document.getElementById('title').value,
+    tags: tags,
+    description: document.getElementById('description').value,
+    price: document.getElementById('price').value,
+    duration: document.getElementById('duration').value,
+    image: imageData
+  });
+  alert('プレビュー機能は準備中です');
+}
+```
+
+### フォーム送信
+```javascript
+function handleSubmit() {
+  const title = document.getElementById('title').value;
+  const description = document.getElementById('description').value;
+  const price = document.getElementById('price').value;
+  const duration = document.getElementById('duration').value;
+
+  if (!title || !description || !price || !duration) {
+    alert('全ての必須項目を入力してください');
+    return;
+  }
+
+  console.log('提出データ:', {
+    title,
+    tags,
+    description,
+    price,
+    duration,
+    image: imageData,
+    features: {
+      feature1: document.getElementById('feature1').checked,
+      feature2: document.getElementById('feature2').checked,
+      feature3: document.getElementById('feature3').checked,
+      feature4: document.getElementById('feature4').checked
+    }
+  });
+
+  alert('スキルを出品しました！');
+  window.location.href = '/skills';
+}
+```
+
+### イベントリスナー
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+  // タグ入力Enter対応
+  document.getElementById('tagInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  });
+
+  // フォーム送信
+  document.getElementById('skillForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleSubmit();
+  });
+});
+```
+
+---
+
+## バリデーション
+
+### 必須項目
+- サービスタイトル（title）
+- サービス内容（description）
+- 料金（price）
+- 納期（duration）
+
+### バリデーションルール
+- すべての必須項目が入力されていない場合：エラーメッセージ表示
+- その他の項目（タグ、画像、特徴）は任意
+
+---
+
+## データ構造
+
+### 送信データ形式
+```javascript
+{
+  title: string,
+  tags: string[],
+  description: string,
+  price: string,
+  duration: string,
+  image: string | null, // Base64形式
+  features: {
+    feature1: boolean,
+    feature2: boolean,
+    feature3: boolean,
+    feature4: boolean
+  }
+}
+```
+
+---
+
+## レスポンシブデザイン
+
+### デスクトップ（lg以上: 1024px~）
+- グリッド：4カラム（1:3分割）
+- 左サイドバー：sticky固定・アクションボタン表示
+- 料金・納期：2カラムグリッド
+- 特徴：2カラムグリッド
+- モバイル用アクションボタン：非表示
+
+### タブレット・モバイル（~1023px）
+- グリッド：1カラム
+- 左サイドバー：非sticky
+- 料金・納期：1カラム
+- 特徴：1カラム
+- モバイル用アクションボタン：表示
+
+---
+
+## アニメーション
+
+### トランジション
+- すべてのボタン：transition-colors または transition-all
+- ボーダー：transition-all
+
+### ホバー効果
+- ボタン：背景色・シャドウ変更
+- アップロードエリア：ボーダー色変更
+
+---
+
+## アクセス制御
+- **閲覧権限**：全ユーザー（デモ版）
+- 将来：ログインユーザーのみ
+- 未ログインの場合：`/login` へリダイレクト
+
+---
+
+## 共通仕様
+
+### 色指定
+- 主要カラー：オレンジ（`orange-500`, `orange-600`）
+- エラーカラー：レッド（`red-500`）
+- 背景：白（`white`）、グレー50（`gray-50`）
+
+### フォント
+- セクションタイトル：`text-xl font-bold`
+- ラベル：`text-sm font-semibold`
+- ヘルプテキスト：`text-sm text-gray-500`
+
+---
+
+## 将来的な拡張
+- 複数画像アップロード
+- カテゴリ選択機能
+- プラン別価格設定（ベーシック・スタンダード・プレミアム）
+- ポートフォリオ添付
+- FAQ追加機能
+- 自動保存機能
+- ドラフト保存
+- テンプレート機能

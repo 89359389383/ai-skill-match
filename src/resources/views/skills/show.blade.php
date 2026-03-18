@@ -74,6 +74,14 @@
                                             <div class="font-bold text-gray-900">{{ $reviewer?->display_name ?? $review->user?->email ?? '匿名' }}</div>
                                             <div class="text-sm text-gray-500">{{ $review->created_at?->format('Y/m/d') }}</div>
                                         </div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="flex items-center gap-0.5" aria-label="評価 {{ $review->rating ?? 0 }}点">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="{{ ($review->rating ?? 0) >= $i ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" class="w-4 h-4 {{ ($review->rating ?? 0) >= $i ? 'text-yellow-400' : 'text-gray-300' }}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                @endfor
+                                            </div>
+                                            <span class="font-bold text-gray-900">{{ $review->rating ?? 0 }}</span>
+                                        </div>
                                         <p class="text-sm text-gray-700">{{ $review->body ?? '' }}</p>
                                     </div>
                                 </div>
