@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\SkillOrder;
 use App\Models\Thread;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
@@ -26,8 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // 公開レイアウト（スキル販売・記事・取引など）でログイン時、ヘッダー用データを共有
-        View::composer('layouts.public', function ($view) {
+        // フリーランスログイン時、ヘッダー・ドロップダウン用データを共有
+        $freelancerComposer = function ($view) {
             if (Auth::guard('freelancer')->check()) {
                 $user = Auth::guard('freelancer')->user();
                 $freelancer = $user->freelancer ?? null;
@@ -36,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
                 $unreadScoutCount = 0;
                 $userInitial = 'U';
 
+                $salesOrderCount = 0;
                 if ($freelancer) {
                     $unreadScoutCount = Thread::query()
                         ->where('freelancer_id', $freelancer->id)
@@ -46,6 +48,10 @@ class AppServiceProvider extends ServiceProvider
                         ->where('freelancer_id', $freelancer->id)
                         ->whereNotNull('job_id')
                         ->where('is_unread_for_freelancer', true)
+                        ->count();
+                    $salesOrderCount = SkillOrder::query()
+                        ->whereHas('skillListing', fn ($q) => $q->where('freelancer_id', $freelancer->id))
+                        ->whereIn('transaction_status', ['in_progress', 'delivered'])
                         ->count();
                     if (!empty($freelancer->display_name)) {
                         $userInitial = mb_substr($freelancer->display_name, 0, 1);
@@ -60,11 +66,25 @@ class AppServiceProvider extends ServiceProvider
                     'freelancer' => $freelancer,
                     'unreadApplicationCount' => $unreadApplicationCount,
                     'unreadScoutCount' => $unreadScoutCount,
+                    'salesOrderCount' => $salesOrderCount,
                     'userInitial' => $userInitial,
                 ]);
-                return;
             }
+        };
 
+        View::composer([
+            'layouts.public',
+            'freelancer.jobs.index',
+            'freelancer.scouts.index',
+            'freelancer.applications.index',
+            'freelancer.applications.create',
+            'freelancer.jobs.show',
+            'freelancer.scouts.show',
+            'freelancer.messages.show',
+            'freelancer.profile.settings',
+        ], $freelancerComposer);
+
+        View::composer('layouts.public', function ($view) {
             if (Auth::guard('company')->check()) {
                 $user = Auth::guard('company')->user();
                 $company = $user->company ?? null;

@@ -11,9 +11,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            background-color: #F9FAFB;
-            color: #111827;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Yu Gothic', sans-serif;
+            background-color: #F8FAFC;
+            color: #333333;
             line-height: 1.5;
         }
 
@@ -128,6 +128,7 @@
         .pscc-chat-area {
             flex: 1;
             overflow-y: auto;
+            background-color: #F8FAFC;
         }
 
         .pscc-chat-content {
@@ -139,7 +140,7 @@
         .pscc-messages {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
         }
 
         /* システムメッセージ */
@@ -169,71 +170,118 @@
             margin-top: 0.25rem;
         }
 
-        /* ユーザーメッセージ */
+        /* ユーザーメッセージ（カード形式・左揃え） */
         .pscc-message {
             display: flex;
             gap: 0.75rem;
+            align-items: flex-start;
         }
 
-        .pscc-message-reverse {
-            flex-direction: row-reverse;
+        .pscc-message-card {
+            flex: 1;
+            background: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 1rem 1.25rem;
+            max-width: 100%;
+        }
+
+        .pscc-message-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.625rem;
+        }
+
+        .pscc-message-card-header-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            min-width: 0;
         }
 
         .pscc-avatar {
             width: 2.5rem;
             height: 2.5rem;
+            min-width: 2.5rem;
             border-radius: 9999px;
             object-fit: cover;
             flex-shrink: 0;
         }
 
-        .pscc-message-content {
-            display: flex;
-            flex-direction: column;
-            max-width: 28rem;
-        }
-
-        .pscc-message-content-reverse {
-            align-items: flex-end;
-        }
-
-        .pscc-message-header {
+        .pscc-avatar-initial {
+            width: 2.5rem;
+            height: 2.5rem;
+            min-width: 2.5rem;
+            border-radius: 9999px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.25rem;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .pscc-message-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+            min-width: 0;
         }
 
         .pscc-sender-name {
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
             font-weight: 500;
-            color: #374151;
+            color: #333333;
+        }
+
+        .pscc-message-time-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8125rem;
+            color: #9B9B9B;
         }
 
         .pscc-message-time {
-            font-size: 0.75rem;
-            color: #6B7280;
+            color: #9B9B9B;
         }
 
-        .pscc-bubble {
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
+        .pscc-read-status {
+            color: #9B9B9B;
+            font-size: 0.8125rem;
         }
 
-        .pscc-bubble-own {
-            background: #F97316;
-            color: white;
+        .pscc-message-options {
+            padding: 0.25rem;
+            color: #9B9B9B;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            flex-shrink: 0;
         }
 
-        .pscc-bubble-other {
-            background: white;
-            border: 1px solid #E5E7EB;
-            color: #111827;
+        .pscc-message-options:hover {
+            color: #4A4A4A;
+            background: #F3F4F6;
         }
 
-        .pscc-bubble-text {
+        .pscc-message-body {
+            color: #333333;
+            font-size: 0.9375rem;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
+        }
+
+        .pscc-message-reactions {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            font-size: 1.125rem;
         }
 
         /* アクションボタンエリア */
@@ -250,7 +298,8 @@
             gap: 0.75rem;
         }
 
-        .pscc-approve-button {
+        .pscc-approve-button,
+        .pscc-deliver-button {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -264,7 +313,8 @@
             transition: background 0.2s;
         }
 
-        .pscc-approve-button:hover {
+        .pscc-approve-button:hover,
+        .pscc-deliver-button:hover {
             background: #059669;
         }
 
@@ -285,7 +335,32 @@
             margin: 0 auto;
             padding: 1rem;
             display: flex;
+            align-items: center;
             gap: 0.75rem;
+        }
+
+        .pscc-input-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            min-width: 2.5rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .pscc-input-avatar-initial {
+            width: 2.5rem;
+            height: 2.5rem;
+            min-width: 2.5rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+            background: #E5E7EB;
+            color: #374151;
         }
 
         .pscc-attach-button {
@@ -631,19 +706,42 @@
                                 ?? $sender?->email
                                 ?? 'ユーザー';
                             $senderInitial = mb_substr($senderName, 0, 1);
+                            $senderIcon = $sender?->freelancer?->icon_path;
+                            $avatarSrc = !empty($senderIcon)
+                                ? (str_starts_with($senderIcon, 'http') ? $senderIcon : asset('storage/' . $senderIcon))
+                                : null;
                         @endphp
 
-                        <div class="pscc-message {{ $isOwn ? 'pscc-message-reverse' : '' }}">
-                            <div class="pscc-avatar" style="background:#E5E7EB; display:flex; align-items:center; justify-content:center; color:#374151; font-weight:700;">
-                                {{ $senderInitial }}
-                            </div>
-                            <div class="pscc-message-content {{ $isOwn ? 'pscc-message-content-reverse' : '' }}">
-                                <div class="pscc-message-header">
-                                    <span class="pscc-sender-name">{{ $senderName }}</span>
-                                    <span class="pscc-message-time">{{ $msg->sent_at?->format('n/j H:i') }}</span>
+                        <div class="pscc-message">
+                            @if ($avatarSrc)
+                                <img src="{{ $avatarSrc }}" alt="{{ $senderName }}" class="pscc-avatar">
+                            @else
+                                <div class="pscc-avatar-initial" style="background:#E5E7EB; color:#374151;">{{ $senderInitial }}</div>
+                            @endif
+                            <div class="pscc-message-card">
+                                <div class="pscc-message-card-header">
+                                    <div class="pscc-message-card-header-left">
+                                        <div class="pscc-message-meta">
+                                            <span class="pscc-sender-name">{{ $senderName }}</span>
+                                            <div class="pscc-message-time-row">
+                                                <span class="pscc-message-time">{{ $msg->sent_at?->format('Y-m-d H:i:s') }}</span>
+                                                @if ($isOwn)
+                                                    <span class="pscc-read-status">既読</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if ($isOwn)
+                                        <button type="button" class="pscc-message-options" aria-label="メッセージオプション" title="オプション">
+                                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+                                            </svg>
+                                        </button>
+                                    @endif
                                 </div>
-                                <div class="pscc-bubble {{ $isOwn ? 'pscc-bubble-own' : 'pscc-bubble-other' }}">
-                                    <p class="pscc-bubble-text">{{ $msg->body }}</p>
+                                <p class="pscc-message-body">{{ $msg->body }}</p>
+                                <div class="pscc-message-reactions">
+                                    <span aria-hidden="true">🎁</span>
                                 </div>
                             </div>
                         </div>
@@ -689,9 +787,20 @@
 
     <!-- メッセージ入力エリア（取引完了まで） -->
     @if ($status !== 'completed')
+        @php
+            $meName = $me?->company?->name ?? $me?->freelancer?->display_name ?? $me?->email ?? 'ユーザー';
+            $meInitial = mb_substr($meName, 0, 1);
+            $meIcon = $me?->freelancer?->icon_path;
+            $meAvatarSrc = !empty($meIcon) ? (str_starts_with($meIcon, 'http') ? $meIcon : asset('storage/' . $meIcon)) : null;
+        @endphp
         <div class="pscc-input-area">
             <form class="pscc-input-content" method="POST" action="{{ route('transactions.messages.store', ['skill_order' => $tx->id]) }}">
                 @csrf
+                @if ($meAvatarSrc)
+                    <img src="{{ $meAvatarSrc }}" alt="{{ $meName }}" class="pscc-input-avatar">
+                @else
+                    <div class="pscc-input-avatar-initial" aria-hidden="true">{{ $meInitial }}</div>
+                @endif
                 <button class="pscc-attach-button" title="ファイル添付（未実装）" type="button" disabled aria-disabled="true">
                     <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
