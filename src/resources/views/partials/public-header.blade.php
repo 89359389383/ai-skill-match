@@ -6,8 +6,8 @@
 @endphp
 <!-- Header（ページ上部に固定） -->
 <header class="fixed top-0 left-0 right-0 z-[5000] bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-[1fr_auto_1fr] items-center h-16 gap-4">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-5 lg:px-8">
+        <div class="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-4">
             <!-- Logo -->
             <a href="{{ route('top') }}" class="flex items-center gap-2 group logo-hover w-fit">
                 <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -15,13 +15,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
                 </div>
-                <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span class="header-logo-text text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     AIスキルマッチ
                 </span>
             </a>
 
             <!-- Desktop Navigation（中央配置：左右カラムでバランス） -->
-            <div class="hidden md:flex items-center gap-6 justify-self-center">
+            <div class="hidden lg:flex items-center gap-6 justify-self-center">
                 <a href="{{ route('questions.index') }}" class="{{ $navBaseClass }} {{ ($isOnRolePage || !request()->routeIs('questions.*')) ? $navDefaultClass : $navActiveClass }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -51,7 +51,7 @@
             <!-- 右側：ログインボタン（未ログイン時）／各種アイコン（ログイン時）／モバイルメニュー -->
             <div class="flex items-center justify-end gap-3">
                 @if(!auth('freelancer')->check() && !auth('company')->check())
-                <div class="hidden md:flex items-center">
+                <div class="hidden lg:flex items-center">
                     <a href="{{ route('auth.login.form') }}" class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
@@ -199,7 +199,7 @@
                     </div>
                 </div>
                 @endif
-                <button id="publicMobileMenuBtn" class="md:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg" type="button" aria-label="メニュー">
+                <button id="publicMobileMenuBtn" class="nav-toggle public-mobile-menu-btn p-2 text-gray-700 hover:bg-gray-100 rounded-lg" type="button" aria-label="メニュー">
                 <svg id="publicMenuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -211,7 +211,7 @@
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="publicMobileMenu" class="md:hidden hidden">
+        <div id="publicMobileMenu" class="hidden">
             <div class="py-4 border-t border-gray-200 space-y-2">
                 <a href="{{ route('questions.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('questions.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }}">
                     <span>AI知恵袋</span>
@@ -241,6 +241,14 @@
     /* アニメーション */
     .nav-link {
         transition: all 0.2s ease;
+        font-size: 0.95rem;
+        padding: 0.55rem 0.85rem;
+    }
+    @media (min-width: 1280px) {
+        .nav-link {
+            font-size: 1rem;
+            padding: 0.65rem 1rem;
+        }
     }
     .logo-hover {
         transition: all 0.3s ease;
@@ -248,14 +256,32 @@
     .logo-hover:hover {
         transform: scale(1.02);
     }
+    .header-logo-text {
+        font-size: 1rem;
+    }
+    @media (min-width: 480px) {
+        .header-logo-text { font-size: 1.1rem; }
+    }
+    @media (min-width: 640px) {
+        .header-logo-text { font-size: 1.15rem; }
+    }
+    @media (min-width: 768px) {
+        .header-logo-text { font-size: 1.2rem; }
+    }
+    @media (min-width: 1024px) {
+        .header-logo-text { font-size: 1.35rem; }
+    }
+    @media (min-width: 1280px) {
+        .header-logo-text { font-size: 1.45rem; }
+    }
 </style>
 
 <style>
     /* 共通ヘッダー右端：ユーザーアイコン/ドロップダウン（roleに依存せず同じ見栄え） */
     #publicFreelancerUserDropdownToggle.user-avatar,
     #publicCompanyUserDropdownToggle.user-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
@@ -273,8 +299,30 @@
     }
     #publicFreelancerUserDropdownToggle.user-avatar:hover,
     #publicCompanyUserDropdownToggle.user-avatar:hover {
-        transform: scale(1.08);
+        transform: scale(1.06);
         box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    @media (min-width: 640px) {
+        #publicFreelancerUserDropdownToggle.user-avatar,
+        #publicCompanyUserDropdownToggle.user-avatar {
+            width: 34px;
+            height: 34px;
+        }
+    }
+    @media (min-width: 768px) {
+        #publicFreelancerUserDropdownToggle.user-avatar,
+        #publicCompanyUserDropdownToggle.user-avatar {
+            width: 36px;
+            height: 36px;
+        }
+    }
+    @media (min-width: 1024px) {
+        #publicFreelancerUserDropdownToggle.user-avatar,
+        #publicCompanyUserDropdownToggle.user-avatar {
+            width: 40px;
+            height: 40px;
+        }
     }
 
     #publicFreelancerUserDropdown .dropdown-content,
@@ -442,6 +490,30 @@
 
     #publicMobileMenu {
         z-index: 5001;
+    }
+
+    /* 早めにハンバーガーへ切り替える */
+    .nav-toggle {
+        display: inline-flex;
+    }
+    @media (min-width: 1024px) {
+        .nav-toggle {
+            display: none;
+        }
+        .nav-links {
+            display: flex !important;
+        }
+    }
+    .nav-links {
+        display: none;
+    }
+    @media (min-width: 1280px) {
+        .nav-links {
+            gap: 3rem;
+        }
+        .header-logo-text {
+            font-size: 1.45rem;
+        }
     }
 </style>
 
