@@ -216,17 +216,6 @@
             margin-top: 0.5rem;
         }
         .dropdown.is-open .dropdown-content { display: block; }
-        .dropdown-item {
-            display: block;
-            padding: 0.875rem 1.25rem;
-            text-decoration: none;
-            color: #586069;
-            transition: all 0.15s ease;
-            border-radius: 6px;
-            margin: 0.25rem;
-            white-space: nowrap;
-        }
-        .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
     </style>
     <style>
@@ -478,9 +467,6 @@
 </head>
 <body>
     @include('partials.public-header')
-    @auth('freelancer')
-        @include('partials.freelancer-header')
-    @endauth
 
     <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
         <div class="content-area">

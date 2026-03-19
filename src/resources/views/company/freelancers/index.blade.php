@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フリーランス一覧（企業）- AITECH</title>
-    @include('partials.company-header-style')
     <style>
         :root {
             --header-height: 72px;           /* md 基本高さ */
@@ -616,7 +615,6 @@
 </head>
 <body>
     @include('partials.public-header')
-    @include('partials.company-header')
 
     <main class="main-content">
         <aside class="sidebar">

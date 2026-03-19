@@ -26,7 +26,7 @@
 
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">タイトル <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title', $article->title) }}" required maxlength="255"
+                    <input type="text" name="title" value="{{ old('title', $article->title) }}" maxlength="255"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('title') border-red-500 @enderror"
                         placeholder="記事のタイトルを入力してください">
                     @error('title')
@@ -36,7 +36,7 @@
 
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">概要 <span class="text-red-500">*</span></label>
-                    <textarea name="excerpt" rows="3" required maxlength="200"
+                    <textarea name="excerpt" rows="3" maxlength="200"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('excerpt') border-red-500 @enderror"
                         placeholder="記事の概要を入力してください">{{ old('excerpt', $article->excerpt) }}</textarea>
                     @error('excerpt')
@@ -46,7 +46,7 @@
 
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">カテゴリー <span class="text-red-500">*</span></label>
-                    <select name="category" required
+                    <select name="category"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('category') border-red-500 @enderror">
                         <option value="ChatGPT" {{ old('category', $article->category) === 'ChatGPT' ? 'selected' : '' }}>ChatGPT</option>
                         <option value="n8n" {{ old('category', $article->category) === 'n8n' ? 'selected' : '' }}>n8n</option>

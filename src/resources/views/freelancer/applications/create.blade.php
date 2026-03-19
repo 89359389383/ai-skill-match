@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募する - AITECH</title>
+    @auth('freelancer')
+        @include('partials.freelancer-header-style')
+    @endauth
     <style>
         :root {
             --header-height: 72px;       /* 80px * 1.3 */
@@ -455,17 +458,6 @@
             margin-top: 0.5rem;
         }
         .dropdown.is-open .dropdown-content { display: block; }
-        .dropdown-item {
-            display: block;
-            padding: 0.875rem 1.25rem;
-            text-decoration: none;
-            color: #586069;
-            transition: all 0.15s ease;
-            border-radius: 6px;
-            margin: 0 0.25rem;
-            white-space: nowrap;
-        }
-        .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
     </style>

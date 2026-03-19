@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募された案件（企業）- AITECH</title>
-    @include('partials.company-header-style')
     <style>
         :root {
             --header-height: 72px;           /* md 基本高さ */
@@ -728,7 +727,6 @@
 </head>
 <body>
     @include('partials.public-header')
-    @include('partials.company-header')
     <!-- Tabs Bar -->
     <div class="tabs-bar">
         <div class="tabs-container">

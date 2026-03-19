@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スカウト一覧（企業）- AITECH</title>
-    @include('partials.company-header-style')
     <style>
         :root {
             --header-height: 72px;           /* md 基本高さ */
@@ -331,7 +330,6 @@
 </head>
 <body>
     @include('partials.public-header')
-    @include('partials.company-header')
 
     <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
         <div class="topbar flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">

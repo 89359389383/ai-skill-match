@@ -28,8 +28,7 @@
                         type="password"
                         name="password"
                         class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 @error('password') border-red-500 @enderror"
-                        placeholder="新しいパスワード"
-                        required>
+                        placeholder="新しいパスワード">
                     @error('password')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
@@ -40,8 +39,7 @@
                         type="password"
                         name="password_confirmation"
                         class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                        placeholder="新しいパスワード（確認）"
-                        required>
+                        placeholder="新しいパスワード（確認）">
                 </div>
 
                 <button type="submit" class="w-full rounded-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm md:text-base font-extrabold text-white shadow hover:shadow-md active:shadow">

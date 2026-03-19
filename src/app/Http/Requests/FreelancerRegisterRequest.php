@@ -40,7 +40,7 @@ class FreelancerRegisterRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\-\(\)\s]*$/'],
             'line_id' => ['nullable', 'string', 'max:100', 'regex:/^(|https:\/\/(line\.me|lin\.ee)\/.*)$/'],
             'twitter_url' => ['nullable', 'string', 'url', 'max:255', 'regex:/^(|https:\/\/(twitter\.com|x\.com)\/.*)$/'],
-            'icon' => ['nullable', 'file', 'image', 'max:5120'],
+            'icon' => ['required', 'file', 'image', 'max:5120'],
 
             // スキル関連（任意）
             'skills' => ['sometimes', 'array', 'min:1'],
@@ -159,6 +159,7 @@ class FreelancerRegisterRequest extends FormRequest
             'twitter_url.max' => 'TwitterプロフィールURLは255文字以内で入力してください。',
             'twitter_url.regex' => 'TwitterプロフィールURLの形式が正しくありません（https://twitter.com/ または https://x.com/ で始まるURLを入力してください）。',
 
+            'icon.required' => 'アイコン画像を選択してください。',
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',
             'icon.max' => 'アイコン画像は5MB以下のファイルを選択してください。',
