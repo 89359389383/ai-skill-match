@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>企業プロフィール登録 - AITECH</title>
-    @include('partials.company-header-style')
     <style>
         /* リセット & ベース */
         * {
@@ -284,7 +283,6 @@
 </head>
 <body>
     @include('partials.public-header')
-    @include('partials.company-header')
     <div class="background"></div>
 
     <div class="container px-4 md:px-6 lg:px-8 py-8 md:py-12">

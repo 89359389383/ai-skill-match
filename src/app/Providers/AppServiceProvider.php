@@ -74,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer([
             'layouts.public',
+            'partials.public-header',
             'freelancer.jobs.index',
             'freelancer.scouts.index',
             'freelancer.applications.index',
@@ -84,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
             'freelancer.profile.settings',
         ], $freelancerComposer);
 
-        View::composer('layouts.public', function ($view) {
+        View::composer(['layouts.public', 'partials.public-header'], function ($view) {
             if (Auth::guard('company')->check()) {
                 $user = Auth::guard('company')->user();
                 $company = $user->company ?? null;
@@ -114,6 +115,7 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 $view->with([
+                    'company' => $company,
                     'unreadApplicationCount' => $unreadApplicationCount,
                     'unreadScoutCount' => $unreadScoutCount,
                     'userInitial' => $userInitial,

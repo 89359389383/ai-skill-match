@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>メッセージ - AITECH</title>
+    @auth('freelancer')
+        @include('partials.freelancer-header-style')
+    @endauth
     {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         /* Header (企業側と同じレスポンシブ構造: 640 / 768 / 1024 / 1280) */
@@ -213,17 +216,6 @@
             margin-top: 0.5rem;
         }
         .dropdown.is-open .dropdown-content { display: block; }
-        .dropdown-item {
-            display: block;
-            padding: 0.875rem 1.25rem;
-            text-decoration: none;
-            color: #586069;
-            transition: all 0.15s ease;
-            border-radius: 6px;
-            margin: 0.25rem;
-            white-space: nowrap;
-        }
-        .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
     </style>
     <style>

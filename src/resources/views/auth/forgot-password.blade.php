@@ -39,8 +39,7 @@
                         name="email"
                         value="{{ old('email') }}"
                         class="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 @error('email') border-red-500 @enderror"
-                        placeholder="メールアドレス"
-                        required>
+                        placeholder="メールアドレス">
                     @error('email')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror

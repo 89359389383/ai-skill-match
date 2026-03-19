@@ -72,7 +72,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">サービスタイトル <span class="text-red-500">*</span></label>
-                                <input type="text" id="title" name="title" value="{{ old('title') }}" placeholder="例：ChatGPTを活用した業務効率化コンサルティング" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('title') border-red-500 @enderror" required>
+                                <input type="text" id="title" name="title" value="{{ old('title') }}" placeholder="例：ChatGPTを活用した業務効率化コンサルティング" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('title') border-red-500 @enderror">
                                 @error('title')
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
@@ -99,7 +99,7 @@
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">詳細説明</h2>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">サービス内容 <span class="text-red-500">*</span></label>
-                            <textarea id="description" name="description" placeholder="サービスの内容を詳しく説明してください。&#10;&#10;・提供する内容&#10;・どんな課題を解決できるか&#10;・対象となる方&#10;・納品物の詳細&#10;など" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none @error('description') border-red-500 @enderror" required>{{ old('description') }}</textarea>
+                            <textarea id="description" name="description" placeholder="サービスの内容を詳しく説明してください。&#10;&#10;・提供する内容&#10;・どんな課題を解決できるか&#10;・対象となる方&#10;・納品物の詳細&#10;など" rows="12" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
                             @error('description')
                                 <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                             @enderror
@@ -113,7 +113,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">料金 <span class="text-red-500">*</span></label>
-                                <input type="text" id="price" name="price" value="{{ old('price') }}" placeholder="例：30000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('price') border-red-500 @enderror" required>
+                                <input type="text" id="price" name="price" value="{{ old('price') }}" placeholder="例：30000" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('price') border-red-500 @enderror">
                                 @error('price')
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
@@ -121,7 +121,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">納期 <span class="text-red-500">*</span></label>
-                                <input type="text" id="duration" name="delivery_days" value="{{ old('delivery_days') }}" placeholder="例：3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('delivery_days') border-red-500 @enderror" required>
+                                <input type="text" id="duration" name="delivery_days" value="{{ old('delivery_days') }}" placeholder="例：3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('delivery_days') border-red-500 @enderror">
                                 @error('delivery_days')
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
