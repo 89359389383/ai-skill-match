@@ -66,7 +66,18 @@
                     $salesCount = $salesOrderCount ?? 0;
                     $userDisplayName = $freelancer?->display_name ?? 'ゲストユーザー';
                     $userIcon = $freelancer?->icon_path ?? null;
-                    $avatarSrc = !empty($userIcon) ? (str_starts_with($userIcon, 'http') ? $userIcon : asset('storage/' . $userIcon)) : null;
+                    $avatarSrc = null;
+                    if (!empty($userIcon)) {
+                        if (str_starts_with($userIcon, 'http://') || str_starts_with($userIcon, 'https://')) {
+                            $avatarSrc = $userIcon;
+                        } else {
+                            $iconRel = ltrim($userIcon, '/');
+                            if (str_starts_with($iconRel, 'storage/')) {
+                                $iconRel = substr($iconRel, strlen('storage/'));
+                            }
+                            $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                        }
+                    }
                 @endphp
                 <div class="dropdown relative" id="publicFreelancerUserDropdown">
                     <button class="user-avatar" id="publicFreelancerUserDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="publicFreelancerUserDropdownMenu">
@@ -120,6 +131,13 @@
                                 <span class="dropdown-item-text">スカウト</span>
                                 @if($scoutUnread > 0)
                                     <span class="dropdown-item-badge dropdown-item-badge-purple">{{ $scoutUnread }}件</span>
+                                @endif
+                            </a>
+                            <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">メッセージ</span>
+                                @if(($unreadDirectMessageCount ?? 0) > 0)
+                                    <span class="dropdown-item-badge dropdown-item-badge-green">新着{{ $unreadDirectMessageCount }}</span>
                                 @endif
                             </a>
                         </div>
@@ -177,10 +195,13 @@
                                     <span class="dropdown-item-badge dropdown-item-badge-blue">新着{{ $appUnread }}</span>
                                 @endif
                             </a>
-                            <span class="dropdown-item dropdown-item-disabled" role="menuitem" aria-disabled="true">
+                            <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
                                 <span class="dropdown-item-text">メッセージ</span>
-                            </span>
+                                @if(($unreadDirectMessageCount ?? 0) > 0)
+                                    <span class="dropdown-item-badge dropdown-item-badge-green">新着{{ $unreadDirectMessageCount }}</span>
+                                @endif
+                            </a>
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-nav">

@@ -292,26 +292,103 @@
                         </div>
                         @php
                             $isGuest = !auth()->check() && !auth('freelancer')->check() && !auth('company')->check();
-                            $currentUserId = auth()->id() ?? auth('freelancer')->id() ?? auth('company')->id();
+                            $currentUser = auth('company')->check() ? auth('company')->user() : (auth('freelancer')->check() ? auth('freelancer')->user() : null);
+                            $currentUserId = $currentUser?->id;
                             $isOwnProfile = $currentUserId && $currentUserId === $user->id;
+                            $currentCompanyProfile = auth('company')->check() ? auth('company')->user()->company : null;
+                            $canStartDirectMessage = !$isGuest && !$isOwnProfile && $currentCompanyProfile !== null;
+                            $loginRedirectUrl = route('auth.login.form', [
+                                'redirect' => route('profiles.show', ['user' => $user->id, 'open_message_modal' => 1]),
+                            ]);
                         @endphp
                         @if($isGuest && !$isOwnProfile)
-                        <p class="text-sm text-gray-500">連絡するにはログインが必要です。</p>
-                        <a href="{{ route('auth.login.form') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                            </svg>
-                            ログインして連絡する
-                        </a>
+                            <p class="text-sm text-gray-500">連絡するにはログインが必要です。</p>
+                            <a href="{{ $loginRedirectUrl }}" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                </svg>
+                                ログインして連絡する
+                            </a>
+                        @elseif($canStartDirectMessage)
+                            <p class="text-sm text-gray-500">メッセージは企業アカウントから送信できます。</p>
+                            <button type="button" onclick="openDirectMessageModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/>
+                                </svg>
+                                メッセージを送る
+                            </button>
+                        @elseif(!$isGuest && !$isOwnProfile)
+                            <p class="text-sm text-gray-500">メッセージ送信には企業アカウントと企業プロフィールが必要です。</p>
                         @endif
                     </div>
                 </div>
 
+                @if($canStartDirectMessage)
+                    <div id="directMessageModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
+                        <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+                            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">メッセージを送る</h3>
+                                    <p class="text-sm text-gray-500">{{ $freelancer->display_name ?? '相手' }}さんへ最初のメッセージを送信します。</p>
+                                </div>
+                                <button type="button" onclick="closeDirectMessageModal()" class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form method="POST" action="{{ route('direct-messages.start', ['user' => $user->id]) }}" class="px-6 py-5 space-y-4">
+                                @csrf
+                                <div>
+                                    <label for="directMessageContent" class="mb-2 block text-sm font-semibold text-gray-700">メッセージ本文</label>
+                                    <textarea
+                                        id="directMessageContent"
+                                        name="content"
+                                        rows="6"
+                                        class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 @error('content') border-red-500 ring-2 ring-red-100 @enderror"
+                                        placeholder="最初のメッセージを入力してください"
+                                    >{{ old('content') }}</textarea>
+                                    @error('content')
+                                        <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="flex items-center justify-end gap-3">
+                                    <button type="button" onclick="closeDirectMessageModal()" class="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
+                                        キャンセル
+                                    </button>
+                                    <button type="submit" class="rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
+                                        送信してチャットを開始
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Blog/Articles Section -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6" id="blog">
-                    <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">
-                        ブログ
-                    </h2>
+                    @php
+                        $profileViewerNav = auth('freelancer')->user() ?? auth('company')->user();
+                        $isOwnProfileNav = $profileViewerNav && (int) $profileViewerNav->id === (int) $user->id;
+                    @endphp
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-2 border-b-2 border-orange-600">
+                        <h2 class="text-xl font-bold text-orange-600">
+                            ブログ
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('articles.index', ['user' => $user->id]) }}" class="text-sm font-semibold text-orange-600 hover:text-orange-800 hover:underline">
+                                このユーザーの記事一覧へ
+                            </a>
+                            @if($isOwnProfileNav)
+                                <span class="text-gray-300 hidden sm:inline">|</span>
+                                <a href="{{ route('my-articles.index') }}" class="text-sm font-semibold text-orange-600 hover:text-orange-800 hover:underline">
+                                    自分の記事を管理
+                                </a>
+                            @endif
+                        </div>
+                    </div>
                     @if(isset($articles) && $articles->isNotEmpty())
                         <div class="space-y-4">
                             @foreach($articles as $article)
@@ -369,5 +446,38 @@
             toggleText.textContent = 'もっと見る（登録スキル数：{{ $skillCount }}）';
         }
     }
+
+    (function () {
+        const modal = document.getElementById('directMessageModal');
+        if (!modal) return;
+
+        const shouldOpen = @json((bool) request()->boolean('open_message_modal') || $errors->has('content') || old('content'));
+
+        window.openDirectMessageModal = function () {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeDirectMessageModal = function () {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                window.closeDirectMessageModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                window.closeDirectMessageModal();
+            }
+        });
+
+        if (shouldOpen) {
+            window.openDirectMessageModal();
+        }
+    })();
 </script>
 @endsection

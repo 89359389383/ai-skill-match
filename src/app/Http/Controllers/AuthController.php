@@ -17,8 +17,19 @@ class AuthController extends Controller
     /**
      * ログイン画面を表示する（表示のみ）
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        $redirect = $request->query('redirect');
+
+        if (is_string($redirect) && $redirect !== '') {
+            $host = parse_url($redirect, PHP_URL_HOST);
+            $isInternal = str_starts_with($redirect, '/') || $host === $request->getHost();
+
+            if ($isInternal) {
+            $request->session()->put('url.intended', $redirect);
+            }
+        }
+
         // ログイン画面のBladeを返すだけ（認証処理はしない）
         return view('auth.login');
     }

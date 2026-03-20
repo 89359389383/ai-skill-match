@@ -3,10 +3,14 @@
 @section('title', ($article->title ?? '記事') . ' - AIスキルマッチ')
 
 @push('styles')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
 .prose p { margin-bottom: 1rem; line-height: 1.75; }
 .prose ul { list-style-type: disc; padding-left: 1.5rem; }
 .prose li { margin-bottom: 0.5rem; }
+.article-body .ql-editor { min-height: auto; padding: 0; font-size: 1.05rem; line-height: 1.75; }
+.article-body .ql-editor h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0; }
+.article-body .ql-editor h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0; }
 </style>
 @endpush
 
@@ -52,27 +56,35 @@
                     </div>
                 </div>
 
-                <div class="prose max-w-none">
+                <div class="max-w-none">
                     @if($article->excerpt)
                         <p class="text-lg text-gray-700 leading-relaxed mb-8">{{ $article->excerpt }}</p>
                     @endif
 
-                    @if($article->structure && is_array($article->structure))
-                        @foreach($article->structure as $section)
-                            @if(is_array($section))
-                                <div class="mb-8">
-                                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ $section['title'] ?? '' }}</h2>
-                                    @if(isset($section['subsections']) && is_array($section['subsections']))
-                                        @foreach($section['subsections'] as $sub)
-                                            <div class="mb-6">
-                                                <h3 class="text-xl font-bold text-gray-800 mb-3">{{ $sub['title'] ?? '' }}</h3>
-                                                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $sub['content'] ?? '' }}</p>
-                                            </div>
-                                        @endforeach
-                                    @endif
-                                </div>
-                            @endif
-                        @endforeach
+                    @if(filled($article->body_html))
+                        <div class="ql-snow article-body border-0">
+                            <div class="ql-editor text-gray-800">
+                                {!! $article->body_html !!}
+                            </div>
+                        </div>
+                    @elseif($article->structure && is_array($article->structure))
+                        <div class="prose max-w-none">
+                            @foreach($article->structure as $section)
+                                @if(is_array($section))
+                                    <div class="mb-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ $section['title'] ?? '' }}</h2>
+                                        @if(isset($section['subsections']) && is_array($section['subsections']))
+                                            @foreach($section['subsections'] as $sub)
+                                                <div class="mb-6">
+                                                    <h3 class="text-xl font-bold text-gray-800 mb-3">{{ $sub['title'] ?? '' }}</h3>
+                                                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $sub['content'] ?? '' }}</p>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     @else
                         <p class="text-gray-700 leading-relaxed">記事の本文はありません。</p>
                     @endif

@@ -1,6 +1,7 @@
 @php
     $appUnread = $unreadApplicationCount ?? 0;
     $scoutUnread = $unreadScoutCount ?? 0;
+    $messageUnread = $unreadDirectMessageCount ?? 0;
     $salesCount = $salesOrderCount ?? 0;
     $userDisplayName = $freelancer?->display_name ?? 'ゲストユーザー';
     $userIcon = $freelancer?->icon_path ?? null;
@@ -27,6 +28,12 @@
                 スカウト
                 @if($scoutUnread > 0)
                     <span class="badge" aria-hidden="false">{{ $scoutUnread }}</span>
+                @endif
+            </a>
+            <a href="{{ route('direct-messages.index') }}" class="nav-link {{ request()->routeIs('direct-messages.*') ? 'active' : '' }} {{ $messageUnread > 0 ? 'has-badge' : '' }}">
+                メッセージ
+                @if($messageUnread > 0)
+                    <span class="badge" aria-live="polite">{{ $messageUnread }}</span>
                 @endif
             </a>
         </nav>
@@ -103,6 +110,13 @@
                                     <span class="dropdown-item-badge dropdown-item-badge-purple">{{ $scoutUnread }}件</span>
                                 @endif
                             </a>
+                            <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">メッセージ</span>
+                                @if($messageUnread > 0)
+                                    <span class="dropdown-item-badge dropdown-item-badge-green">新着{{ $messageUnread }}</span>
+                                @endif
+                            </a>
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-nav">
@@ -138,6 +152,12 @@
                 スカウト
                 @if($scoutUnread > 0)
                     <span class="badge" aria-hidden="false">{{ $scoutUnread }}</span>
+                @endif
+            </a>
+            <a href="{{ route('direct-messages.index') }}" class="nav-link {{ request()->routeIs('direct-messages.*') ? 'active' : '' }} {{ $messageUnread > 0 ? 'has-badge' : '' }}">
+                メッセージ
+                @if($messageUnread > 0)
+                    <span class="badge" aria-live="polite">{{ $messageUnread }}</span>
                 @endif
             </a>
         </div>

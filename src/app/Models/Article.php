@@ -18,6 +18,7 @@ class Article extends Model
         'excerpt',
         'category',
         'eyecatch_image_url',
+        'body_html',
         'structure',
         'status',
         'published_at',
@@ -67,6 +68,34 @@ class Article extends Model
     public function bookmarks(): HasMany
     {
         return $this->hasMany(ArticleBookmark::class);
+    }
+
+    /**
+     * Quill 編集画面の初期 HTML（body_html が無い旧データは structure から組み立て）。
+     */
+    public function editorInitialHtml(): string
+    {
+        if (filled($this->body_html)) {
+            return $this->body_html;
+        }
+
+        $chunks = [];
+        foreach ($this->structure ?? [] as $section) {
+            if (! is_array($section)) {
+                continue;
+            }
+            $chunks[] = '<h2>'.e($section['title'] ?? '').'</h2>';
+            foreach ($section['subsections'] ?? [] as $sub) {
+                if (! is_array($sub)) {
+                    continue;
+                }
+                $chunks[] = '<h3>'.e($sub['title'] ?? '').'</h3>';
+                $content = $sub['content'] ?? '';
+                $chunks[] = '<p>'.e($content).'</p>';
+            }
+        }
+
+        return implode('', $chunks);
     }
 }
 

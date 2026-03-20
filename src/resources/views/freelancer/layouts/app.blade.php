@@ -147,6 +147,7 @@
                 @php
                     $appUnread = ($unreadApplicationCount ?? 0);
                     $scoutUnread = ($unreadScoutCount ?? 0);
+                    $messageUnread = ($unreadDirectMessageCount ?? 0);
                 @endphp
                 <a href="{{ route('freelancer.applications.index') }}" class="nav-link {{ Request::routeIs('freelancer.applications.*') ? 'active' : '' }} {{ $appUnread > 0 ? 'has-badge' : '' }}">
                     応募した案件
@@ -158,6 +159,12 @@
                     スカウト
                     @if($scoutUnread > 0)
                         <span class="badge" aria-hidden="false">{{ $scoutUnread }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('direct-messages.index') }}" class="nav-link {{ Request::routeIs('direct-messages.*') ? 'active' : '' }} {{ $messageUnread > 0 ? 'has-badge' : '' }}">
+                    メッセージ
+                    @if($messageUnread > 0)
+                        <span class="badge" aria-live="polite">{{ $messageUnread }}</span>
                     @endif
                 </a>
             </nav>
@@ -173,6 +180,7 @@
                     </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('profiles.show', auth('freelancer')->user()) }}" class="dropdown-item" role="menuitem">プロフィール詳細</a>
+                        <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">メッセージ</a>
                         <a href="{{ route('freelancer.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
                         <a href="{{ route('auth.logout') }}" class="dropdown-item" role="menuitem" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">ログアウト</a>
