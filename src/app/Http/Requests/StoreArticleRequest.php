@@ -28,15 +28,27 @@ class StoreArticleRequest extends FormRequest
             // 画像URL（任意）
             'eyecatch_image_url' => ['nullable', 'url'],
 
-            // 記事の構造（大項目/中項目）
+            // 本文（Quill の HTML）
+            'body_html' => [
+                'required',
+                'string',
+                'max:50000',
+                function ($attribute, $value, $fail) {
+                    if (trim(strip_tags($value)) === '') {
+                        $fail('本文を入力してください。');
+                    }
+                },
+            ],
+
+            // 記事の構造（旧フォーム互換・任意）
             'structure' => ['nullable', 'array'],
             'structure.*.title' => ['nullable', 'string', 'max:255'],
             'structure.*.subsections' => ['nullable', 'array'],
             'structure.*.subsections.*.title' => ['nullable', 'string', 'max:255'],
             'structure.*.subsections.*.content' => ['nullable', 'string'],
 
-            // タグ（任意）
-            'tags' => ['nullable', 'array'],
+            // タグ（任意・最大5）
+            'tags' => ['nullable', 'array', 'max:5'],
             'tags.*' => ['string', 'max:50'],
         ];
     }
@@ -49,8 +61,11 @@ class StoreArticleRequest extends FormRequest
             'excerpt.max' => '概要は200文字以内で入力してください。',
             'category.required' => 'カテゴリーは必須です。',
             'eyecatch_image_url.url' => 'アイキャッチ画像URLは正しいURL形式で入力してください。',
+            'body_html.required' => '本文を入力してください。',
+            'body_html.max' => '本文が長すぎます。',
             'structure.array' => '記事構造の形式が不正です。',
             'tags.array' => 'タグの形式が不正です。',
+            'tags.max' => 'タグは最大5個までです。',
             'tags.*.max' => 'タグは50文字以内で入力してください。',
         ];
     }

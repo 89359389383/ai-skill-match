@@ -570,11 +570,27 @@
 
     <script>
 
-        // アイコンファイルプレビュー機能
+        // アイコンファイルプレビュー機能（サイドバー＋共通ヘッダー右のアバター）
         (function () {
             const iconInput = document.getElementById('icon');
             const previewAvatar = document.getElementById('preview-avatar');
-            const defaultAvatarText = '{{ mb_substr($user->email ?? "U", 0, 1) }}';
+            const defaultAvatarText = @json(mb_substr($user->email ?? 'U', 0, 1));
+            const headerToggle = document.getElementById('publicFreelancerUserDropdownToggle');
+            const headerDefaultInitial = @json($userInitial ?? mb_substr($user->email ?? 'U', 0, 1));
+
+            function setHeaderAvatarFromDataUrl(dataUrl) {
+                if (!headerToggle) return;
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.alt = 'プロフィール画像';
+                img.setAttribute('style', 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%;');
+                headerToggle.replaceChildren(img);
+            }
+
+            function resetHeaderAvatarToInitial() {
+                if (!headerToggle) return;
+                headerToggle.textContent = headerDefaultInitial;
+            }
 
             if (iconInput && previewAvatar) {
                 iconInput.addEventListener('change', function(e) {
@@ -594,6 +610,7 @@
                             img.src = e.target.result;
                             img.alt = 'プレビュー画像';
                             previewAvatar.appendChild(img);
+                            setHeaderAvatarFromDataUrl(e.target.result);
                         };
                         reader.readAsDataURL(file);
                     } else {
@@ -603,6 +620,7 @@
                             existingImg.remove();
                         }
                         previewAvatar.textContent = defaultAvatarText;
+                        resetHeaderAvatarToInitial();
                     }
                 });
             }

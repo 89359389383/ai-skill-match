@@ -21,8 +21,12 @@ class ArticleController extends Controller
         $articles = Article::query()
             ->with(['user', 'tags'])
             ->where('status', 1)
+            ->when($request->filled('user'), function ($q) use ($request) {
+                $q->where('user_id', (int) $request->query('user'));
+            })
             ->orderByDesc('published_at')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         if (view()->exists('articles.index')) {
             return view('articles.index', compact('articles'));
@@ -85,7 +89,7 @@ class ArticleController extends Controller
 
         $article = $service->store($user, $validated);
 
-        return redirect()->route('articles.show', ['article' => $article->id]);
+        return redirect()->route('articles.index')->with('status', '記事を投稿しました。');
     }
 }
 

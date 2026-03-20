@@ -24,6 +24,7 @@ use App\Http\Controllers\MyArticleController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AnswerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DirectMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,23 @@ Route::get('/profiles', [ProfileController::class, 'index'])->name('profiles.ind
 Route::get('/profiles/{user}', [ProfileController::class, 'show'])
     ->whereNumber('user')
     ->name('profiles.show');
+
+Route::middleware(['auth.any:freelancer,company'])->group(function () {
+    Route::get('/messages', [DirectMessageController::class, 'index'])
+        ->name('direct-messages.index');
+
+    Route::get('/messages/{direct_conversation}', [DirectMessageController::class, 'show'])
+        ->whereNumber('direct_conversation')
+        ->name('direct-messages.show');
+
+    Route::post('/profiles/{user}/messages', [DirectMessageController::class, 'start'])
+        ->whereNumber('user')
+        ->name('direct-messages.start');
+
+    Route::post('/messages/{direct_conversation}/messages', [DirectMessageController::class, 'reply'])
+        ->whereNumber('direct_conversation')
+        ->name('direct-messages.reply');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -243,6 +261,7 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::get('/my-articles/{article}', [MyArticleController::class, 'show'])->whereNumber('article')->name('my-articles.show');
     Route::get('/my-articles/{article}/edit', [MyArticleController::class, 'edit'])->whereNumber('article')->name('my-articles.edit');
     Route::match(['put', 'patch'], '/my-articles/{article}', [MyArticleController::class, 'update'])->whereNumber('article')->name('my-articles.update');
+    Route::delete('/my-articles/{article}', [MyArticleController::class, 'destroy'])->whereNumber('article')->name('my-articles.destroy');
 
     // 質問投稿
     Route::get('/questions/new', [QuestionController::class, 'create'])->name('questions.create');

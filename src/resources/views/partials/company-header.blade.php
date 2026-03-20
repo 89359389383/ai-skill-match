@@ -20,6 +20,7 @@
             @php
                 $appUnread = ($unreadApplicationCount ?? 0);
                 $scoutUnread = ($unreadScoutCount ?? 0);
+    $messageUnread = ($unreadDirectMessageCount ?? 0);
             @endphp
             <a href="{{ route('company.applications.index') }}" class="nav-link {{ ($appUnread > 0 ? 'has-badge' : '') }} {{ (request()->routeIs('company.applications.*') || (request()->routeIs('company.threads.*') && empty($scout))) ? 'active' : '' }}">
                 応募された案件
@@ -33,6 +34,12 @@
                     <span class="badge">{{ $scoutUnread }}</span>
                 @endif
             </a>
+            <a href="{{ route('direct-messages.index') }}" class="nav-link {{ ($messageUnread > 0 ? 'has-badge' : '') }} {{ request()->routeIs('direct-messages.*') ? 'active' : '' }}">
+                メッセージ
+                @if($messageUnread > 0)
+                    <span class="badge">{{ $messageUnread }}</span>
+                @endif
+            </a>
         </nav>
 
         <div class="header-right">
@@ -40,6 +47,12 @@
                 <div class="dropdown" id="userDropdown">
                     <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">企</button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                        <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
+                            メッセージ
+                            @if($messageUnread > 0)
+                                <span class="badge" style="position: static; transform: none; margin-left: auto;">{{ $messageUnread }}</span>
+                            @endif
+                        </a>
                         <a href="{{ route('company.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
                         <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">

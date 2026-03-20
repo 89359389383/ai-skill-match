@@ -26,7 +26,8 @@ class ArticleService
                 'excerpt' => $data['excerpt'],
                 'category' => $data['category'],
                 'eyecatch_image_url' => $data['eyecatch_image_url'] ?? null,
-                // 記事構造（大項目/中項目）をそのまま JSON として保存
+                'body_html' => $this->sanitizeBodyHtml($data['body_html'] ?? null),
+                // 旧フォーマット互換のため残す（Quill 本文は body_html を優先して表示）
                 'structure' => $data['structure'] ?? null,
                 // まずは公開（仕様が固まったら下書き導線を追加）
                 'status' => 1,
@@ -55,7 +56,8 @@ class ArticleService
                 'excerpt' => $data['excerpt'],
                 'category' => $data['category'],
                 'eyecatch_image_url' => $data['eyecatch_image_url'] ?? null,
-                'structure' => $data['structure'] ?? null,
+                'body_html' => $this->sanitizeBodyHtml($data['body_html'] ?? null),
+                'structure' => array_key_exists('structure', $data) ? $data['structure'] : $article->structure,
             ])->save();
 
             $tagNames = $data['tags'] ?? [];
@@ -63,6 +65,17 @@ class ArticleService
             $article->tags()->sync($tagIds);
 
             return $article;
+        });
+    }
+
+    /**
+     * 記事を削除する（タグの中間テーブルのみ明示的に外す。他はDBの制約に任せる）。
+     */
+    public function delete(Article $article): void
+    {
+        DB::transaction(function () use ($article): void {
+            $article->tags()->detach();
+            $article->delete();
         });
     }
 
@@ -90,6 +103,28 @@ class ArticleService
 
         // 重複除去（UI側の入力ミスでも安全に）
         return array_values(array_unique($tagIds));
+    }
+
+    /**
+     * 保存前の簡易サニタイズ（スクリプト系・イベントハンドラを除去）。
+     */
+    private function sanitizeBodyHtml(?string $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+
+        $html = trim($html);
+        if ($html === '') {
+            return null;
+        }
+
+        $html = preg_replace('#<(script|iframe|object|embed|form|input|button|meta|link|style)\b[^>]*>.*?</\1>#is', '', $html) ?? $html;
+        $html = preg_replace('#<(script|iframe|object|embed|form|input|button|meta|link|style)\b[^>]*/>#is', '', $html) ?? $html;
+        $html = preg_replace('#\s(on[a-z]+\s*=\s*("|\').*?\2)#i', '', $html) ?? $html;
+        $html = str_ireplace('javascript:', '', $html);
+
+        return $html;
     }
 }
 
