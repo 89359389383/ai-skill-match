@@ -36,7 +36,32 @@
                         <div class="h-24 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"></div>
                         <div class="relative px-6">
                             <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
-                                <img src="{{ $f->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}" alt="{{ $f->display_name }}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
+                                @php
+                                    $iconPath = $f->icon_path ?? null;
+                                    $iconSrc = null;
+
+                                    if (!empty($iconPath)) {
+                                        if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                            $iconSrc = $iconPath;
+                                        } else {
+                                            $iconRel = ltrim($iconPath, '/');
+                                            if (str_starts_with($iconRel, 'storage/')) {
+                                                $iconRel = substr($iconRel, strlen('storage/'));
+                                            }
+                                            $iconSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                        }
+                                    }
+
+                                    $minRate = (int) ($f->min_rate ?? 0);
+                                    $minRateMan = $minRate > 0 ? $minRate / 10000 : 0;
+                                    $minRateManStr = ($minRate > 0 && $minRate % 10000 === 0)
+                                        ? number_format($minRateMan, 0)
+                                        : number_format($minRateMan, 1);
+                                @endphp
+
+                                <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}"
+                                     alt="{{ $f->display_name }}"
+                                     class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
                             </div>
                         </div>
                         <div class="pt-16 px-6 pb-6 text-center">
@@ -44,7 +69,7 @@
                             <p class="text-sm text-gray-600 mb-2">職種: {{ $f->job_title ?? '未設定' }}</p>
                             <p class="text-sm mb-3">
                                 <span class="font-bold text-gray-700">希望時給単価: </span>
-                                <span class="font-bold text-orange-600">¥{{ number_format($f->min_rate ?? 0) }}</span>
+                                <span class="font-bold text-orange-600">{{ $minRateManStr }}万</span>
                             </p>
                             <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
                             <div class="flex flex-wrap gap-2 justify-center">

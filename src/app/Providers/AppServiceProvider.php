@@ -52,8 +52,19 @@ class AppServiceProvider extends ServiceProvider
                         ->where('is_unread_for_freelancer', true)
                         ->count();
                     $unreadDirectMessageCount = DirectConversation::query()
-                        ->where('freelancer_id', $freelancer->id)
                         ->where('is_unread_for_freelancer', true)
+                        // フリーランス同士の会話では「受信者」が freelancer_id ではなく最新送信者/initiator から決まる
+                        ->whereRaw(
+                            'CASE
+                                WHEN company_id IS NULL THEN
+                                    CASE
+                                        WHEN latest_sender_id = freelancer_id THEN initiator_id
+                                        ELSE freelancer_id
+                                    END
+                                ELSE freelancer_id
+                             END = ?',
+                            [$freelancer->id]
+                        )
                         ->count();
                     $salesOrderCount = SkillOrder::query()
                         ->whereHas('skillListing', fn ($q) => $q->where('freelancer_id', $freelancer->id))

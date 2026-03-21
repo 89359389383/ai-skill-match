@@ -5,9 +5,42 @@
 @push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
-    .ql-editor { min-height: 280px; font-size: 16px; }
-    .ql-toolbar.ql-snow { border-radius: 0.75rem 0.75rem 0 0; border-color: #d1d5db; }
-    .ql-container.ql-snow { border-radius: 0 0 0.75rem 0.75rem; border-color: #d1d5db; min-height: 300px; }
+    /* エディタラッパー */
+    #editor-wrapper {
+        position: relative;
+    }
+    /* エディタコンテナ */
+    #editor {
+        min-height: 300px;
+    }
+    /* Quillコンテナ */
+    .ql-container.ql-snow {
+        border-radius: 0 0 0.75rem 0.75rem;
+        border-color: #d1d5db;
+        min-height: 300px;
+        height: 300px;
+    }
+    /* ツールバー */
+    .ql-toolbar.ql-snow {
+        border-radius: 0.75rem 0.75rem 0 0;
+        border-color: #d1d5db;
+    }
+    /* エディタ本体 - クリック可能に */
+    .ql-editor {
+        min-height: 280px;
+        font-size: 16px;
+        pointer-events: auto !important;
+        cursor: text;
+    }
+    /* フォントサイズクラス */
+    .ql-snow .ql-editor .ql-size-small { font-size: 0.75em; }
+    .ql-snow .ql-editor .ql-size-large { font-size: 1.5em; }
+    .ql-snow .ql-editor .ql-size-huge { font-size: 2em; }
+    /* placeholderスタイル */
+    .ql-editor.ql-blank::before {
+        color: #9ca3af;
+        font-style: normal;
+    }
 </style>
 @endpush
 
@@ -100,7 +133,9 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                         本文 <span class="text-red-500">*</span>
                     </label>
-                    <div id="editor" class="bg-white rounded-xl overflow-hidden border border-gray-300"></div>
+                    <div id="editor-wrapper" class="bg-white rounded-xl border border-gray-300">
+                        <div id="editor"></div>
+                    </div>
                     <input type="hidden" name="body_html" id="article_body_html" value="{{ old('body_html') }}">
                     @error('body_html')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
@@ -160,21 +195,40 @@
         @endif
         renderTags();
 
-        quill = new Quill('#editor', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic'],
-                    [{ 'header': [1, 2, false] }],
-                    [{ 'size': ['small', false, 'large'] }],
-                    ['clean']
-                ]
-            }
-        });
+        // エディタ要素の確認
+        var editorElement = document.getElementById('editor');
+        if (!editorElement) {
+            console.error('Editor element not found');
+            return;
+        }
 
-        var initial = document.getElementById('article_body_html').value;
-        if (initial) {
-            quill.root.innerHTML = initial;
+        // Quill初期化
+        try {
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: '本文を入力してください...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'header': [1, 2, 3, false] }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // 初期コンテンツ設定
+            var initial = document.getElementById('article_body_html').value;
+            if (initial) {
+                quill.root.innerHTML = initial;
+            }
+
+            // エディタが初期化されたことを確認
+            console.log('Quill initialized successfully');
+        } catch (e) {
+            console.error('Quill initialization failed:', e);
         }
 
         document.getElementById('tagInput').addEventListener('keypress', function(e) {

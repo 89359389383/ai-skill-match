@@ -14,6 +14,8 @@ class DirectConversation extends Model
     protected $fillable = [
         'company_id',
         'freelancer_id',
+        'initiator_type',
+        'initiator_id',
         'latest_sender_type',
         'latest_sender_id',
         'latest_message_at',
@@ -24,6 +26,7 @@ class DirectConversation extends Model
     protected $casts = [
         'company_id' => 'integer',
         'freelancer_id' => 'integer',
+        'initiator_id' => 'integer',
         'latest_sender_id' => 'integer',
         'latest_message_at' => 'datetime',
         'is_unread_for_company' => 'boolean',

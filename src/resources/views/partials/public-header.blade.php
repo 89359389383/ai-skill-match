@@ -580,6 +580,62 @@
     })();
 </script>
 
+{{-- `slot` をタブごとに付けておき、ナビゲーションやフォーム送信でも維持する --}}
+<script>
+    (function () {
+        const url = new URL(window.location.href);
+        const slot = url.searchParams.get('slot');
+        if (!slot) return;
+
+        sessionStorage.setItem('slot', slot);
+
+        const withSlot = (href) => {
+            try {
+                if (!href || typeof href !== 'string') return href;
+                if (href.startsWith('#') || href.startsWith('javascript:')) return href;
+
+                // 相対パス / 同一オリジン想定
+                const u = new URL(href, window.location.origin);
+                // 外部サイトは触らない
+                if (u.origin !== window.location.origin) return href;
+
+                if (!u.searchParams.has('slot')) {
+                    u.searchParams.set('slot', slot);
+                }
+                return u.toString();
+            } catch (e) {
+                return href;
+            }
+        };
+
+        document.addEventListener('click', function (e) {
+            const a = e.target && e.target.closest ? e.target.closest('a') : null;
+            if (!a) return;
+
+            const href = a.getAttribute('href');
+            if (!href) return;
+            if (a.target === '_blank') return; // 別タブは対象外
+
+            const nextHref = withSlot(href);
+            if (nextHref && nextHref !== href) {
+                a.href = nextHref;
+            }
+        }, true);
+
+        document.addEventListener('submit', function (e) {
+            const form = e.target && e.target.closest ? e.target.closest('form') : null;
+            if (!form) return;
+            if (form.querySelector('input[name=\"slot\"]')) return;
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'slot';
+            input.value = slot;
+            form.appendChild(input);
+        }, true);
+    })();
+</script>
+
 {{-- ログイン後ヘッダー（フリーランス/企業）を public ヘッダー直下に固定 --}}
 <style>
     .header-role {
