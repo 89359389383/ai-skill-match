@@ -19,6 +19,7 @@
 
             <form class="mt-6 space-y-4" method="POST" action="{{ route('password.update') }}">
                 @csrf
+                @include('partials.session-slot-field')
 
                 <input type="hidden" name="token" value="{{ $token }}">
                 <input type="hidden" name="email" value="{{ request()->email }}">

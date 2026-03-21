@@ -36,6 +36,9 @@ class CreateCompaniesTable extends Migration
 
             // 自己紹介
             $table->text('introduction')->nullable();
+
+            // 企業アイコン（必須化するため列を追加）
+            $table->string('icon_path')->nullable();
             
             // 作成日時・更新日時
             $table->timestamps();

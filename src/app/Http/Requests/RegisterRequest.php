@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class RegisterRequest extends FormRequest
 {
@@ -38,6 +40,37 @@ class RegisterRequest extends FormRequest
 
             'password_confirmation.required' => 'パスワード（確認）を入力してください。',
         ];
+    }
+
+    protected function passedValidation(): void
+    {
+        $routeName = $this->route()?->getName();
+        if (!in_array($routeName, ['auth.register.company.store', 'auth.register.freelancer.store'], true)) {
+            return;
+        }
+
+        $isCompany = $routeName === 'auth.register.company.store';
+        Log::info($isCompany ? '[企業登録] RegisterRequest バリデーション成功' : '[フリーランス登録] RegisterRequest バリデーション成功', [
+            'route' => $routeName,
+            'ip' => $this->ip(),
+            'email' => $this->input('email'),
+            'password_length' => strlen((string) $this->input('password', '')),
+        ]);
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        $routeName = $this->route()?->getName();
+        if ($routeName === 'auth.register.company.store') {
+            Log::warning('[企業登録] RegisterRequest バリデーション失敗', [
+                'route' => $routeName,
+                'ip' => $this->ip(),
+                'error_fields' => array_keys($validator->errors()->toArray()),
+                'messages' => $validator->errors()->toArray(),
+            ]);
+        }
+
+        parent::failedValidation($validator);
     }
 }
 

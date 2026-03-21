@@ -302,7 +302,7 @@
             </div>
             @endif
 
-            <form class="register-form" method="POST" action="{{ route('company.profile.store') }}">
+            <form class="register-form" method="POST" action="{{ route('company.profile.store') }}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="form-group">
@@ -334,7 +334,7 @@
 
                 <div class="two-col grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
-                        <label class="label" for="contact_name">担当者名（任意）</label>
+                        <label class="label" for="contact_name">担当者名（必須）</label>
                         <input
                             id="contact_name"
                             type="text"
@@ -373,6 +373,21 @@
                     <span class="error-message">{{ $message }}</span>
                     @enderror
                     <div class="help">登録後は「プロフィール設定」から更新できます</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" for="icon">プロフィール画像（必須）</label>
+                    <input
+                        id="icon"
+                        name="icon"
+                        type="file"
+                        accept="image/*"
+                        class="form-input @error('icon') is-invalid @enderror"
+                    >
+                    @error('icon')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
+                    <div class="help">画像を選択してください（最大5MB）。</div>
                 </div>
 
                 <div class="btn-row flex flex-col md:flex-row gap-3">

@@ -333,7 +333,7 @@
 
 
         <div class="panel p-5 md:p-8">
-            <form action="{{ route('company.profile.settings.update') }}" method="post">
+            <form action="{{ route('company.profile.settings.update') }}" method="post" enctype="multipart/form-data">
                 @csrf
                 <div class="field">
                     <label for="name">企業名（必須）</label>
@@ -350,7 +350,7 @@
                     @enderror
                 </div>
                 <div class="field">
-                    <label for="contact_name">担当者名（任意）</label>
+                    <label for="contact_name">担当者名（必須）</label>
                     <input id="contact_name" name="contact_name" class="input @error('contact_name') is-invalid @enderror" type="text" value="{{ old('contact_name', $company->contact_name ?? '') }}">
                     @error('contact_name')
                         <span class="error-message">{{ $message }}</span>
@@ -369,6 +369,21 @@
                     @error('introduction')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
+                </div>
+
+                <div class="field">
+                    <label for="icon">プロフィール画像（必須）</label>
+                    @if($company && $company->icon_path)
+                        <p class="help" style="margin-top:0.25rem;">現在の画像</p>
+                        <div style="margin: 0.5rem 0;">
+                            <img src="{{ asset('storage/' . $company->icon_path) }}" alt="プロフィール画像" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
+                        </div>
+                    @endif
+                    <input id="icon" name="icon" type="file" class="input @error('icon') is-invalid @enderror" accept="image/*">
+                    @error('icon')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
+                    <div class="help">画像を選択してください（最大5MB）。</div>
                 </div>
                 <div class="btn-row flex flex-col md:flex-row gap-3 md:gap-4">
                     <a class="btn btn-secondary w-full md:flex-1" href="{{ route('company.freelancers.index') }}">キャンセル</a>

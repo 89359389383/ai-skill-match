@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Http\Requests\CompanyRegisterRequest;
 use App\Http\Requests\CompanyProfileUpdateRequest;
 use App\Models\Thread;
@@ -43,23 +44,49 @@ class CompanyProfileController extends Controller
         // 認証ユーザーを取得する
         $user = Auth::user();
 
+        Log::info('[企業登録] プロフィール store 受信', [
+            'user_id' => $user?->id,
+            'role' => $user?->role,
+            'url' => $request->fullUrl(),
+            'referer' => $request->header('Referer'),
+            'slot_query' => $request->query('slot'),
+            'slot_post_present' => $request->has('slot'),
+            'has_multipart_icon' => $request->hasFile('icon'),
+            'session_cookie_name' => config('session.cookie'),
+        ]);
+
         // 企業ロール以外は拒否する
         if ($user->role !== 'company') {
+            Log::warning('[企業登録] プロフィール store 403（企業ロール以外）', [
+                'user_id' => $user?->id,
+                'role' => $user?->role,
+            ]);
             // 企業以外は拒否する
             abort(403);
         }
 
         // すでに登録済みなら登録させない
         if ($user->company()->exists()) {
+            Log::info('[企業登録] プロフィール store 既存あり→リダイレクト', [
+                'user_id' => $user->id,
+                'company_id' => $user->company?->id,
+            ]);
             // 企業向け一覧へ戻す
             return redirect('/company/freelancers');
         }
 
         // バリデーションを行う（CompanyRegisterRequest に委譲）
         $validated = $request->validated();
+        $validated['icon'] = $request->file('icon');
 
         // 実処理を Service へ委譲する（CompanyProfileService::register）
-        $companyProfileService->register($user, $validated);
+        $company = $companyProfileService->register($user, $validated);
+
+        Log::info('[企業登録] プロフィール store 完了', [
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'company_name' => $company->name,
+        ]);
 
         // 企業向けフリーランス一覧へ遷移する
         return redirect('/company/freelancers')->with('success', '企業プロフィールの登録が完了しました');
@@ -75,13 +102,21 @@ class CompanyProfileController extends Controller
         // 認証ユーザーを取得する
         $user = Auth::user();
 
+        Log::info('[企業登録/設定] プロフィール設定画面 edit', [
+            'user_id' => $user?->id,
+            'role' => $user?->role,
+            'url' => request()->fullUrl(),
+        ]);
+
         // 企業ロール以外は拒否する
         if ($user->role !== 'company') {
+            Log::warning('[企業登録/設定] プロフィール設定画面 403', ['user_id' => $user?->id]);
             abort(403);
         }
 
         // 企業プロフィールが無い場合は先に登録へ誘導する
         if (!$user->company()->exists()) {
+            Log::info('[企業登録/設定] プロフィール設定画面 企業なし→新規登録へ', ['user_id' => $user->id]);
             return redirect('/company/profile')->with('error', '先に企業プロフィールを登録してください');
         }
 
@@ -126,26 +161,45 @@ class CompanyProfileController extends Controller
      *
      * ※設計書にはないが、web.php に存在するため最低限を用意する
      */
-    public function update(CompanyProfileUpdateRequest $request)
+    public function update(CompanyProfileUpdateRequest $request, CompanyProfileService $companyProfileService)
     {
         // 認証ユーザーを取得する
         $user = Auth::user();
 
+        Log::info('[企業登録/設定] プロフィール update 受信', [
+            'user_id' => $user?->id,
+            'company_id' => $user?->company?->id,
+            'url' => $request->fullUrl(),
+            'has_icon_file' => $request->hasFile('icon'),
+        ]);
+
         // 企業ロール以外は拒否する
         if ($user->role !== 'company') {
+            Log::warning('[企業登録/設定] プロフィール update 403', ['user_id' => $user?->id, 'role' => $user?->role]);
             abort(403);
         }
 
         // 企業プロフィールが無い場合は先に登録へ誘導する
         if (!$user->company()->exists()) {
+            Log::info('[企業登録/設定] プロフィール update 企業レコードなし→登録へ', ['user_id' => $user->id]);
             return redirect('/company/profile')->with('error', '先に企業プロフィールを登録してください');
         }
 
         // 更新用のバリデーションを行う（最低限 / FormRequest に委譲）
         $validated = $request->validated();
 
+        // アイコンがある場合だけ icon_path を差し替える（フォーム側は必須化する想定）
+        if ($request->hasFile('icon')) {
+            $validated['icon'] = $request->file('icon');
+        }
+
         // 企業プロフィールを更新する
-        $user->company->fill($validated)->save();
+        $companyProfileService->update($user->company, $validated);
+
+        Log::info('[企業登録/設定] プロフィール update 完了', [
+            'user_id' => $user->id,
+            'company_id' => $user->company->id,
+        ]);
 
         // 設定画面へ戻す
         return redirect()->route('company.profile.settings')->with('success', '企業プロフィールを更新しました');

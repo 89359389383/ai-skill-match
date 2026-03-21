@@ -142,72 +142,61 @@ class AuthController extends Controller
      */
     public function showCompanyRegister(Request $request)
     {
-        // メソッド開始ログ
-        Log::info('showCompanyRegister: メソッド開始', [
-            'method' => 'showCompanyRegister',
+        $sessionCookieName = (string) config('session.cookie');
+        $resolvedSlot = $request->attributes->get('resolved_slot');
+        $slotAttr = $request->attributes->get('slot');
+
+        Log::info('[企業登録] 画面表示 GET /register/company 開始', [
             'timestamp' => now()->toDateTimeString(),
-        ]);
-
-        // リクエスト情報のログ
-        Log::info('showCompanyRegister: リクエスト情報', [
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'ip' => $request->ip(),
             'url' => $request->fullUrl(),
-            'method' => $request->method(),
-            'referer' => $request->header('referer'),
-            'query_params' => $request->query(),
-            'request_headers' => $request->headers->all(),
+            'path' => $request->path(),
+            'user_agent' => $request->userAgent(),
+            'referer' => $request->header('Referer'),
+            'accept_language' => $request->header('Accept-Language'),
+            'query_keys' => array_keys($request->query->all()),
+            'slot_query' => $request->query('slot'),
+            'slot_sanitized_attr' => $slotAttr,
+            'resolved_slot_raw' => is_string($resolvedSlot) ? $resolvedSlot : null,
+            'session_cookie_name' => $sessionCookieName,
+            'laravel_session_cookie_present' => $request->cookies->has($sessionCookieName),
         ]);
 
-        // セッション情報のログ
-        $sessionData = [];
+        // セッション情報（値は載せずキーと長さのみ・419 調査用）
+        $sessionData = ['session_driver' => config('session.driver')];
         if ($request->hasSession()) {
             try {
-                $sessionData = [
+                $all = $request->session()->all();
+                $sessionData += [
+                    'session_exists' => true,
                     'session_id' => $request->session()->getId(),
-                    'session_exists' => true,
-                    'session_data_keys' => $request->session()->all() ? array_keys($request->session()->all()) : [],
-                    'csrf_token' => $request->session()->token(),
+                    'session_data_keys' => $all ? array_keys($all) : [],
+                    'csrf_token_length' => strlen((string) $request->session()->token()),
                 ];
-            } catch (\Exception $e) {
-                $sessionData = [
+            } catch (\Throwable $e) {
+                $sessionData += [
                     'session_exists' => true,
-                    'error' => 'セッション情報の取得に失敗しました: ' . $e->getMessage(),
+                    'session_read_error' => $e->getMessage(),
                 ];
             }
         } else {
-            $sessionData = [
-                'session_exists' => false,
-            ];
+            $sessionData['session_exists'] = false;
         }
-        Log::info('showCompanyRegister: セッション情報', $sessionData);
+        Log::info('[企業登録] 画面表示 セッション概要', $sessionData);
 
-        // 認証状態のログ
         $isAuthenticated = Auth::check();
         $user = Auth::user();
-        Log::info('showCompanyRegister: 認証状態', [
+        Log::info('[企業登録] 画面表示 認証状態', [
             'is_authenticated' => $isAuthenticated,
+            'default_guard_check' => Auth::check(),
+            'company_guard_check' => Auth::guard('company')->check(),
             'user_id' => $user ? $user->id : null,
-            'user_email' => $user ? $user->email : null,
             'user_role' => $user ? $user->role : null,
         ]);
 
-        // ビュー返却前のログ
-        Log::info('showCompanyRegister: ビュー返却前', [
-            'view_name' => 'auth.register.company',
-        ]);
+        Log::info('[企業登録] 画面表示 Blade 返却', ['view' => 'auth.register.company']);
 
-        // 企業登録画面のBladeを返すだけ
-        $view = view('auth.register.company');
-
-        // ビュー返却後のログ
-        Log::info('showCompanyRegister: メソッド終了', [
-            'method' => 'showCompanyRegister',
-            'timestamp' => now()->toDateTimeString(),
-            'view_returned' => true,
-        ]);
-
-        return $view;
+        return view('auth.register.company');
     }
 
     /**
@@ -215,8 +204,33 @@ class AuthController extends Controller
      */
     public function storeCompany(RegisterRequest $request)
     {
+        $sessionCookieName = (string) config('session.cookie');
+
+        // ※ FormRequest 検証・passedValidation ログの直後に実行される
+        Log::info('[企業登録] アカウント作成 storeCompany 処理開始（RegisterRequest 検証済み）', [
+            'timestamp' => now()->toDateTimeString(),
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
+            'path' => $request->path(),
+            'referer' => $request->header('Referer'),
+            'user_agent' => $request->userAgent(),
+            'slot_query' => $request->query('slot'),
+            'slot_post_present' => $request->has('slot'),
+            'slot_post_length' => $request->has('slot') ? strlen((string) $request->input('slot')) : 0,
+            'session_cookie_name' => $sessionCookieName,
+            'session_id_before' => $request->hasSession() ? $request->session()->getId() : null,
+            'has__token' => $request->has('_token'),
+            '_token_length' => $request->has('_token') ? strlen((string) $request->input('_token')) : 0,
+            'csrf_token_length_session' => $request->hasSession() ? strlen((string) $request->session()->token()) : null,
+        ]);
+
         // 入力をバリデーションする（RegisterRequest に委譲）
         $validated = $request->validated();
+
+        Log::info('[企業登録] アカウント作成 バリデーション済み（パスワードはログ不出力）', [
+            'email' => $validated['email'],
+            'password_length' => strlen((string) $validated['password']),
+        ]);
 
         // ユーザーを作成する（role=company）
         $user = User::create([
@@ -228,12 +242,30 @@ class AuthController extends Controller
             'role' => 'company',
         ]);
 
+        Log::info('[企業登録] アカウント作成 User レコード作成完了', [
+            'user_id' => $user->id,
+            'role' => $user->role,
+        ]);
+
         // 作成したユーザーでログインさせる
         Auth::guard('company')->login($user);
         $request->session()->regenerate();
 
+        Log::info('[企業登録] アカウント作成 ログイン・セッション再生成完了', [
+            'user_id' => $user->id,
+            'session_id_after_regenerate' => $request->session()->getId(),
+            'company_guard_check' => Auth::guard('company')->check(),
+            'default_guard_user_id' => Auth::user()?->id,
+        ]);
+
+        $redirectTo = '/company/profile';
+        Log::info('[企業登録] アカウント作成 リダイレクト', [
+            'to' => $redirectTo,
+            'intended' => $request->session()->get('url.intended'),
+        ]);
+
         // 企業プロフィール登録画面へ遷移する（/company/profile 相当）
-        return redirect('/company/profile');
+        return redirect($redirectTo);
     }
 
     /**
