@@ -98,8 +98,8 @@ class AuthController extends Controller
             return redirect('/login')->withErrors(['email' => '企業アカウントではありません']);
         }
 
-        // 元々アクセスしようとしていたURL（例: 質問投稿・記事投稿）があればそこへ、なければフリーランス一覧へ
-        return redirect()->intended(route('company.freelancers.index'));
+        // 元々アクセスしようとしていたURL（例: 質問投稿・記事投稿）があればそこへ、なければ案件一覧へ
+        return redirect()->intended(route('company.jobs.index'));
     }
 
     /**
