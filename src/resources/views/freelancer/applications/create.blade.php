@@ -260,6 +260,11 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 3rem;
+            /* public-header が fixed のため、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
         }
         .content-area { width: 100%; }
         .page-title {
@@ -546,7 +551,7 @@
         </div>
     </header>
 
-    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <div class="content-area">
             <h1 class="page-title">応募する</h1>
             @include('partials.error-panel')

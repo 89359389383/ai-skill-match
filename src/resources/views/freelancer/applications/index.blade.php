@@ -284,6 +284,11 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 3rem;
+            /* public-header が fixed のため、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
         }
 
         /* Content Area */
@@ -578,7 +583,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+    <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <!-- Content Area -->
         <div class="content-area">
             <div class="jobs-grid grid grid-cols-1 gap-5 lg:gap-6" id="jobs-grid">

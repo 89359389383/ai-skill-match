@@ -267,7 +267,17 @@
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
         /* Main */
-        .main-content { max-width: 1000px; margin: 0 auto; padding: 2.25rem 3rem 3rem; background-color: #fafbfc; }
+        .main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 3rem 3rem;
+            background-color: #fafbfc;
+            /* public-header は fixed なので、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
+        }
         .page-head {
             display: flex;
             align-items: center;
@@ -737,7 +747,7 @@
         </div>
     </div>
     <!-- Main Content -->
-    <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+    <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <div class="content-area">
             @php
                 $applicationItems = $applications instanceof \Illuminate\Pagination\AbstractPaginator
