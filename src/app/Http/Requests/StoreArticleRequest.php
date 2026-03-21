@@ -27,6 +27,8 @@ class StoreArticleRequest extends FormRequest
 
             // 画像URL（任意）
             'eyecatch_image_url' => ['nullable', 'url'],
+            // アイキャッチ画像ファイル（任意、最大5MB）
+            'eyecatch_image' => ['nullable', 'file', 'image', 'max:5120'],
 
             // 本文（Quill の HTML）
             'body_html' => [

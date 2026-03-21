@@ -6,6 +6,7 @@ use App\Http\Requests\StoreQuestionRequest;
 use App\Models\Question;
 use App\Services\QuestionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class QuestionController extends Controller
 {
@@ -48,6 +49,62 @@ class QuestionController extends Controller
         }
 
         return view('welcome');
+    }
+
+    /**
+     * 自分の質問一覧（ログインユーザー本人のみ）。
+     */
+    public function myIndex(Request $request)
+    {
+        $user = null;
+        if (Auth::guard('freelancer')->check()) {
+            $user = Auth::guard('freelancer')->user();
+        } elseif (Auth::guard('company')->check()) {
+            $user = Auth::guard('company')->user();
+        }
+
+        if (!$user) {
+            return redirect()->route('auth.login.form');
+        }
+
+        $questions = Question::query()
+            ->with(['user', 'tags'])
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->paginate(12);
+
+        if (view()->exists('questions.my-questions')) {
+            return view('questions.my-questions', compact('questions'));
+        }
+
+        return view('welcome');
+    }
+
+    /**
+     * 質問削除（作成者本人のみ）。
+     */
+    public function destroy(Request $request, Question $question)
+    {
+        $user = null;
+        if (Auth::guard('freelancer')->check()) {
+            $user = Auth::guard('freelancer')->user();
+        } elseif (Auth::guard('company')->check()) {
+            $user = Auth::guard('company')->user();
+        }
+
+        if (!$user) {
+            abort(403);
+        }
+
+        if ((int) $question->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        $question->delete();
+
+        return redirect()
+            ->route('questions.my.index')
+            ->with('success', '質問を削除しました');
     }
 
     /**

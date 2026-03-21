@@ -76,11 +76,49 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $a->title }}</h3>
                                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit($a->excerpt ?? '', 80) }}</p>
-                                @php $authorF = $a->user?->freelancer; @endphp
+                                @php
+                                    $author = $a->user;
+                                    $authorF = $author?->freelancer;
+                                    $authorCompany = $author?->company;
+                                    $displayName = '匿名';
+                                    $avatarSrc = null;
+                                    $isCompanyAuthor = $authorCompany !== null;
+
+                                    if ($authorF) {
+                                        $displayName = $authorF->display_name ?? $author->email ?? '匿名';
+                                        $iconPath = $authorF->icon_path ?? null;
+                                        if (!empty($iconPath)) {
+                                            if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                                $avatarSrc = $iconPath;
+                                            } else {
+                                                $iconRel = ltrim($iconPath, '/');
+                                                if (str_starts_with($iconRel, 'storage/')) {
+                                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                                }
+                                                $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                            }
+                                        }
+                                    } elseif ($isCompanyAuthor) {
+                                        $displayName = $authorCompany->contact_name
+                                            ?: ($author->name ?? null)
+                                            ?: $authorCompany->name
+                                            ?: ($author->email ?? '匿名');
+                                    } elseif ($author) {
+                                        $displayName = $author->name ?? $author->email ?? '匿名';
+                                    }
+
+                                    $authorInitial = mb_substr($displayName, 0, 1);
+                                @endphp
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $authorF?->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-8 h-8 rounded-full object-cover">
-                                    <div class="text-sm text-gray-600">{{ $authorF?->display_name ?? $a->user?->email ?? '匿名' }}</div>
-                                    <div class="text-sm text-gray-500 ml-auto">{{ $a->published_at?->format('Y/m/d') ?? $a->created_at?->format('Y/m/d') }}</div>
+                                    @if($avatarSrc)
+                                        <img src="{{ $avatarSrc }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                                    @else
+                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                            {{ $authorInitial }}
+                                        </div>
+                                    @endif
+                                    <div class="text-sm text-gray-600 min-w-0 truncate">{{ $displayName }}</div>
+                                    <div class="text-sm text-gray-500 ml-auto flex-shrink-0">{{ $a->published_at?->format('Y/m/d') ?? $a->created_at?->format('Y/m/d') }}</div>
                                 </div>
                             </div>
                         </a>

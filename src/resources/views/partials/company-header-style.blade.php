@@ -31,6 +31,7 @@
         z-index: 100;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
+        overflow: visible; /* ドロップダウンが下端で切れないよう */
     }
     .header-content {
         max-width: 1600px;
@@ -157,6 +158,11 @@
         z-index: 1000;
         border: 1px solid #e1e4e8;
         margin-top: 0.5rem;
+        max-height: min(75vh, calc(100vh - 6rem));
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
     .dropdown.is-open .dropdown-content { display: block; }
 
@@ -344,6 +350,7 @@
         z-index: 100;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
+        overflow: visible; /* ドロップダウンが下端で切れないよう */
     }
     .header-content {
         max-width: 1600px;
@@ -470,6 +477,11 @@
         z-index: 1000;
         border: 1px solid #e1e4e8;
         margin-top: 0.5rem;
+        max-height: min(75vh, calc(100vh - 6rem));
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
     .dropdown.is-open .dropdown-content { display: block; }
 

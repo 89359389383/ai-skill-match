@@ -12,6 +12,25 @@ class StoreQuestionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * 入力前処理：
+     * - tags が存在する場合、個々の要素を文字列に変換して空要素を除去する。
+     *   API 経由で数値などが来ても文字列化してバリデーションに通るようにする。
+     */
+    protected function prepareForValidation(): void
+    {
+        $tags = $this->input('tags', null);
+        if (is_array($tags)) {
+            $normalized = array_values(array_filter(array_map(function ($t) {
+                if (is_null($t)) return null;
+                return (string) $t;
+            }, $tags), function ($v) {
+                return trim($v) !== '';
+            }));
+            $this->merge(['tags' => $normalized]);
+        }
+    }
+
     public function rules(): array
     {
         return [

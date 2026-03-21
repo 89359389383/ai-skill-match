@@ -186,9 +186,15 @@
 
                 <!-- Services Section -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6" id="services">
-                    <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">
-                        提供サービス
-                    </h2>
+                    <div class="flex items-center justify-between gap-3 mb-4 pb-2 border-b-2 border-orange-600">
+                        <h2 class="text-xl font-bold text-orange-600">
+                            提供サービス
+                        </h2>
+                        <a href="{{ route('profiles.skills.index', ['user' => $user->id]) }}"
+                           class="text-sm font-semibold text-orange-600 hover:text-orange-800 hover:underline">
+                            スキル一覧
+                        </a>
+                    </div>
                     @php $skillListings = $freelancer->skillListings; @endphp
                     @if($skillListings->isEmpty())
                         <p class="text-gray-500">まだサービスを出品していません</p>

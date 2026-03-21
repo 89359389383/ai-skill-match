@@ -81,6 +81,18 @@
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span class="dropdown-item-text">プロフィール</span>
                             </a>
+                            <a href="{{ route('questions.my.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">質問一覧</span>
+                            </a>
+                            <a href="{{ route('profiles.skills.index', ['user' => auth('freelancer')->user()]) }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-3 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                                <span class="dropdown-item-text">スキル一覧</span>
+                            </a>
+                            <a href="{{ route('my-articles.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                                <span class="dropdown-item-text">記事一覧</span>
+                            </a>
                             <a href="{{ route('purchased-skills.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                 <span class="dropdown-item-text">購入したスキル</span>

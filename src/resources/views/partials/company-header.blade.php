@@ -53,6 +53,12 @@
                                 <span class="badge" style="position: static; transform: none; margin-left: auto;">{{ $messageUnread }}</span>
                             @endif
                         </a>
+                        <a href="{{ route('questions.my.index') }}" class="dropdown-item" role="menuitem">
+                            質問一覧
+                        </a>
+                        <a href="{{ route('my-articles.index') }}" class="dropdown-item" role="menuitem">
+                            記事一覧
+                        </a>
                         <a href="{{ route('company.profile.settings') }}" class="dropdown-item" role="menuitem">プロフィール設定</a>
                         <div class="dropdown-divider"></div>
                         <form method="POST" action="{{ route('auth.logout') }}" style="display: inline;">
