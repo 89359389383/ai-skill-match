@@ -1,3 +1,12 @@
+@php
+    $companyUser = auth('company')->check() ? auth('company')->user() : null;
+    $companyIconPath = $companyUser?->company?->icon_path ?? null;
+    $companyAvatarSrc = !empty($companyIconPath) ? asset('storage/' . $companyIconPath) : null;
+    $companyInitial = $companyUser?->company?->name
+        ? mb_substr($companyUser?->company?->name, 0, 1)
+        : ($companyUser?->email ? mb_substr($companyUser?->email, 0, 1) : '企');
+@endphp
+
 <header class="header header-role">
     <div class="header-content">
         <div class="header-left">
@@ -45,7 +54,13 @@
         <div class="header-right">
             <div class="user-menu">
                 <div class="dropdown" id="userDropdown">
-                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">企</button>
+                    <button class="user-avatar" id="userDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="userDropdownMenu">
+                        @if($companyAvatarSrc)
+                            <img src="{{ $companyAvatarSrc }}" alt="企業アイコン" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $companyInitial ?? '企' }}
+                        @endif
+                    </button>
                     <div class="dropdown-content" id="userDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
                             メッセージ

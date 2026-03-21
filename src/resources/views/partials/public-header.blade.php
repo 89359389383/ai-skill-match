@@ -174,14 +174,24 @@
                     $appUnread = $unreadApplicationCount ?? 0;
                     $scoutUnread = $unreadScoutCount ?? 0;
                     $companyDisplayName = $company?->name ?? 'ゲスト企業';
+                    $companyIconPath = $company?->icon_path ?? null;
+                    $companyAvatarSrc = !empty($companyIconPath) ? \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim((string) $companyIconPath, '/')) : null;
                 @endphp
                 <div class="dropdown relative" id="publicCompanyUserDropdown">
                     <button class="user-avatar" id="publicCompanyUserDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="publicCompanyUserDropdownMenu">
-                        {{ $userInitial ?? '企' }}
+                        @if($companyAvatarSrc)
+                            <img src="{{ $companyAvatarSrc }}" alt="{{ $companyDisplayName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $userInitial ?? '企' }}
+                        @endif
                     </button>
                     <div class="dropdown-content" id="publicCompanyUserDropdownMenu" role="menu" aria-label="ユーザーメニュー">
                         <div class="dropdown-profile">
-                            <div class="dropdown-profile-avatar-initial">{{ $userInitial ?? '企' }}</div>
+                            @if($companyAvatarSrc)
+                                <img src="{{ $companyAvatarSrc }}" alt="{{ $companyDisplayName }}" class="dropdown-profile-avatar" style="width: 44px; height: 44px; min-width: 44px; border-radius: 50%; object-fit: cover;">
+                            @else
+                                <div class="dropdown-profile-avatar-initial">{{ $userInitial ?? '企' }}</div>
+                            @endif
                             <div class="dropdown-profile-info">
                                 <div class="dropdown-profile-name">{{ $companyDisplayName }}</div>
                                 <div class="dropdown-profile-role">企業</div>

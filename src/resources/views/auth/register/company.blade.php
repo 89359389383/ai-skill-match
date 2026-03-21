@@ -308,6 +308,7 @@
 
             <form class="register-form" method="POST" action="{{ route('auth.register.company.store') }}">
                 @csrf
+                @include('partials.session-slot-field')
 
                 <div class="form-group">
                     <input
