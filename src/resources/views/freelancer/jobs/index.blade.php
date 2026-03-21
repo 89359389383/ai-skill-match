@@ -281,7 +281,12 @@
             max-width: var(--container-max-width);
             margin: 0 auto;
             padding: var(--main-padding);
+            /* public-header が fixed のため、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
             gap: var(--sidebar-gap);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
         }
         .sidebar {
             width: var(--sidebar-width);
@@ -588,7 +593,7 @@
     @include('partials.public-header')
 
     <!-- Main Content -->
-    <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-6 lg:gap-8">
+    <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10 flex flex-col lg:flex-row gap-6 lg:gap-8">
         <!-- Sidebar -->
         <aside class="sidebar w-full lg:w-80 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
             <div class="search-section">

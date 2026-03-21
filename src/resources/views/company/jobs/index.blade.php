@@ -272,7 +272,12 @@
             max-width: 1600px;
             margin: 0 auto;
             padding: 3rem;
+            /* public-header は fixed なので、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
             gap: 3rem;
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
         }
         .sidebar {
             width: 320px;
@@ -643,7 +648,7 @@
 <body>
     @include('partials.public-header')
 
-    <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-6 lg:gap-10">
+    <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10 flex flex-col lg:flex-row gap-6 lg:gap-10">
         <aside class="sidebar w-full lg:w-80 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
             <div class="panel p-5 md:p-7">
                 <h3>検索</h3>

@@ -266,7 +266,16 @@
         .dropdown-item:hover { background-color: #f6f8fa; color: #24292e; }
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
-        .main-content { max-width: 700px; margin: 0 auto; padding: 3rem; }
+        /* public-header が fixed のため、本文をヘッダー（h-16 = 4rem）の下から始める */
+        .main-content {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 3rem;
+            padding-top: calc(4rem + 1.5rem);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
+        }
         .page-title { font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
         .panel {
             background-color: white; border-radius: 16px; padding: 2rem;
@@ -315,7 +324,7 @@
 <body>
     @include('partials.public-header')
 
-    <main class="main-content max-w-3xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+    <main class="main-content max-w-3xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <h1 class="page-title text-2xl md:text-3xl font-black tracking-tight">企業プロフィール設定</h1>
         @include('partials.error-panel')
         

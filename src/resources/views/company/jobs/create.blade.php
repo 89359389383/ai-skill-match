@@ -267,7 +267,16 @@
         .dropdown-divider { height: 1px; background-color: #e1e4e8; margin: 0.5rem 0; }
 
         /* Layout (ページ固有のスタイルを以下に継承) */
-        .main-content { max-width: 900px; margin: 0 auto; padding: 3rem; }
+        .main-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem;
+            /* public-header は fixed なので、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
+        }
         .page-title { font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
         .panel {
             background-color: white; border-radius: 16px; padding: 2rem;
@@ -399,7 +408,7 @@
 <body>
     @include('partials.public-header')
 
-    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
+    <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <h1 class="page-title text-2xl md:text-3xl font-black tracking-tight">案件 新規登録</h1>
         
         @include('partials.error-panel')

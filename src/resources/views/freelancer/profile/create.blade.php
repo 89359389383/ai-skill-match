@@ -39,15 +39,20 @@
             max-width: 1600px;
             margin: 0 auto;
             padding: 3rem;
+            /* public-header が fixed のため、ヘッダー分だけ本文を下げる */
+            padding-top: calc(4rem + 1.5rem);
             gap: 3rem;
             position: relative;
+        }
+        @media (min-width: 768px) {
+            .main-content { padding-top: calc(4rem + 2.5rem); }
         }
         .content-area { flex: 1; min-width: 0; }
         .sidebar {
             width: 360px;
             flex-shrink: 0;
             position: sticky;
-            top: 3rem;
+            top: calc(4rem + 1.5rem);
             height: fit-content;
             align-self: flex-start;
         }
