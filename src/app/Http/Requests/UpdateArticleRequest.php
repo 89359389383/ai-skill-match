@@ -20,6 +20,7 @@ class UpdateArticleRequest extends FormRequest
             'excerpt' => ['required', 'string', 'max:200'],
             'category' => ['required', 'string', 'max:50'],
             'eyecatch_image_url' => ['nullable', 'url'],
+            'eyecatch_image' => ['nullable', 'file', 'image', 'max:5120'],
             'body_html' => [
                 'required',
                 'string',
@@ -44,6 +45,8 @@ class UpdateArticleRequest extends FormRequest
             'excerpt.max' => '概要は200文字以内で入力してください。',
             'category.required' => 'カテゴリーは必須です。',
             'eyecatch_image_url.url' => 'アイキャッチ画像URLは正しいURL形式で入力してください。',
+            'eyecatch_image.image' => 'アイキャッチ画像は画像ファイルを選択してください。',
+            'eyecatch_image.max' => 'アイキャッチ画像は5MB以内にしてください。',
             'body_html.required' => '本文を入力してください。',
             'body_html.max' => '本文が長すぎます。',
             'tags.max' => 'タグは最大5個までです。',

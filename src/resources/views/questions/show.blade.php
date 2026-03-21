@@ -16,10 +16,36 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                 質問一覧に戻る
             </a>
+        <div class="flex flex-wrap items-center gap-3">
+            @php
+                $viewerId = null;
+                if(auth('freelancer')->check()) {
+                    $viewerId = auth('freelancer')->user()->id;
+                } elseif(auth('company')->check()) {
+                    $viewerId = auth('company')->user()->id;
+                }
+                $canDelete = $viewerId && (int)$viewerId === (int)$question->user_id;
+            @endphp
+
+            @if(auth('freelancer')->check() || auth('company')->check())
+                <a href="{{ route('questions.my.index') }}" class="flex items-center gap-2 px-6 py-4 border-2 border-indigo-200 text-indigo-700 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all duration-300 text-lg">
+                    自分の質問一覧
+                </a>
+            @endif
+
             <a href="{{ route('questions.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                 質問を投稿
             </a>
+
+            @if($canDelete)
+                <button type="button"
+                        onclick="openQuestionDeleteModal('{{ route('questions.destroy', ['question' => $question->id]) }}')"
+                        class="flex items-center gap-2 px-6 py-3 border-2 border-red-200 text-red-700 rounded-xl font-bold shadow-sm hover:bg-red-50 transition-all duration-300">
+                    削除
+                </button>
+            @endif
+        </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
@@ -131,4 +157,46 @@
         @endif
     </div>
 </div>
+
+@if($canDelete ?? false)
+    <div id="questionDeleteModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">質問を削除しますか？</h3>
+            <p class="text-sm text-gray-600 mb-6">この操作は取り消せません。</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeQuestionDeleteModal()" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">キャンセル</button>
+                <form id="questionDeleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700">削除する</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionDeleteUrl = null;
+        function openQuestionDeleteModal(destroyUrl) {
+            currentQuestionDeleteUrl = destroyUrl;
+            const modal = document.getElementById('questionDeleteModal');
+            const form = document.getElementById('questionDeleteForm');
+            if (!modal || !form) return;
+            form.action = currentQuestionDeleteUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeQuestionDeleteModal() {
+            const modal = document.getElementById('questionDeleteModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            currentQuestionDeleteUrl = null;
+        }
+        document.getElementById('questionDeleteModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeQuestionDeleteModal();
+        });
+    </script>
+@endif
 @endsection

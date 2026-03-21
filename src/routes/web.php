@@ -77,6 +77,11 @@ Route::get('/profiles/{user}', [ProfileController::class, 'show'])
     ->whereNumber('user')
     ->name('profiles.show');
 
+// フリーランスプロフィール詳細から辿る「そのフリーランスのスキル一覧」
+Route::get('/profiles/{user}/skills', [SkillListingController::class, 'skillsByFreelancer'])
+    ->whereNumber('user')
+    ->name('profiles.skills.index');
+
 Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::get('/messages', [DirectMessageController::class, 'index'])
         ->name('direct-messages.index');
@@ -180,6 +185,17 @@ Route::middleware(['auth:freelancer', 'freelancer'])->group(function () {
     // スキル出品（フリーランスのみ）
     Route::get('/skills/new', [SkillListingController::class, 'create'])->name('skills.create');
     Route::post('/skills', [SkillListingController::class, 'store'])->name('skills.store');
+
+    // スキル出品（編集/更新/削除）
+    Route::get('/skills/{skill_listing}/edit', [SkillListingController::class, 'edit'])
+        ->whereNumber('skill_listing')
+        ->name('skills.edit');
+    Route::match(['put', 'patch'], '/skills/{skill_listing}', [SkillListingController::class, 'update'])
+        ->whereNumber('skill_listing')
+        ->name('skills.update');
+    Route::delete('/skills/{skill_listing}', [SkillListingController::class, 'destroy'])
+        ->whereNumber('skill_listing')
+        ->name('skills.destroy');
 });
 
 Route::middleware(['auth:company', 'company'])->group(function () {
@@ -266,6 +282,14 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     // 質問投稿
     Route::get('/questions/new', [QuestionController::class, 'create'])->name('questions.create');
     Route::post('/questions', [QuestionController::class, 'store'])->name('questions.store');
+
+    // 自分の質問一覧（自分の質問だけ表示）
+    Route::get('/my-questions', [QuestionController::class, 'myIndex'])->name('questions.my.index');
+
+    // 質問削除（作成者本人のみ）
+    Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])
+        ->whereNumber('question')
+        ->name('questions.destroy');
 
     // 回答投稿（質問詳細から）
     Route::post('/questions/{question}/answers', [AnswerController::class, 'store'])

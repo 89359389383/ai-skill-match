@@ -6,6 +6,8 @@ use App\Http\Requests\UpdateArticleRequest;
 use App\Models\Article;
 use App\Services\ArticleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MyArticleController extends Controller
 {
@@ -77,6 +79,15 @@ class MyArticleController extends Controller
 
         if (! array_key_exists('structure', $validated)) {
             $validated['structure'] = $article->structure;
+        }
+
+        if ($request->hasFile('eyecatch_image')) {
+            try {
+                $path = $request->file('eyecatch_image')->store('eyecatches', 'public');
+                $validated['eyecatch_image_url'] = Storage::disk('public')->url($path);
+            } catch (\Throwable $e) {
+                Log::warning('[MyArticleController@update] eyecatch upload failed: '.$e->getMessage());
+            }
         }
 
         $service->update($article, $validated);

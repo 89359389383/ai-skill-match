@@ -3,14 +3,45 @@
 @section('title', ($article->title ?? '投稿記事') . ' - AIスキルマッチ')
 
 @push('styles')
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
 .prose p { margin-bottom: 1rem; line-height: 1.75; }
 .prose ul { list-style-type: disc; padding-left: 1.5rem; }
 .prose li { margin-bottom: 0.5rem; }
-.article-body .ql-editor { min-height: auto; padding: 0; font-size: 1.05rem; line-height: 1.75; }
-.article-body .ql-editor h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0; }
-.article-body .ql-editor h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0; }
+
+.article-body {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #1f2937;
+    padding: 0;
+    margin: 0;
+    /* 改行は維持しつつ、行頭の余計なスペースは折りたたむ */
+    white-space: pre-line;
+    word-break: break-word;
+}
+.article-body > *:first-child { margin-top: 0; }
+.article-body p { margin: 0 0 1rem 0; text-indent: 0 !important; }
+.article-body p:last-child { margin-bottom: 0; }
+.article-body h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0; }
+.article-body h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0; }
+.article-body h3 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0; }
+.article-body ul { list-style-type: disc; padding-left: 1.5rem; margin: 0 0 1rem 0; }
+.article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0 0 1rem 0; }
+.article-body li { margin-bottom: 0.5rem; }
+.article-body a { color: #4f46e5; text-decoration: underline; }
+.article-body img { max-width: 100%; height: auto; }
+.article-body blockquote { border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 1rem 0; color: #4b5563; }
+
+.article-body .ql-editor,
+.article-body .ql-snow,
+.article-body .ql-container {
+    border: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+}
+.article-body [class*="ql-indent"] { padding-left: 0 !important; margin-left: 0 !important; }
 </style>
 @endpush
 
@@ -62,10 +93,8 @@
                     @endif
 
                     @if(filled($article->body_html))
-                        <div class="ql-snow article-body border-0">
-                            <div class="ql-editor text-gray-800">
-                                {!! $article->body_html !!}
-                            </div>
+                        <div class="article-body">
+                            {!! $article->body_html !!}
                         </div>
                     @elseif($article->structure && is_array($article->structure))
                         <div class="prose max-w-none">

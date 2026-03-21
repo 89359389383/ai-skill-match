@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Session\TokenMismatchException;
 use Throwable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,22 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        // 419: multipart 全体を all() でログに載せない（VerifyCsrfToken 側でも詳細ログあり）
+        if ($exception instanceof TokenMismatchException) {
+            Log::warning('【419 Page Expired】CSRF / セッション不一致', [
+                'url' => $request->fullUrl(),
+                'path' => $request->path(),
+                'method' => $request->method(),
+                'session_cookie_name' => config('session.cookie'),
+                'query_slot' => $request->query('slot'),
+                'input_slot' => $request->input('slot'),
+                'has__token' => $request->has('_token'),
+                '_token_length' => $request->has('_token') ? strlen((string) $request->input('_token')) : 0,
+            ]);
+
+            return parent::render($request, $exception);
+        }
+
         // ログインユーザー情報
         $user = Auth::check() ? [
             'id' => Auth::user()->id,

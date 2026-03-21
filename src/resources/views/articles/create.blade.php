@@ -3,44 +3,8 @@
 @section('title', '記事を投稿 - AIスキルマッチ')
 
 @push('styles')
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
-    /* エディタラッパー */
-    #editor-wrapper {
-        position: relative;
-    }
-    /* エディタコンテナ */
-    #editor {
-        min-height: 300px;
-    }
-    /* Quillコンテナ */
-    .ql-container.ql-snow {
-        border-radius: 0 0 0.75rem 0.75rem;
-        border-color: #d1d5db;
-        min-height: 300px;
-        height: 300px;
-    }
-    /* ツールバー */
-    .ql-toolbar.ql-snow {
-        border-radius: 0.75rem 0.75rem 0 0;
-        border-color: #d1d5db;
-    }
-    /* エディタ本体 - クリック可能に */
-    .ql-editor {
-        min-height: 280px;
-        font-size: 16px;
-        pointer-events: auto !important;
-        cursor: text;
-    }
-    /* フォントサイズクラス */
-    .ql-snow .ql-editor .ql-size-small { font-size: 0.75em; }
-    .ql-snow .ql-editor .ql-size-large { font-size: 1.5em; }
-    .ql-snow .ql-editor .ql-size-huge { font-size: 2em; }
-    /* placeholderスタイル */
-    .ql-editor.ql-blank::before {
-        color: #9ca3af;
-        font-style: normal;
-    }
+    /* 本文はシンプルなtextareaにするため、Quill関連スタイルは使いません */
 </style>
 @endpush
 
@@ -55,15 +19,8 @@
                 記事一覧に戻る
             </a>
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <h1 class="text-4xl font-bold text-gray-900">記事を投稿</h1>
+                    <h1 class="text-4xl font-bold text-gray-900">記事を投稿</h1>
                 <div class="flex flex-wrap gap-3">
-                    <button type="button" onclick="handlePreview()" class="flex items-center gap-2 px-4 py-2 border-2 border-green-600 text-green-600 rounded-xl font-semibold hover:bg-green-50 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                        プレビュー
-                    </button>
                     <button type="submit" form="articleForm" class="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
@@ -74,7 +31,7 @@
             </div>
         </div>
 
-        <form id="articleForm" action="{{ route('articles.store') }}" method="POST" class="space-y-6">
+        <form id="articleForm" action="{{ route('articles.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @include('partials.error-panel')
 
@@ -108,9 +65,13 @@
                         カテゴリー <span class="text-red-500">*</span>
                     </label>
                     <select name="category" id="category" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('category') border-red-500 @enderror">
-                        <option value="ChatGPT" {{ old('category') === 'ChatGPT' ? 'selected' : '' }}>ChatGPT</option>
+                        <option value="">選択してください</option>
                         <option value="n8n" {{ old('category') === 'n8n' ? 'selected' : '' }}>n8n</option>
-                        <option value="Python" {{ old('category') === 'Python' ? 'selected' : '' }}>Python</option>
+                        <option value="AIツール" {{ old('category') === 'AIツール' ? 'selected' : '' }}>AIツール</option>
+                        <option value="自動化" {{ old('category') === '自動化' ? 'selected' : '' }}>自動化</option>
+                        <option value="プログラミング" {{ old('category') === 'プログラミング' ? 'selected' : '' }}>プログラミング</option>
+                        <option value="ビジネス活用" {{ old('category') === 'ビジネス活用' ? 'selected' : '' }}>ビジネス活用</option>
+                        <option value="副業・フリーランス" {{ old('category') === '副業・フリーランス' ? 'selected' : '' }}>副業・フリーランス</option>
                         <option value="その他" {{ old('category', '') === 'その他' ? 'selected' : '' }}>その他</option>
                     </select>
                     @error('category')
@@ -133,23 +94,28 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                         本文 <span class="text-red-500">*</span>
                     </label>
-                    <div id="editor-wrapper" class="bg-white rounded-xl border border-gray-300">
-                        <div id="editor"></div>
-                    </div>
-                    <input type="hidden" name="body_html" id="article_body_html" value="{{ old('body_html') }}">
+                    <textarea
+                        id="body_html"
+                        name="body_html"
+                        rows="10"
+                        maxlength="50000"
+                        placeholder="本文を入力してください"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-vertical @error('body_html') border-red-500 ring-2 ring-red-100 @enderror"
+                    >{{ old('body_html') }}</textarea>
                     @error('body_html')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">アイキャッチ画像URL</label>
-                    <div class="flex gap-2">
-                        <input type="url" name="eyecatch_image_url" id="imageUrl" value="{{ old('eyecatch_image_url') }}" placeholder="https://example.com/image.jpg"
-                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('eyecatch_image_url') border-red-500 @enderror">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">アイキャッチ画像（任意）</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="file" name="eyecatch_image" id="eyecatchImage" accept="image/*"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('eyecatch_image') border-red-500 @enderror">
+                        <button type="button" id="removeEyecatchBtn" class="px-3 py-2 border rounded-lg text-sm text-gray-600">削除</button>
                     </div>
-                    <div id="imagePreviewContainer"></div>
-                    @error('eyecatch_image_url')
+                    <div id="imagePreviewContainer" class="mt-3"></div>
+                    @error('eyecatch_image')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
                 </div>
@@ -167,27 +133,12 @@
     </div>
 </div>
 
-<div id="previewModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50" onclick="closePreview()"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900">プレビュー</h3>
-                <button type="button" onclick="closePreview()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div id="previewContent"></div>
-        </div>
-    </div>
-</div>
+{{-- プレビュー機能（Quill依存）のため、いったん非表示にします --}}
 @endsection
 
 @push('scripts')
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script>
     let tags = [];
-    let quill;
 
     document.addEventListener('DOMContentLoaded', function() {
         @if(is_array(old('tags')))
@@ -195,66 +146,49 @@
         @endif
         renderTags();
 
-        // エディタ要素の確認
-        var editorElement = document.getElementById('editor');
-        if (!editorElement) {
-            console.error('Editor element not found');
-            return;
-        }
-
-        // Quill初期化
-        try {
-            quill = new Quill('#editor', {
-                theme: 'snow',
-                placeholder: '本文を入力してください...',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'header': [1, 2, 3, false] }],
-                        [{ 'size': ['small', false, 'large', 'huge'] }],
-                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['clean']
-                    ]
-                }
+        // タグ入力：Enterで追加
+        const tagInput = document.getElementById('tagInput');
+        if (tagInput) {
+            tagInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); addTag(); }
             });
-
-            // 初期コンテンツ設定
-            var initial = document.getElementById('article_body_html').value;
-            if (initial) {
-                quill.root.innerHTML = initial;
-            }
-
-            // エディタが初期化されたことを確認
-            console.log('Quill initialized successfully');
-        } catch (e) {
-            console.error('Quill initialization failed:', e);
         }
 
-        document.getElementById('tagInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); addTag(); }
-        });
-
-        document.getElementById('imageUrl').addEventListener('input', function(e) {
-            var url = e.target.value;
-            var container = document.getElementById('imagePreviewContainer');
-            if (url) {
-                container.innerHTML = '<div class="mt-3 rounded-xl overflow-hidden"><img src="'+escapeAttr(url)+'" alt="Preview" class="w-full h-48 object-cover" onerror="this.parentElement.innerHTML=\'<p class=\\'text-red-500 text-sm\\'>画像を読み込めません</p>\'"></div>';
-            } else {
-                container.innerHTML = '';
-            }
-        });
-
-        document.getElementById('articleForm').addEventListener('submit', function() {
-            document.getElementById('article_body_html').value = quill.root.innerHTML;
+        // 投稿時：tags[] を hidden input として追加
+        const articleForm = document.getElementById('articleForm');
+        if (articleForm) {
+            articleForm.addEventListener('submit', function() {
             prepareFormData();
-        });
-    });
+            });
+        }
 
-    function escapeAttr(s) {
-        if (!s) return '';
-        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+        // アイキャッチ画像ファイルのクライアントプレビュー（FileReader）
+        const eyecatchInput = document.getElementById('eyecatchImage');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const removeEyecatchBtn = document.getElementById('removeEyecatchBtn');
+        if (eyecatchInput && imagePreviewContainer) {
+            eyecatchInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                imagePreviewContainer.innerHTML = '';
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    imagePreviewContainer.innerHTML = '<p class=\"text-red-500 text-sm mt-3\">画像ファイルを選択してください</p>';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    imagePreviewContainer.innerHTML = '<div class=\"mt-3 rounded-xl overflow-hidden\"><img src=\"' + ev.target.result + '\" alt=\"Preview\" class=\"w-full h-48 object-cover\"></div>';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        if (removeEyecatchBtn) {
+            removeEyecatchBtn.addEventListener('click', function () {
+                if (eyecatchInput) eyecatchInput.value = '';
+                if (imagePreviewContainer) imagePreviewContainer.innerHTML = '';
+            });
+        }
+    });
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -299,31 +233,6 @@
             input.value = tag;
             form.appendChild(input);
         });
-    }
-
-    function handlePreview() {
-        var title = document.getElementById('title').value;
-        var excerpt = document.getElementById('excerpt').value;
-        var category = document.getElementById('category').value;
-        var imageUrl = document.getElementById('imageUrl').value;
-        var bodyHtml = quill.root.innerHTML;
-
-        var html = '';
-        if (imageUrl) html += '<div class="mb-6"><img src="' + escapeAttr(imageUrl) + '" alt="" class="w-full h-48 object-cover rounded-xl"></div>';
-        html += '<h1 class="text-2xl font-bold text-gray-900 mb-4">' + escapeHtml(title || '（タイトル未入力）') + '</h1>';
-        html += '<p class="text-gray-600 mb-4">' + escapeHtml(excerpt || '（概要未入力）') + '</p>';
-        html += '<span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm mb-4">' + escapeHtml(category) + '</span>';
-        html += '<div class="flex flex-wrap gap-2 mb-6">' + tags.map(function(t) {
-            return '<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">#' + escapeHtml(t) + '</span>';
-        }).join('') + '</div>';
-        html += '<div class="ql-snow border-0"><div class="ql-editor" style="min-height:auto;padding:0;">' + bodyHtml + '</div></div>';
-
-        document.getElementById('previewContent').innerHTML = html;
-        document.getElementById('previewModal').classList.remove('hidden');
-    }
-
-    function closePreview() {
-        document.getElementById('previewModal').classList.add('hidden');
     }
 </script>
 @endpush

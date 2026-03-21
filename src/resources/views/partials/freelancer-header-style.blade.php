@@ -45,6 +45,7 @@
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         min-height: var(--header-height-current);
+        overflow: visible; /* ドロップダウンが下端で切れないよう */
     }
     .header-content {
         max-width: 1600px;
@@ -218,7 +219,12 @@
         border-radius: 12px;
         z-index: 1000;
         border: 1px solid #e5e7eb;
-        overflow: hidden;
+        /* 項目が増えても下端で切れないよう、メニュー内でスクロール */
+        max-height: min(75vh, calc(100vh - 6rem));
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
     .dropdown.is-open .dropdown-content { display: block; }
 

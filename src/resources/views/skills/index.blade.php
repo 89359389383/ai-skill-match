@@ -19,10 +19,21 @@
         <div class="mb-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">スキル販売</h1>
+                    @php
+                        $viewerFreelancer = auth('freelancer')->check() ? auth('freelancer')->user()->freelancer : null;
+                    @endphp
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                        {{ isset($freelancer) && $freelancer ? ($freelancer->display_name . 'さんのスキル一覧') : 'スキル販売' }}
+                    </h1>
                     <p class="text-gray-600">AIスキルを持つプロフェッショナルに直接依頼できます</p>
                 </div>
-                <a href="{{ route('skills.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                @if(auth('freelancer')->check() && auth('freelancer')->user()?->freelancer)
+                    <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [])) }}"
+                       class="flex items-center gap-2 px-6 py-4 border-2 border-indigo-200 text-indigo-700 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all duration-300 text-lg">
+                        自分のスキル一覧
+                    </a>
+                @endif
+                <a href="{{ route('skills.create', request()->filled('slot') ? ['slot' => request('slot')] : []) }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                     スキルを出品
                 </a>
@@ -48,41 +59,80 @@
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($listings as $l)
-                    <a href="{{ route('skills.show', ['skill_listing' => $l->id]) }}" class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
-                        <div class="relative h-48 overflow-hidden">
-                            <img src="{{ $l->thumbnail_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $l->title }}" class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500">
-                        </div>
-                        <div class="p-6">
-                            <div class="flex items-center gap-2 mb-3">
-                                @php $seller = $l->freelancer; @endphp
-                                <img src="{{ $seller->icon_path ?? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop' }}" alt="{{ $seller->display_name }}" class="w-8 h-8 rounded-full object-cover">
-                                <div class="flex-1">
-                                    <div class="font-bold text-sm text-gray-900">{{ $seller->display_name ?? '出品者' }}</div>
-                                    <div class="text-xs text-gray-500">職種: {{ $seller->job_title ?? '-' }}</div>
+                    @php
+                        $isOwnListing = $viewerFreelancer
+                            && (int) $viewerFreelancer->id === (int) $l->freelancer_id;
+                    @endphp
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+                        <a href="{{ route('skills.show', ['skill_listing' => $l->id]) }}" class="block">
+                            <div class="relative h-48 overflow-hidden">
+                                <img src="{{ $l->thumbnail_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $l->title }}" class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center gap-2 mb-3">
+                                    @php $seller = $l->freelancer; @endphp
+                                    @php
+                                        $iconPath = $seller?->icon_path ?? null;
+                                        $defaultIcon = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop';
+                                        $avatarSrc = $defaultIcon;
+
+                                        if (!empty($iconPath)) {
+                                            if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                                $avatarSrc = $iconPath;
+                                            } else {
+                                                // icon_path が `freelancer_icons/...` や `storage/freelancer_icons/...` のどちらでも対応
+                                                $iconRel = ltrim((string) $iconPath, '/');
+                                                if (str_starts_with($iconRel, 'storage/')) {
+                                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                                }
+                                                $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                            }
+                                        }
+                                    @endphp
+                                    <img src="{{ $avatarSrc }}" alt="{{ $seller->display_name }}" class="w-8 h-8 rounded-full object-cover">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-sm text-gray-900">{{ $seller->display_name ?? '出品者' }}</div>
+                                        <div class="text-xs text-gray-500">職種: {{ $seller->job_title ?? '-' }}</div>
+                                    </div>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $l->title }}</h3>
+                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit($l->description, 100) }}</p>
+                                <div class="flex flex-wrap gap-1 mb-4">
+                                    @foreach($l->skills->take(3) as $skill)
+                                        <span class="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-full">{{ $skill->name }}</span>
+                                    @endforeach
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        <span class="font-bold text-sm">{{ $l->rating_average ?? '0' }}</span>
+                                        <span class="text-xs text-gray-500">({{ $l->reviews_count ?? 0 }})</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xl font-bold text-purple-600">¥{{ number_format($l->price) }}</div>
+                                        @if($l->delivery_days)
+                                            <div class="text-xs text-gray-500">納期: {{ $l->delivery_days }}日</div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $l->title }}</h3>
-                            <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit($l->description, 100) }}</p>
-                            <div class="flex flex-wrap gap-1 mb-4">
-                                @foreach($l->skills->take(3) as $skill)
-                                    <span class="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-full">{{ $skill->name }}</span>
-                                @endforeach
+                        </a>
+
+                        @if($isOwnListing)
+                            <div class="px-6 pb-4 pt-0 flex flex-wrap gap-2 border-t border-gray-100">
+                                <a href="{{ route('skills.edit', array_merge(['skill_listing' => $l->id], request()->filled('slot') ? ['slot' => request('slot')] : [])) }}"
+                                   class="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                                   onclick="event.stopPropagation();">
+                                    編集
+                                </a>
+                                <button type="button"
+                                        class="inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                                        onclick="openSkillDeleteModal({{ $l->id }}, {{ json_encode($l->title) }}, {{ json_encode(route('skills.destroy', array_merge(['skill_listing' => $l->id], request()->filled('slot') ? ['slot' => request('slot')] : []))) }});">
+                                    削除
+                                </button>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                    <span class="font-bold text-sm">{{ $l->rating_average ?? '0' }}</span>
-                                    <span class="text-xs text-gray-500">({{ $l->reviews_count ?? 0 }})</span>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xl font-bold text-purple-600">¥{{ number_format($l->price) }}</div>
-                                    @if($l->delivery_days)
-                                        <div class="text-xs text-gray-500">納期: {{ $l->delivery_days }}日</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </a>
+                        @endif
+                    </div>
                 @endforeach
             </div>
 
@@ -92,4 +142,51 @@
         @endif
     </div>
 </div>
+
+<div id="skillDeleteModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">スキルを削除しますか？</h3>
+        <p id="skillDeleteModalMessage" class="text-sm text-gray-600 mb-6">この操作は取り消せません。</p>
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="closeSkillDeleteModal()" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">キャンセル</button>
+            <form id="skillDeleteForm" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700">削除する</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSkillDeleteUrl = null;
+
+    function openSkillDeleteModal(skillId, skillTitle, destroyUrl) {
+        currentSkillDeleteUrl = destroyUrl;
+        const modal = document.getElementById('skillDeleteModal');
+        const message = document.getElementById('skillDeleteModalMessage');
+        const form = document.getElementById('skillDeleteForm');
+        if (!modal || !message || !form) return;
+
+        message.textContent = '「' + skillTitle + '」を本当に削除しますか？この操作は取り消せません。';
+        form.action = currentSkillDeleteUrl;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSkillDeleteModal() {
+        const modal = document.getElementById('skillDeleteModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+        currentSkillDeleteUrl = null;
+    }
+
+    document.getElementById('skillDeleteModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeSkillDeleteModal();
+    });
+</script>
 @endsection

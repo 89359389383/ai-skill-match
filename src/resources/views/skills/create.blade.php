@@ -63,8 +63,15 @@
 
             <!-- Main Content -->
             <div class="lg:col-span-3">
-                <form id="skillForm" action="{{ route('skills.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
+                @php
+                    $slotQuery = request()->filled('slot')
+                        ? request('slot')
+                        : request()->attributes->get('resolved_slot');
+                    $skillsStoreParams = (is_string($slotQuery) && $slotQuery !== '') ? ['slot' => $slotQuery] : [];
+                @endphp
+                <form id="skillForm" action="{{ route('skills.store', $skillsStoreParams) }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                     @csrf
+                    @include('partials.session-slot-field')
                     @include('partials.error-panel')
                     <!-- Basic Info Section -->
                     <div class="bg-white rounded-lg shadow-sm p-6" id="basicInfo">
@@ -200,6 +207,8 @@
 <script>
     let tags = [];
     let imageData = null;
+    /** true のときはブラウザ標準の submit をそのまま通す（requestSubmit 2回目） */
+    let skillFormAllowNativeSubmit = false;
 
     document.addEventListener('DOMContentLoaded', function() {
         const tagInput = document.getElementById('tagInput');
@@ -215,8 +224,12 @@
         const skillForm = document.getElementById('skillForm');
         if (skillForm) {
             skillForm.addEventListener('submit', function(e) {
+                if (skillFormAllowNativeSubmit) {
+                    skillFormAllowNativeSubmit = false;
+                    return;
+                }
                 e.preventDefault();
-                handleSubmit();
+                runSkillFormValidationAndSubmit();
             });
         }
     });
@@ -283,7 +296,7 @@
         alert('プレビュー機能は準備中です');
     }
 
-    function handleSubmit() {
+    function runSkillFormValidationAndSubmit() {
         const title = document.getElementById('title').value;
         const description = document.getElementById('description').value;
         const price = document.getElementById('price').value;
@@ -294,11 +307,25 @@
             return;
         }
 
-        // 実際の保存はフォーム送信に任せる（ここではデフォルト送信を呼び出す）
         const form = document.getElementById('skillForm');
-        if (form) {
-            form.submit();
-        }
+        if (!form) return;
+
+        // UIで管理しているタグ（スキル名）を backend へ渡す
+        form.querySelectorAll('input[name="skill_names[]"]').forEach(el => el.remove());
+        tags.forEach(t => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'skill_names[]';
+            input.value = t;
+            form.appendChild(input);
+        });
+
+        skillFormAllowNativeSubmit = true;
+        form.requestSubmit();
+    }
+
+    function handleSubmit() {
+        runSkillFormValidationAndSubmit();
     }
 </script>
 </push>

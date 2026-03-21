@@ -5,7 +5,7 @@
     $navActiveClass = 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg';
 @endphp
 <!-- Header（ページ上部に固定） -->
-<header class="fixed top-0 left-0 right-0 z-[5000] bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+<header class="fixed top-0 left-0 right-0 z-[5000] overflow-visible bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
     <nav class="max-w-7xl mx-auto px-4 sm:px-5 lg:px-8">
         <div class="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-4">
             <!-- Logo -->
@@ -104,6 +104,18 @@
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span class="dropdown-item-text">プロフィール</span>
                             </a>
+                            <a href="{{ route('questions.my.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">質問一覧</span>
+                            </a>
+                            <a href="{{ route('profiles.skills.index', ['user' => auth('freelancer')->user()]) }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-3 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                                <span class="dropdown-item-text">スキル一覧</span>
+                            </a>
+                            <a href="{{ route('my-articles.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                                <span class="dropdown-item-text">記事一覧</span>
+                            </a>
                             <a href="{{ route('purchased-skills.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                 <span class="dropdown-item-text">購入したスキル</span>
@@ -176,6 +188,14 @@
                             </div>
                         </div>
                         <div class="dropdown-nav">
+                            <a href="{{ route('questions.my.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">質問一覧</span>
+                            </a>
+                            <a href="{{ route('my-articles.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                                <span class="dropdown-item-text">記事一覧</span>
+                            </a>
                             <a href="{{ route('company.freelancers.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span class="dropdown-item-text">フリーランス一覧</span>
@@ -358,7 +378,18 @@
         border-radius: 12px;
         z-index: 5001;
         border: 1px solid #e5e7eb;
-        overflow: hidden;
+        max-height: min(75vh, calc(100vh - 6rem));
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    /* ドロップダウン親がヘッダー内で切れないよう */
+    #publicFreelancerUserDropdown,
+    #publicCompanyUserDropdown {
+        position: relative;
+        overflow: visible;
     }
     #publicFreelancerUserDropdown.is-open .dropdown-content,
     #publicCompanyUserDropdown.is-open .dropdown-content {

@@ -19,7 +19,7 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         $articles = Article::query()
-            ->with(['user', 'tags'])
+            ->with(['user', 'tags', 'user.freelancer', 'user.company'])
             ->where('status', 1)
             ->when($request->filled('user'), function ($q) use ($request) {
                 $q->where('user_id', (int) $request->query('user'));
@@ -40,7 +40,7 @@ class ArticleController extends Controller
      */
     public function show(Article $article)
     {
-        $article->load(['user', 'tags']);
+        $article->load(['user', 'tags', 'user.freelancer', 'user.company']);
 
         // 将来: views_count を increment する（bot対策/重複対策を入れてから）
 
@@ -86,6 +86,18 @@ class ArticleController extends Controller
         // 仕様（記事投稿画面）に沿った入力チェックは FormRequest 側へ移動。
         // Controller では “validated 済みの安全な配列” だけを受け取る。
         $validated = $request->validated();
+
+        // アイキャッチ画像がアップロードされていれば保存して URL を validated にセットする
+        if ($request->hasFile('eyecatch_image')) {
+            try {
+                $file = $request->file('eyecatch_image');
+                $path = $file->store('eyecatches', 'public');
+                $validated['eyecatch_image_url'] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+            } catch (\Throwable $e) {
+                // 保存に失敗しても投稿処理自体は継続（バリデーションで弾きたい場合は別途対応）
+                \Illuminate\Support\Facades\Log::warning('[ArticleController@store] eyecatch upload failed: ' . $e->getMessage());
+            }
+        }
 
         $article = $service->store($user, $validated);
 

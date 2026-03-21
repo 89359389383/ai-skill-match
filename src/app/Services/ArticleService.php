@@ -55,10 +55,16 @@ class ArticleService
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],
                 'category' => $data['category'],
-                'eyecatch_image_url' => $data['eyecatch_image_url'] ?? null,
                 'body_html' => $this->sanitizeBodyHtml($data['body_html'] ?? null),
                 'structure' => array_key_exists('structure', $data) ? $data['structure'] : $article->structure,
-            ])->save();
+            ]);
+
+            // フォームから eyecatch_image_url を送らない更新（ファイル未選択）では既存 URL を維持する
+            if (array_key_exists('eyecatch_image_url', $data)) {
+                $article->eyecatch_image_url = $data['eyecatch_image_url'];
+            }
+
+            $article->save();
 
             $tagNames = $data['tags'] ?? [];
             $tagIds = $this->resolveTagIds($tagNames);
