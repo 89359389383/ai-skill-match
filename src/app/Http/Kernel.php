@@ -32,7 +32,11 @@ class Kernel extends HttpKernel
         'web' => [
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            // タブごとに `slot` を付けて、Laravel のセッションCookieを分離する
+            \App\Http\Middleware\SetSessionCookieSlot::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            // リダイレクト先に slot クエリを自動付与して、タブごとのログイン状態を維持する
+            \App\Http\Middleware\PreserveSlotOnRedirect::class,
             // \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,

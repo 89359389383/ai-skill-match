@@ -310,8 +310,10 @@
             </div>
             @endif
 
+            @php $slot = request()->query('slot'); @endphp
             <form class="login-form" method="POST">
                 @csrf
+                <input type="hidden" name="slot" id="slotInput" value="{{ is_string($slot) ? $slot : '' }}">
 
                 <div class="form-group">
                     <input
@@ -389,6 +391,34 @@
                 toggleButton.classList.remove('active');
             }
         }
+    </script>
+
+    <script>
+        // タブごとに別ログインを維持するため、`slot` を自動採番してURL/Hiddenに入れる
+        (function () {
+            const url = new URL(window.location.href);
+            const existingSlot = url.searchParams.get('slot');
+            if (existingSlot && typeof existingSlot === 'string' && existingSlot !== '') {
+                sessionStorage.setItem('slot', existingSlot);
+                const input = document.getElementById('slotInput');
+                if (input) input.value = existingSlot;
+                return;
+            }
+
+            let slot = sessionStorage.getItem('slot');
+            if (!slot) {
+                try {
+                    slot = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+                } catch (e) {
+                    slot = null;
+                }
+                if (!slot) slot = String(Date.now()) + '_' + String(Math.random()).slice(2, 10);
+                sessionStorage.setItem('slot', slot);
+            }
+
+            url.searchParams.set('slot', slot);
+            window.location.replace(url.toString());
+        })();
     </script>
 </body>
 

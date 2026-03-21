@@ -144,7 +144,22 @@
 
                         <!-- Profile Image -->
                         <div class="ml-6 flex-shrink-0">
-                            <img src="{{ $freelancer->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&h=160&fit=crop' }}" alt="{{ $freelancer->display_name }}" class="w-40 h-40 object-cover rounded-lg shadow-md">
+                            @php
+                                $iconPath = $freelancer->icon_path ?? null;
+                                $iconSrc = null;
+                                if (!empty($iconPath)) {
+                                    if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                        $iconSrc = $iconPath;
+                                    } else {
+                                        $iconRel = ltrim($iconPath, '/');
+                                        if (str_starts_with($iconRel, 'storage/')) {
+                                            $iconRel = substr($iconRel, strlen('storage/'));
+                                        }
+                                        $iconSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                    }
+                                }
+                            @endphp
+                            <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&h=160&fit=crop' }}" alt="{{ $freelancer->display_name }}" class="w-40 h-40 object-cover rounded-lg shadow-md">
                         </div>
                     </div>
                 </div>
@@ -295,8 +310,8 @@
                             $currentUser = auth('company')->check() ? auth('company')->user() : (auth('freelancer')->check() ? auth('freelancer')->user() : null);
                             $currentUserId = $currentUser?->id;
                             $isOwnProfile = $currentUserId && $currentUserId === $user->id;
-                            $currentCompanyProfile = auth('company')->check() ? auth('company')->user()->company : null;
-                            $canStartDirectMessage = !$isGuest && !$isOwnProfile && $currentCompanyProfile !== null;
+                            // フリーランスまたは企業としてログインしていれば、自分以外のプロフィールにメッセージ送信可能
+                            $canStartDirectMessage = !$isGuest && !$isOwnProfile;
                             $loginRedirectUrl = route('auth.login.form', [
                                 'redirect' => route('profiles.show', ['user' => $user->id, 'open_message_modal' => 1]),
                             ]);
@@ -310,15 +325,13 @@
                                 ログインして連絡する
                             </a>
                         @elseif($canStartDirectMessage)
-                            <p class="text-sm text-gray-500">メッセージは企業アカウントから送信できます。</p>
+                            <p class="text-sm text-gray-500">メッセージを送信できます。</p>
                             <button type="button" onclick="openDirectMessageModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/>
                                 </svg>
                                 メッセージを送る
                             </button>
-                        @elseif(!$isGuest && !$isOwnProfile)
-                            <p class="text-sm text-gray-500">メッセージ送信には企業アカウントと企業プロフィールが必要です。</p>
                         @endif
                     </div>
                 </div>
