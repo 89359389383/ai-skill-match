@@ -23,7 +23,7 @@
         </div>
 
         <nav class="nav-links" id="desktopNav" aria-label="グローバルナビゲーション">
-            <a href="{{ route('company.freelancers.index') }}" class="nav-link {{ request()->routeIs('company.freelancers.*') ? 'active' : '' }}">フリーランス一覧</a>
+            {{-- <a href="{{ route('company.freelancers.index') }}" class="nav-link {{ request()->routeIs('company.freelancers.*') ? 'active' : '' }}">フリーランス一覧</a> --}}
             <a href="{{ route('company.jobs.index') }}" class="nav-link {{ request()->routeIs('company.jobs.*') ? 'active' : '' }}">案件一覧</a>
             <a href="{{ route('purchased-skills.index') }}" class="nav-link {{ request()->routeIs('purchased-skills.*') || request()->routeIs('transactions.*') ? 'active' : '' }}">購入したスキル</a>
             @php

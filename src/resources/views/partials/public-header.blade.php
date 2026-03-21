@@ -206,10 +206,10 @@
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
                                 <span class="dropdown-item-text">記事一覧</span>
                             </a>
-                            <a href="{{ route('company.freelancers.index') }}" class="dropdown-item" role="menuitem">
+                            {{-- <a href="{{ route('company.freelancers.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span class="dropdown-item-text">フリーランス一覧</span>
-                            </a>
+                            </a> --}}
                             <a href="{{ route('company.jobs.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                 <span class="dropdown-item-text">案件一覧</span>
