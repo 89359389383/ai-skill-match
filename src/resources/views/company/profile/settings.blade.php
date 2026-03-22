@@ -381,7 +381,13 @@
                 </div>
 
                 <div class="field">
-                    <label for="icon">プロフィール画像（必須）</label>
+                    <label for="icon">
+                        @if($company && $company->icon_path)
+                            プロフィール画像（変更時のみ）
+                        @else
+                            プロフィール画像（必須）
+                        @endif
+                    </label>
                     @if($company && $company->icon_path)
                         <p class="help" style="margin-top:0.25rem;">現在の画像</p>
                         <div style="margin: 0.5rem 0;">
@@ -392,7 +398,11 @@
                     @error('icon')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
-                    <div class="help">画像を選択してください（最大5MB）。</div>
+                    @if($company && $company->icon_path)
+                        <div class="help">変更する場合のみ選択してください。（最大5MB）</div>
+                    @else
+                        <div class="help">画像を選択してください。（最大5MB）</div>
+                    @endif
                 </div>
                 <div class="btn-row flex flex-col md:flex-row gap-3 md:gap-4">
                     <a class="btn btn-secondary w-full md:flex-1" href="{{ route('company.freelancers.index') }}">キャンセル</a>

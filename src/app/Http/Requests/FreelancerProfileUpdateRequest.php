@@ -40,7 +40,8 @@ class FreelancerProfileUpdateRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\-\(\)\s]*$/'],
             'line_id' => ['nullable', 'string', 'max:100', 'regex:/^(|https:\/\/(line\.me|lin\.ee)\/.*)$/'],
             'twitter_url' => ['nullable', 'string', 'url', 'max:255', 'regex:/^(|https:\/\/(twitter\.com|x\.com)\/.*)$/'],
-            'icon' => ['required', 'file', 'image', 'max:5120'],
+            // アイコンは未変更なら送られてこない（DBの既存アイコンを維持）
+            'icon' => ['nullable', 'file', 'image', 'max:5120'],
 
              // スキル関連（任意）
             'skills' => ['sometimes', 'array'],
@@ -132,8 +133,8 @@ class FreelancerProfileUpdateRequest extends FormRequest
             'days_per_week.min' => '週の稼働日数は0以上で入力してください。',
             'days_per_week.max' => '週の稼働日数は7以下で入力してください。',
 
-            'work_style_text.string' => '働き方は文字列で入力してください。',
-            'work_style_text.max' => '働き方は5000文字以内で入力してください。',
+            'work_style_text.string' => '担当業務は文字列で入力してください。',
+            'work_style_text.max' => '担当業務は5000文字以内で入力してください。',
 
             'min_rate.integer' => '希望単価（下限）は整数で入力してください。',
             'min_rate.min' => '希望単価（下限）は0以上で入力してください。',
@@ -142,11 +143,11 @@ class FreelancerProfileUpdateRequest extends FormRequest
             'max_rate.min' => '希望単価（上限）は0以上で入力してください。',
             'max_rate.gte' => '希望単価（上限）は希望単価（下限）以上で入力してください。',
 
-            'experience_companies.string' => '経験企業は文字列で入力してください。',
-            'experience_companies.max' => '経験企業は5000文字以内で入力してください。',
+            'experience_companies.string' => '得意業務は文字列で入力してください。',
+            'experience_companies.max' => '得意業務は5000文字以内で入力してください。',
 
             'services_offered.max' => '対応業務は500文字以内で入力してください。',
-            'industry_specialties.max' => '得意業種は500文字以内で入力してください。',
+            'industry_specialties.max' => '得意業界は500文字以内で入力してください。',
             'prefecture.max' => '在住都道府県は50文字以内で入力してください。',
             'certifications.max' => '資格は2000文字以内で入力してください。',
             'phone.max' => '電話番号は20文字以内で入力してください。',
@@ -157,7 +158,6 @@ class FreelancerProfileUpdateRequest extends FormRequest
             'twitter_url.max' => 'TwitterプロフィールURLは255文字以内で入力してください。',
             'twitter_url.regex' => 'TwitterプロフィールURLの形式が正しくありません（https://twitter.com/ または https://x.com/ で始まるURLを入力してください）。',
 
-            'icon.required' => 'アイコン画像を選択してください。',
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',
             'icon.max' => 'アイコン画像は5MB以下のファイルを選択してください。',

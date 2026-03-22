@@ -63,6 +63,9 @@
             @endif
 
             <div class="p-8 md:p-12">
+                @php
+                    $isOwner = auth()->check() && auth()->user()->id === (int) $article->user_id;
+                @endphp
                 <div class="flex flex-wrap items-center gap-3 mb-6">
                     <span class="px-4 py-1.5 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">{{ $article->category ?? 'その他' }}</span>
                     @foreach($article->tags as $tag)
@@ -79,12 +82,27 @@
                             / 更新: {{ $article->updated_at->format('Y年n月j日') }}
                         @endif
                     </div>
-                    <a href="{{ route('my-articles.edit', ['article' => $article->id]) }}" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        <span>編集</span>
-                    </a>
+                    @if($isOwner)
+                        <div class="flex flex-wrap items-center gap-3">
+                            <a href="{{ route('my-articles.edit', ['article' => $article->id]) }}" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <span>編集</span>
+                            </a>
+
+                            <form action="{{ route('my-articles.destroy', ['article' => $article->id]) }}" method="POST" onsubmit="return confirm('この記事を削除しますか？この操作は元に戻せません。');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-all">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    <span>削除</span>
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="max-w-none mb-8">

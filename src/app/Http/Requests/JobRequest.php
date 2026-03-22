@@ -29,8 +29,8 @@ class JobRequest extends FormRequest
             // 報酬種別（必須）
             'reward_type' => ['required', 'string', 'in:monthly,hourly'],
             // 報酬レンジ（必須）
-            'min_rate' => ['required', 'integer', 'min:0'],
-            'max_rate' => ['required', 'integer', 'min:0', 'gte:min_rate'],
+            'min_rate' => ['required', 'integer', 'min:0', 'max:100000000'],
+            'max_rate' => ['required', 'integer', 'min:0', 'max:100000000', 'gte:min_rate'],
             // 稼働条件（必須）
             'work_time_text' => ['required', 'string', 'max:100'],
             // 稼働開始/掲載終了（必須）
@@ -70,10 +70,12 @@ class JobRequest extends FormRequest
             'min_rate.required' => '最低単価を入力してください。',
             'min_rate.integer' => '最低単価は整数で入力してください。',
             'min_rate.min' => '最低単価は0以上で入力してください。',
+            'min_rate.max' => '最低単価は100,000,000以下で入力してください。',
 
             'max_rate.required' => '最高単価を入力してください。',
             'max_rate.integer' => '最高単価は整数で入力してください。',
             'max_rate.min' => '最高単価は0以上で入力してください。',
+            'max_rate.max' => '最高単価は100,000,000以下で入力してください。',
             'max_rate.gte' => '最高単価は最低単価以上で入力してください。',
 
             'work_time_text.required' => '稼働条件を入力してください。',

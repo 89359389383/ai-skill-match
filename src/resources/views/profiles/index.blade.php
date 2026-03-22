@@ -52,11 +52,11 @@
                                         }
                                     }
 
+                                    // freelancers.min_rate は「万円」単位で保存されている前提。
                                     $minRate = (int) ($f->min_rate ?? 0);
-                                    $minRateMan = $minRate > 0 ? $minRate / 10000 : 0;
-                                    $minRateManStr = ($minRate > 0 && $minRate % 10000 === 0)
-                                        ? number_format($minRateMan, 0)
-                                        : number_format($minRateMan, 1);
+                                    $maxRate = (int) ($f->max_rate ?? 0);
+                                    $minRateManStr = number_format($minRate, 0);
+                                    $maxRateManStr = number_format($maxRate, 0);
                                 @endphp
 
                                 <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}"
@@ -67,10 +67,16 @@
                         <div class="pt-16 px-6 pb-6 text-center">
                             <h3 class="text-xl font-bold text-gray-900 mb-1">{{ $f->display_name ?? '名前未設定' }}</h3>
                             <p class="text-sm text-gray-600 mb-2">職種: {{ $f->job_title ?? '未設定' }}</p>
-                            <p class="text-sm mb-3">
-                                <span class="font-bold text-gray-700">希望時給単価: </span>
-                                <span class="font-bold text-orange-600">{{ $minRateManStr }}万</span>
-                            </p>
+                                <p class="text-sm mb-3">
+                                    <span class="font-bold text-gray-700">希望単価: </span>
+                                    <span class="font-bold text-orange-600">
+                                        @if($maxRate > 0)
+                                            {{ $minRateManStr }}万〜{{ $maxRateManStr }}万
+                                        @else
+                                            {{ $minRateManStr }}万
+                                        @endif
+                                    </span>
+                                </p>
                             <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
                             <div class="flex flex-wrap gap-2 justify-center">
                                 @foreach($f->skills->take(3) as $skill)

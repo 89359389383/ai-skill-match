@@ -32,8 +32,11 @@ class UpdateArticleRequest extends FormRequest
                 },
             ],
             'structure' => ['nullable', 'array'],
-            'tags' => ['nullable', 'array', 'max:5'],
+            'tags' => ['required', 'array', 'min:4', 'max:16'],
             'tags.*' => ['string', 'max:50'],
+
+            // 公開設定（任意）
+            'is_published' => ['nullable', 'in:0,1'],
         ];
     }
 
@@ -49,7 +52,9 @@ class UpdateArticleRequest extends FormRequest
             'eyecatch_image.max' => 'アイキャッチ画像は5MB以内にしてください。',
             'body_html.required' => '本文を入力してください。',
             'body_html.max' => '本文が長すぎます。',
-            'tags.max' => 'タグは最大5個までです。',
+            'tags.min' => 'タグは最低4個入力してください。',
+            'tags.max' => 'タグは最大16個までです。',
+            'is_published.in' => '公開設定の値が不正です。',
         ];
     }
 }

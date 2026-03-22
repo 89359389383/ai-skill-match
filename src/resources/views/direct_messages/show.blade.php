@@ -214,16 +214,29 @@
     $counterpart = $viewerRole === 'company' ? $conversation->freelancer : $conversation->company;
     $counterpartName = $viewerRole === 'company'
         ? ($conversation->freelancer?->display_name ?? 'フリーランス')
-        : ($conversation->company?->name ?? '企業');
+        : ($conversation->company?->contact_name
+            ?? $conversation->company?->name
+            ?? '企業');
     $counterpartRole = $viewerRole === 'company' ? 'フリーランス' : '企業';
-    $counterpartIcon = $viewerRole === 'company' ? ($conversation->freelancer?->icon_path ?? null) : null;
-    $avatarSrc = !empty($counterpartIcon)
-        ? (str_starts_with($counterpartIcon, 'http') ? $counterpartIcon : asset('storage/' . $counterpartIcon))
-        : null;
+    $counterpartIcon = $viewerRole === 'company'
+        ? ($conversation->freelancer?->icon_path ?? null)
+        : ($conversation->company?->icon_path ?? null);
+    $avatarSrc = null;
+    if (!empty($counterpartIcon)) {
+        if (str_starts_with($counterpartIcon, 'http://') || str_starts_with($counterpartIcon, 'https://')) {
+            $avatarSrc = $counterpartIcon;
+        } else {
+            $iconRel = ltrim($counterpartIcon, '/');
+            if (str_starts_with($iconRel, 'storage/')) {
+                $iconRel = substr($iconRel, strlen('storage/'));
+            }
+            $avatarSrc = asset('storage/' . $iconRel);
+        }
+    }
     $messages = ($messages ?? collect())->whereNull('deleted_at')->sortBy('sent_at')->values();
     $latestMessage = $messages->last();
     $viewerName = $viewerRole === 'company'
-        ? ($viewerProfile?->name ?? '企業')
+        ? ($viewerProfile?->contact_name ?? $viewerProfile?->name ?? '企業')
         : ($viewerProfile?->display_name ?? 'フリーランス');
     $viewerInitial = mb_substr($viewerName, 0, 1);
 @endphp
@@ -243,11 +256,17 @@
     <div class="dm-panel">
         <div class="dm-chat-header">
             <div class="dm-chat-title">
-                <a class="dm-back" href="{{ route('direct-messages.index') }}" aria-label="一覧に戻る">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
+                <div class="flex items-center gap-2 min-w-0">
+                    <a class="dm-back" href="{{ route('direct-messages.index') }}" aria-label="メッセージ一覧へ戻る">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <a href="{{ route('direct-messages.index') }}"
+                       class="text-sm font-bold text-slate-600 hover:text-slate-900 truncate">
+                        メッセージ一覧へ戻る
+                    </a>
+                </div>
 
                 @if($avatarSrc)
                     <img src="{{ $avatarSrc }}" alt="{{ $counterpartName }}" class="dm-avatar">
@@ -280,7 +299,9 @@
                         ? $viewerName
                         : ($viewerRole === 'company'
                             ? ($conversation->freelancer?->display_name ?? 'フリーランス')
-                            : ($conversation->company?->name ?? '企業'));
+                            : ($conversation->company?->contact_name
+                                ?? $conversation->company?->name
+                                ?? '企業'));
                 @endphp
                 <div class="dm-message {{ $isMe ? 'me' : '' }}">
                     @if(!$isMe)

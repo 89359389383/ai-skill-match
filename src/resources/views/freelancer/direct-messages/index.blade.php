@@ -13,7 +13,7 @@
     @include('partials.public-header')
 
     <main class="pt-24">
-        <div class="container mx-auto px-4 py-8">
+        <div class="max-w-[900px] mx-auto px-4 py-8">
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-gray-900">メッセージ</h1>
                 <p class="text-gray-600">フリーランスとしてのメッセージのやり取りを一覧で確認できます。</p>
@@ -53,9 +53,11 @@
 
                             // 企業との会話: company_id / freelancer_id が両方入る（閲覧者は freelancer 側）
                             if ($conversation->company_id !== null) {
-                                $counterpartName = $conversation->company?->name ?? '企業';
+                                $counterpartName = $conversation->company?->contact_name
+                                    ?? $conversation->company?->name
+                                    ?? '企業';
                                 $counterpartRole = '企業';
-                                $counterpartIcon = null;
+                                $counterpartIcon = $conversation->company?->icon_path ?? null;
                             } elseif (
                                 $conversation->initiator_type === 'freelancer'
                                 && $conversation->initiator_id !== null
@@ -83,13 +85,26 @@
                                 }
                             }
 
-                            $avatarSrc = !empty($counterpartIcon)
-                                ? (str_starts_with($counterpartIcon, 'http') ? $counterpartIcon : asset('storage/' . ltrim($counterpartIcon, '/')))
-                                : null;
+                            $avatarSrc = null;
+                            if (!empty($counterpartIcon)) {
+                                if (str_starts_with($counterpartIcon, 'http://') || str_starts_with($counterpartIcon, 'https://')) {
+                                    $avatarSrc = $counterpartIcon;
+                                } else {
+                                    $iconRel = ltrim($counterpartIcon, '/');
+                                    if (str_starts_with($iconRel, 'storage/')) {
+                                        $iconRel = substr($iconRel, strlen('storage/'));
+                                    }
+                                    $avatarSrc = asset('storage/' . $iconRel);
+                                }
+                            }
 
                             $latestMessage = $conversation->messages->last();
                             $preview = $latestMessage?->body ?? 'メッセージはまだありません。';
                             $sentAt = $conversation->latest_message_at?->format('Y/m/d H:i') ?? '-';
+                            $isLatestMessageFromSelf = $latestMessage
+                                && $latestMessage->sender_type === 'freelancer'
+                                && (int)$latestMessage->sender_id === (int)($viewerId ?? 0);
+                            $latestMessageSenderLabel = $latestMessage ? ($isLatestMessageFromSelf ? '自分' : '相手') : null;
 
                             // 未読ラベルは「最新メッセージの受信者が閲覧者本人」かで決める。
                             if ($conversation->company_id !== null) {
@@ -122,7 +137,14 @@
                                 </span>
                             </div>
 
-                            <p class="text-gray-600 line-clamp-2 mb-3">{{ $preview }}</p>
+                            <div class="flex gap-2 mb-3 items-start">
+                                @if($latestMessageSenderLabel)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border {{ $isLatestMessageFromSelf ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200' }}">
+                                        {{ $latestMessageSenderLabel }}
+                                    </span>
+                                @endif
+                                <p class="text-gray-600 line-clamp-2">{{ $preview }}</p>
+                            </div>
 
                             <div class="flex justify-between items-center text-sm text-gray-500 pt-3 border-t border-gray-100">
                                 <span>最終更新: {{ $sentAt }}</span>

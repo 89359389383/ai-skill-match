@@ -90,9 +90,22 @@
                                     <p class="text-gray-600 mb-4 line-clamp-2">{{ Str::limit($q->content, 150) }}</p>
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3">
-                                            @php $authorF = $q->user?->freelancer; @endphp
-                                            <img src="{{ $authorF?->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-10 h-10 rounded-full object-cover">
-                                            <div class="font-medium text-sm text-gray-900">{{ $authorF?->display_name ?? $q->user?->email ?? '匿名' }}</div>
+                                    @php
+                                        $authorUser = $q->user;
+                                        $authorF = $authorUser?->freelancer;
+                                        $authorC = $authorUser?->company;
+
+                                        $authorIconSrc = null;
+                                        if (!empty($authorF?->icon_path)) {
+                                            $authorIconSrc = asset('storage/' . $authorF->icon_path);
+                                        } elseif (!empty($authorC?->icon_path)) {
+                                            $authorIconSrc = asset('storage/' . $authorC->icon_path);
+                                        }
+
+                                        $authorName = $authorF?->display_name ?? $authorC?->name ?? $authorUser?->email ?? '匿名';
+                                    @endphp
+                                    <img src="{{ $authorIconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-10 h-10 rounded-full object-cover">
+                                    <div class="font-medium text-sm text-gray-900">{{ $authorName }}</div>
                                         </div>
                                         <div class="text-sm text-gray-500">{{ $q->created_at?->format('Y/m/d H:i') }}</div>
                                     </div>

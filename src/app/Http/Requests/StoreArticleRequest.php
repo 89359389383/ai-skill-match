@@ -49,9 +49,12 @@ class StoreArticleRequest extends FormRequest
             'structure.*.subsections.*.title' => ['nullable', 'string', 'max:255'],
             'structure.*.subsections.*.content' => ['nullable', 'string'],
 
-            // タグ（任意・最大5）
-            'tags' => ['nullable', 'array', 'max:5'],
+            // タグ（必須・4〜16）
+            'tags' => ['required', 'array', 'min:4', 'max:16'],
             'tags.*' => ['string', 'max:50'],
+
+            // 公開設定（任意・デフォルトは公開）
+            'is_published' => ['nullable', 'in:0,1'],
         ];
     }
 
@@ -67,8 +70,10 @@ class StoreArticleRequest extends FormRequest
             'body_html.max' => '本文が長すぎます。',
             'structure.array' => '記事構造の形式が不正です。',
             'tags.array' => 'タグの形式が不正です。',
-            'tags.max' => 'タグは最大5個までです。',
+            'tags.min' => 'タグは最低4個入力してください。',
+            'tags.max' => 'タグは最大16個までです。',
             'tags.*.max' => 'タグは50文字以内で入力してください。',
+            'is_published.in' => '公開設定の値が不正です。',
         ];
     }
 }

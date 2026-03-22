@@ -284,8 +284,8 @@ class AuthController extends Controller
         // CSRFトークンも再生成する
         $request->session()->regenerateToken();
 
-        // ログイン画面へ戻す
-        return redirect('/login');
+        // トップページへ戻す
+        return redirect()->route('top');
     }
 
     /**

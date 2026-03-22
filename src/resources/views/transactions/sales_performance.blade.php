@@ -543,10 +543,24 @@
                     $date = $tx->purchased_at?->format('Y/n/j') ?? '-';
 
                     $buyer = $tx->buyer;
-                    $buyerName = $buyer?->company?->name
+                    $buyerName = $buyer?->company?->contact_name
+                        ?? $buyer?->company?->name
                         ?? $buyer?->freelancer?->display_name
                         ?? $buyer?->email
                         ?? '購入者';
+                    $buyerIcon = $buyer?->company?->icon_path ?? $buyer?->freelancer?->icon_path;
+                    $buyerAvatarSrc = null;
+                    if (!empty($buyerIcon)) {
+                        if (str_starts_with($buyerIcon, 'http://') || str_starts_with($buyerIcon, 'https://')) {
+                            $buyerAvatarSrc = $buyerIcon;
+                        } else {
+                            $iconRel = ltrim($buyerIcon, '/');
+                            if (str_starts_with($iconRel, 'storage/')) {
+                                $iconRel = substr($iconRel, strlen('storage/'));
+                            }
+                            $buyerAvatarSrc = asset('storage/' . $iconRel);
+                        }
+                    }
                     $buyerInitial = mb_substr($buyerName, 0, 1);
 
                     $isInProgress = ($tx->transaction_status === 'in_progress');
@@ -570,9 +584,13 @@
                                         <h3 class="sp-skill-title">{{ $listing?->title ?? '（削除されたスキル）' }}</h3>
                                         <div class="sp-buyer-info">
                                             <div class="sp-buyer-avatar-box">
-                                                <div class="sp-buyer-avatar" style="background:#E5E7EB; display:flex; align-items:center; justify-content:center; color:#374151; font-weight:700;">
-                                                    {{ $buyerInitial }}
-                                                </div>
+                                                @if (!empty($buyerAvatarSrc))
+                                                    <img src="{{ $buyerAvatarSrc }}" alt="{{ $buyerName }}" class="sp-buyer-avatar">
+                                                @else
+                                                    <div class="sp-buyer-avatar" style="background:#E5E7EB; display:flex; align-items:center; justify-content:center; color:#374151; font-weight:700;">
+                                                        {{ $buyerInitial }}
+                                                    </div>
+                                                @endif
                                                 <span>{{ $buyerName }}</span>
                                             </div>
                                             <div class="sp-date-box">

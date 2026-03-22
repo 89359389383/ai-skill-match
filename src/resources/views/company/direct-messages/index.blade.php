@@ -16,7 +16,7 @@
     $isUnreadFilter = $filter === 'unread';
 @endphp
 
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-[900px] mx-auto px-4 py-8">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">メッセージ</h1>
         <p class="text-gray-600">企業としてのメッセージのやり取りを一覧で確認できます。</p>
@@ -80,6 +80,10 @@
                     $preview = $latestMessage?->body ?? 'まだメッセージはありません。';
                     $sentAt = $conversation->latest_message_at?->format('Y/m/d H:i') ?? '-';
                     $isUnread = (bool) $conversation->is_unread_for_company;
+                    $isLatestMessageFromSelf = $latestMessage
+                        && $latestMessage->sender_type === 'company'
+                        && (int)$latestMessage->sender_id === (int)$viewerProfile->id;
+                    $latestMessageSenderLabel = $latestMessage ? ($isLatestMessageFromSelf ? '自分' : '相手') : null;
                 @endphp
                 <a href="{{ route('direct-messages.show', ['direct_conversation' => $conversation->id]) }}"
                    class="block bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition-all">
@@ -101,7 +105,14 @@
                         </span>
                     </div>
 
-                    <p class="text-gray-600 line-clamp-2 mb-3">{{ $preview }}</p>
+                    <div class="flex gap-2 mb-3 items-start">
+                        @if($latestMessageSenderLabel)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border {{ $isLatestMessageFromSelf ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200' }}">
+                                {{ $latestMessageSenderLabel }}
+                            </span>
+                        @endif
+                        <p class="text-gray-600 line-clamp-2">{{ $preview }}</p>
+                    </div>
 
                     <div class="flex justify-between items-center text-sm text-gray-500 pt-3 border-t border-gray-100">
                         <span>最終更新: {{ $sentAt }}</span>

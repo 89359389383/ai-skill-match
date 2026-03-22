@@ -79,10 +79,10 @@
             </div>
 
             <div class="flex gap-4">
-                <a href="{{ route('questions.index') }}" class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all">
+                <a href="{{ route('questions.index') }}" class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all text-center">
                     キャンセル
                 </a>
-                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                <button type="submit" class="flex-1 px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
                     投稿する
                 </button>
             </div>

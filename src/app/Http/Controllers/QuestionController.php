@@ -7,6 +7,8 @@ use App\Models\Question;
 use App\Services\QuestionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
@@ -42,13 +44,67 @@ class QuestionController extends Controller
     public function show(Request $request, Question $question)
     {
         // 詳細画面で必要な関連をまとめてロード
-        $question->load(['user', 'tags', 'answers.user', 'acceptedAnswer.user']);
+        // 回答とそのコメント、ユーザー情報をEager Load
+        $question->load([
+            'user',
+            'tags',
+            'answers' => function ($query) {
+                $query->with(['user', 'comments.user'])->orderBy('created_at', 'asc');
+            },
+            'acceptedAnswer.user'
+        ]);
 
-        if (view()->exists('questions.show')) {
-            return view('questions.show', compact('question'));
+        // 閲覧数カウント（詳細ページ表示時のみ +1）
+        // - ログイン中: user_id 判定
+        // - 未ログイン: guest_token（cookie）判定
+        // - 同一人物は24時間以内の再閲覧では +1 しない
+        // - 作成者の閲覧（本人）はカウントしない
+        $viewerId = null;
+        if (Auth::guard('freelancer')->check()) {
+            $viewerId = (int) Auth::guard('freelancer')->user()->id;
+        } elseif (Auth::guard('company')->check()) {
+            $viewerId = (int) Auth::guard('company')->user()->id;
         }
 
-        return view('welcome');
+        $guestToken = null;
+        $needsGuestCookie = false;
+        if ($viewerId === null) {
+            $guestToken = $request->cookie('guest_token');
+            if (empty($guestToken)) {
+                $guestToken = (string) Str::uuid();
+                $needsGuestCookie = true;
+            }
+        }
+
+        $shouldIncrement = true;
+        if ($viewerId !== null && $viewerId === (int) $question->user_id) {
+            $shouldIncrement = false;
+        }
+
+        $cacheKey = $viewerId !== null
+            ? "question_viewed:{$question->id}:u:{$viewerId}"
+            : "question_viewed:{$question->id}:g:{$guestToken}";
+
+        if ($shouldIncrement) {
+            if (Cache::add($cacheKey, 1, 60 * 60 * 24)) {
+                $question->increment('views_count');
+                $question->views_count = (int) ($question->views_count ?? 0) + 1;
+            }
+        }
+
+        if (view()->exists('questions.show')) {
+            $response = response()->view('questions.show', compact('question'));
+            if ($needsGuestCookie) {
+                $response->withCookie(cookie('guest_token', $guestToken, 60 * 24 * 365));
+            }
+            return $response;
+        }
+
+        $response = response()->view('welcome');
+        if ($needsGuestCookie) {
+            $response->withCookie(cookie('guest_token', $guestToken, 60 * 24 * 365));
+        }
+        return $response;
     }
 
     /**

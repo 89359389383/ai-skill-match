@@ -15,7 +15,9 @@ class AnswerService
      * - answers を作る
      * - questions.answers_count を増やす
      *
-     * の2つを “同じ結果になるように” まとめて処理する。
+     * の2つを同じ結果になるようにまとめて処理する。
+     *
+     * @throws \InvalidArgumentException 既に回答済みの場合
      */
     public function store(User $user, Question $question, array $data): Answer
     {
@@ -32,5 +34,14 @@ class AnswerService
             return $answer;
         });
     }
-}
 
+    /**
+     * ユーザーが質問に既に回答しているかチェック
+     */
+    public function hasAnswered(User $user, Question $question): bool
+    {
+        return Answer::where('question_id', $question->id)
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+}

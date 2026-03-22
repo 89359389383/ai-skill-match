@@ -58,13 +58,20 @@
                                 <img src="{{ $a->eyecatch_image_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $a->title }}" class="w-full h-full object-cover">
                             </div>
                             <div class="p-6">
-                                <div class="flex flex-wrap gap-2 mb-2">
-                                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">{{ $a->category ?? 'その他' }}</span>
-                                    @if($a->status === 1)
-                                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full">公開中</span>
-                                    @else
-                                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">下書き</span>
-                                    @endif
+                                <div class="grid grid-cols-[auto_1fr] items-start gap-3 mb-2">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">{{ $a->category ?? 'その他' }}</span>
+                                        @if($a->status === 1)
+                                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full">公開中</span>
+                                        @else
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">下書き</span>
+                                        @endif
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($a->tags->take(2) as $tag)
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">#{{ $tag->name }}</span>
+                                        @endforeach
+                                    </div>
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $a->title }}</h3>
                                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit($a->excerpt ?? '', 80) }}</p>

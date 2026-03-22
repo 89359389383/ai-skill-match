@@ -29,10 +29,10 @@
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(ellipse at top left, rgba(219, 234, 254, 0.75) 0%, transparent 55%),
-                radial-gradient(ellipse at bottom right, rgba(186, 230, 253, 0.55) 0%, transparent 55%),
-                radial-gradient(ellipse at center, rgba(224, 242, 254, 0.45) 0%, transparent 70%),
-                linear-gradient(135deg, #eff6ff 0%, #dbeafe 20%, #bae6fd 45%, #e0f2fe 70%, #f0f9ff 100%);
+                radial-gradient(ellipse at top left, rgba(255, 237, 213, 0.85) 0%, transparent 55%),
+                radial-gradient(ellipse at bottom right, rgba(253, 186, 116, 0.55) 0%, transparent 55%),
+                radial-gradient(ellipse at center, rgba(255, 246, 230, 0.55) 0%, transparent 70%),
+                linear-gradient(135deg, #fff7ed 0%, #ffedd5 20%, #fed7aa 45%, #ffedd5 70%, #fff7ed 100%);
             overflow: hidden;
             z-index: 0;
         }
@@ -241,7 +241,7 @@
         .register-button {
             width: 100%;
             padding: 12px 24px;
-            background: linear-gradient(135deg, #1e88e5 0%, #1976d2 100%);
+            background: #FC4C0C;
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -249,13 +249,13 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.25);
+            box-shadow: 0 4px 12px rgba(252, 76, 12, 0.25);
             margin-top: 8px;
         }
 
         .register-button:hover {
-            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-            box-shadow: 0 6px 16px rgba(30, 136, 229, 0.32);
+            background: #f14005;
+            box-shadow: 0 6px 16px rgba(252, 76, 12, 0.32);
             transform: translateY(-1px);
         }
 

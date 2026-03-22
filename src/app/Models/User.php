@@ -79,11 +79,19 @@ class User extends Authenticatable
     }
 
     /**
-     * ??????????????
+     * ?????????
      */
     public function answers(): HasMany
     {
         return $this->hasMany(Answer::class);
+    }
+
+    /**
+     * ?????????????
+     */
+    public function answerComments(): HasMany
+    {
+        return $this->hasMany(AnswerComment::class);
     }
 
     /**

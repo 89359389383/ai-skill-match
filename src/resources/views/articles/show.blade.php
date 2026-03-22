@@ -48,6 +48,14 @@
 @endpush
 
 @section('content')
+@php
+    $currentUserId = null;
+    if (auth('freelancer')->check()) {
+        $currentUserId = (int) auth('freelancer')->user()->id;
+    } elseif (auth('company')->check()) {
+        $currentUserId = (int) auth('company')->user()->id;
+    }
+@endphp
 <div class="min-h-screen py-12 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="mb-6 text-sm text-gray-500">
@@ -55,7 +63,29 @@
             <span class="mx-2">></span>
             <a href="{{ route('articles.index') }}" class="hover:text-gray-900">記事</a>
             <span class="mx-2">></span>
-            <span class="font-bold text-gray-900">{{ Str::limit($article->title, 40) }}</span>
+            <div class="inline-flex flex-wrap items-center gap-3">
+                <span class="font-bold text-gray-900">{{ Str::limit($article->title, 40) }}</span>
+                @if($currentUserId !== null && $currentUserId === (int) $article->user_id)
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ route('my-articles.edit', ['article' => $article->id]) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            編集
+                        </a>
+                        <form action="{{ route('my-articles.destroy', ['article' => $article->id]) }}" method="POST" class="inline" onsubmit="return confirm('この記事を削除しますか？この操作は元に戻せません。');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                削除
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
         </nav>
 
         <article class="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -66,11 +96,13 @@
             @endif
 
             <div class="p-8 md:p-12">
-                <div class="flex flex-wrap items-center gap-3 mb-6">
+                <div class="grid grid-cols-[auto_1fr] items-center gap-3 mb-6">
                     <span class="px-4 py-1.5 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">{{ $article->category ?? 'その他' }}</span>
-                    @foreach($article->tags as $tag)
-                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">#{{ $tag->name }}</span>
-                    @endforeach
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($article->tags as $tag)
+                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">#{{ $tag->name }}</span>
+                        @endforeach
+                    </div>
                 </div>
 
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{{ $article->title }}</h1>
@@ -82,6 +114,7 @@
                     $displayName = '匿名';
                     $avatarSrc = null;
                     $isCompanyAuthor = $authorCompany !== null;
+                    $isOwner = $currentUserId !== null && $currentUserId === (int) $article->user_id;
 
                     if ($authorF) {
                         $displayName = $authorF->display_name ?? $author->email ?? '匿名';
@@ -102,12 +135,27 @@
                             ?: ($author->name ?? null)
                             ?: $authorCompany->name
                             ?: ($author->email ?? '匿名');
+
+                        // 企業アイコン（storage配下の相対パス前提でURL化）
+                        $iconPath = $authorCompany->icon_path ?? null;
+                        if (!empty($iconPath)) {
+                            if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                $avatarSrc = $iconPath;
+                            } else {
+                                $iconRel = ltrim($iconPath, '/');
+                                if (str_starts_with($iconRel, 'storage/')) {
+                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                }
+                                $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                            }
+                        }
                     } elseif ($author) {
                         $displayName = $author->name ?? $author->email ?? '匿名';
                     }
 
                     $authorInitial = mb_substr($displayName, 0, 1);
                 @endphp
+
                 <div class="flex items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-200">
                     <div class="flex items-center gap-3 min-w-0">
                         @if($avatarSrc)
