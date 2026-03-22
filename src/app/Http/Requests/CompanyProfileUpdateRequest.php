@@ -18,8 +18,8 @@ class CompanyProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            // アイコン（必須）
-            'icon' => ['required', 'file', 'image', 'max:5120'],
+            // アイコンは未変更なら送られてこない（DBの既存アイコンを維持）
+            'icon' => ['nullable', 'file', 'image', 'max:5120'],
             'overview' => ['nullable', 'string', 'max:2000'],
             'contact_name' => ['required', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
@@ -34,7 +34,6 @@ class CompanyProfileUpdateRequest extends FormRequest
             'name.string' => '会社名は文字列で入力してください。',
             'name.max' => '会社名は255文字以内で入力してください。',
 
-            'icon.required' => 'アイコン画像を選択してください。',
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',
             'icon.max' => 'アイコン画像は5MB以下のファイルを選択してください。',

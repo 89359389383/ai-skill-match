@@ -92,8 +92,14 @@
                                 </div>
 
                                 <div class="flex items-start gap-3">
-                                    <span class="text-sm font-bold text-orange-600 min-w-[100px]">希望時給単価</span>
-                                    <span class="text-sm text-gray-700">¥{{ number_format($freelancer->min_rate ?? 0) }}〜@if($freelancer->max_rate)¥{{ number_format($freelancer->max_rate) }}@endif</span>
+                                    <span class="text-sm font-bold text-orange-600 min-w-[100px]">希望単価</span>
+                                    <span class="text-sm text-gray-700">
+                                        @if($freelancer->max_rate && (int) $freelancer->max_rate > 0)
+                                            {{ number_format($freelancer->min_rate ?? 0) }}万〜{{ number_format($freelancer->max_rate) }}万
+                                        @else
+                                            {{ number_format($freelancer->min_rate ?? 0) }}万
+                                        @endif
+                                    </span>
                                 </div>
 
                                 <div class="flex items-start gap-3">
@@ -121,7 +127,7 @@
                                 @endif
 
                                 <div class="flex items-start gap-3">
-                                    <span class="text-sm font-bold text-orange-600 min-w-[100px]">得意業種</span>
+                                    <span class="text-sm font-bold text-orange-600 min-w-[100px]">得意業界</span>
                                     <div class="flex-1 flex flex-wrap gap-2">
                                         @if($freelancer->industry_specialties)
                                             @foreach(array_map('trim', explode(',', $freelancer->industry_specialties)) as $industry)
@@ -169,9 +175,7 @@
                     <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">
                         詳細プロフィール
                     </h2>
-                    <div class="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                        {{ $freelancer->bio ?? '自己紹介はまだありません。' }}
-                    </div>
+                    <div class="text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $freelancer->bio ?? '自己紹介はまだありません。' }}</div>
                 </div>
 
                 <!-- Responsibilities Section -->
@@ -179,9 +183,19 @@
                     <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">
                         担当業務・得意業務
                     </h2>
-                    <div class="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                        {{ $freelancer->work_style_text ?? $freelancer->experience_companies ?? '担当業務の情報はまだありません。' }}
-                    </div>
+                    @php
+                        $responsibilitiesText = null;
+                        if ($freelancer->work_style_text && $freelancer->experience_companies) {
+                            $responsibilitiesText = '担当業務：' . $freelancer->work_style_text . "\n" . '得意業務：' . $freelancer->experience_companies;
+                        } elseif ($freelancer->work_style_text) {
+                            $responsibilitiesText = $freelancer->work_style_text;
+                        } elseif ($freelancer->experience_companies) {
+                            $responsibilitiesText = $freelancer->experience_companies;
+                        } else {
+                            $responsibilitiesText = '担当業務/得意業務の情報はまだありません。';
+                        }
+                    @endphp
+                    <div class="text-gray-700 whitespace-pre-wrap leading-relaxed">{{ $responsibilitiesText }}</div>
                 </div>
 
                 <!-- Services Section -->

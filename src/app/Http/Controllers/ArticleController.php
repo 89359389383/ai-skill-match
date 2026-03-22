@@ -6,6 +6,9 @@ use App\Http\Requests\StoreArticleRequest;
 use App\Models\Article;
 use App\Services\ArticleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
@@ -38,17 +41,63 @@ class ArticleController extends Controller
     /**
      * 記事詳細（ログイン不要）。
      */
-    public function show(Article $article)
+    public function show(Request $request, Article $article)
     {
         $article->load(['user', 'tags', 'user.freelancer', 'user.company']);
 
-        // 将来: views_count を increment する（bot対策/重複対策を入れてから）
-
-        if (view()->exists('articles.show')) {
-            return view('articles.show', compact('article'));
+        // 閲覧数カウント（詳細ページ表示時のみ +1）
+        // - ログイン中: user_id 判定
+        // - 未ログイン: guest_token（cookie）判定
+        // - 同一人物は24時間以内の再閲覧では +1 しない
+        // - 作成者の閲覧（本人）はカウントしない
+        $viewerId = null;
+        if (Auth::guard('freelancer')->check()) {
+            $viewerId = (int) Auth::guard('freelancer')->user()->id;
+        } elseif (Auth::guard('company')->check()) {
+            $viewerId = (int) Auth::guard('company')->user()->id;
         }
 
-        return view('welcome');
+        $guestToken = null;
+        $needsGuestCookie = false;
+        if ($viewerId === null) {
+            $guestToken = $request->cookie('guest_token');
+            if (empty($guestToken)) {
+                $guestToken = (string) Str::uuid();
+                $needsGuestCookie = true;
+            }
+        }
+
+        $shouldIncrement = true;
+        if ($viewerId !== null && $viewerId === (int) $article->user_id) {
+            $shouldIncrement = false;
+        }
+
+        $cacheKey = $viewerId !== null
+            ? "article_viewed:{$article->id}:u:{$viewerId}"
+            : "article_viewed:{$article->id}:g:{$guestToken}";
+
+        $didIncrement = false;
+        if ($shouldIncrement) {
+            if (Cache::add($cacheKey, 1, 60 * 60 * 24)) {
+                $article->increment('views_count');
+                $article->views_count = (int) ($article->views_count ?? 0) + 1;
+                $didIncrement = true;
+            }
+        }
+
+        if (view()->exists('articles.show')) {
+            $response = response()->view('articles.show', compact('article'));
+            if ($needsGuestCookie) {
+                $response->withCookie(cookie('guest_token', $guestToken, 60 * 24 * 365));
+            }
+            return $response;
+        }
+
+        $response = response()->view('welcome');
+        if ($needsGuestCookie) {
+            $response->withCookie(cookie('guest_token', $guestToken, 60 * 24 * 365));
+        }
+        return $response;
     }
 
     /**

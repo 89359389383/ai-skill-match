@@ -2,7 +2,7 @@
     $isOnRolePage = request()->routeIs('freelancer.*') || request()->routeIs('company.*');
     $navBaseClass = 'nav-link flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200';
     $navDefaultClass = 'text-gray-700 hover:bg-gray-100';
-    $navActiveClass = 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg';
+    $navActiveClass = 'bg-[#FC4C0C] text-white shadow-lg';
 @endphp
 <!-- Header（ページ上部に固定） -->
 <header class="fixed top-0 left-0 right-0 z-[5000] overflow-visible bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
@@ -10,12 +10,12 @@
         <div class="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-4">
             <!-- Logo -->
             <a href="{{ route('top') }}" class="flex items-center gap-2 group logo-hover w-fit">
-                <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <div class="p-2 bg-[#FC4C0C] rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
                 </div>
-                <span class="header-logo-text text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span class="header-logo-text text-xl font-bold text-[#FC4C0C]">
                     AIスキルマッチ
                 </span>
             </a>
@@ -52,7 +52,7 @@
             <div class="flex items-center justify-end gap-3">
                 @if(!auth('freelancer')->check() && !auth('company')->check())
                 <div class="hidden lg:flex items-center">
-                    <a href="{{ route('auth.login.form') }}" class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300">
+                    <a href="{{ route('auth.login.form') }}" class="flex items-center gap-2 px-6 py-2.5 bg-[#FC4C0C] text-white rounded-lg font-medium hover:bg-[#FC4C0C] hover:shadow-lg transition-all duration-300">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
@@ -138,13 +138,13 @@
                                     <span class="dropdown-item-badge dropdown-item-badge-blue">新着{{ $appUnread }}</span>
                                 @endif
                             </a>
-                            <a href="{{ route('freelancer.scouts.index') }}" class="dropdown-item" role="menuitem">
+                            {{-- <a href="{{ route('freelancer.scouts.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                                 <span class="dropdown-item-text">スカウト</span>
                                 @if($scoutUnread > 0)
                                     <span class="dropdown-item-badge dropdown-item-badge-purple">{{ $scoutUnread }}件</span>
                                 @endif
-                            </a>
+                            </a> --}}
                             <a href="{{ route('direct-messages.index') }}" class="dropdown-item" role="menuitem">
                                 <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
                                 <span class="dropdown-item-text">メッセージ</span>
@@ -173,7 +173,7 @@
                 @php
                     $appUnread = $unreadApplicationCount ?? 0;
                     $scoutUnread = $unreadScoutCount ?? 0;
-                    $companyDisplayName = $company?->name ?? 'ゲスト企業';
+                    $companyDisplayName = $company?->contact_name ?? $company?->name ?? 'ゲスト企業';
                     $companyIconPath = $company?->icon_path ?? null;
                     $companyAvatarSrc = !empty($companyIconPath) ? \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim((string) $companyIconPath, '/')) : null;
                 @endphp
@@ -264,21 +264,21 @@
         <!-- Mobile Navigation -->
         <div id="publicMobileMenu" class="hidden">
             <div class="py-4 border-t border-gray-200 space-y-2">
-                <a href="{{ route('questions.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('questions.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }}">
+                <a href="{{ route('questions.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('questions.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-[#FC4C0C] text-white' }}">
                     <span>AI知恵袋</span>
                 </a>
-                <a href="{{ route('skills.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('skills.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }}">
+                <a href="{{ route('skills.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('skills.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-[#FC4C0C] text-white' }}">
                     <span>スキル販売</span>
                 </a>
-                <a href="{{ route('profiles.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('profiles.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }}">
+                <a href="{{ route('profiles.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('profiles.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-[#FC4C0C] text-white' }}">
                     <span>プロフィール</span>
                 </a>
-                <a href="{{ route('articles.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('articles.*') && !request()->routeIs('my-articles.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }}">
+                <a href="{{ route('articles.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('articles.*') && !request()->routeIs('my-articles.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-[#FC4C0C] text-white' }}">
                     <span>記事</span>
                 </a>
                 @if(!auth('freelancer')->check() && !auth('company')->check())
                 <div class="pt-4 border-t border-gray-200 space-y-2">
-                    <a href="{{ route('auth.login.form') }}" class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium">
+                    <a href="{{ route('auth.login.form') }}" class="flex items-center gap-3 px-4 py-3 bg-[#FC4C0C] text-white rounded-lg font-medium">
                         <span>ログイン</span>
                     </a>
                 </div>

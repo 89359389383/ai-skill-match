@@ -1,187 +1,275 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フリーランス チャット - AIスキルマッチ</title>
-    @auth('freelancer')
-        @include('partials.freelancer-header-style')
-    @endauth
-    {{-- ヘッダーに必要なスタイルのみ --}}
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-    @include('partials.public-header')
-    <main class="pt-24">
-        @php
-            $viewerId = (int) ($viewerProfile->id ?? 0);
+@extends('layouts.public')
 
-            if ($conversation->company_id !== null) {
-                $counterpartName = $conversation->company?->name ?? '企業';
-                $counterpartRole = '企業';
-                $counterpartIcon = null;
-                $counterpartUserId = null;
-            } elseif (
-                $conversation->initiator_type === 'freelancer'
-                && $conversation->initiator_id !== null
-                && $conversation->freelancer_id !== null
-            ) {
-                $counterpartFreelancerId = ($viewerId === (int) $conversation->freelancer_id)
-                    ? (int) $conversation->initiator_id
-                    : (int) $conversation->freelancer_id;
-                $counterpartFreelancer = \App\Models\Freelancer::find($counterpartFreelancerId);
-                $counterpartName = $counterpartFreelancer?->display_name ?? 'フリーランス';
-                $counterpartRole = 'フリーランス';
-                $counterpartIcon = $counterpartFreelancer?->icon_path ?? null;
-                $counterpartUserId = $counterpartFreelancer?->user_id;
-            } else {
-                $counterpartFreelancer = $conversation->freelancer;
-                if ($counterpartFreelancer && (int) $counterpartFreelancer->id === $viewerId) {
-                    $counterpartName = 'フリーランス';
-                    $counterpartRole = 'フリーランス';
-                    $counterpartIcon = null;
-                    $counterpartUserId = null;
-                } else {
-                    $counterpartName = $counterpartFreelancer?->display_name ?? 'フリーランス';
-                    $counterpartRole = 'フリーランス';
-                    $counterpartIcon = $counterpartFreelancer?->icon_path ?? null;
-                    $counterpartUserId = $counterpartFreelancer?->user_id;
-                }
+@section('title', 'フリーランス チャット')
+
+@push('styles')
+    @include('partials.pscc-chat-core-styles')
+@endpush
+
+@section('content')
+@php
+    $viewerId = (int) ($viewerProfile->id ?? 0);
+
+    if ($conversation->company_id !== null) {
+        $counterpartName = $conversation->company?->contact_name
+            ?? $conversation->company?->name
+            ?? '企業';
+        $counterpartRole = '企業';
+        $counterpartIcon = $conversation->company?->icon_path ?? null;
+        $counterpartUserId = null;
+    } elseif (
+        $conversation->initiator_type === 'freelancer'
+        && $conversation->initiator_id !== null
+        && $conversation->freelancer_id !== null
+    ) {
+        $counterpartFreelancerId = ($viewerId === (int) $conversation->freelancer_id)
+            ? (int) $conversation->initiator_id
+            : (int) $conversation->freelancer_id;
+        $counterpartFreelancer = \App\Models\Freelancer::find($counterpartFreelancerId);
+        $counterpartName = $counterpartFreelancer?->display_name ?? 'フリーランス';
+        $counterpartRole = 'フリーランス';
+        $counterpartIcon = $counterpartFreelancer?->icon_path ?? null;
+        $counterpartUserId = $counterpartFreelancer?->user_id;
+    } else {
+        $counterpartFreelancer = $conversation->freelancer;
+        if ($counterpartFreelancer && (int) $counterpartFreelancer->id === $viewerId) {
+            $counterpartName = 'フリーランス';
+            $counterpartRole = 'フリーランス';
+            $counterpartIcon = null;
+            $counterpartUserId = null;
+        } else {
+            $counterpartName = $counterpartFreelancer?->display_name ?? 'フリーランス';
+            $counterpartRole = 'フリーランス';
+            $counterpartIcon = $counterpartFreelancer?->icon_path ?? null;
+            $counterpartUserId = $counterpartFreelancer?->user_id;
+        }
+    }
+
+    $headerThumbSrc = null;
+    if (!empty($counterpartIcon)) {
+        if (str_starts_with($counterpartIcon, 'http://') || str_starts_with($counterpartIcon, 'https://')) {
+            $headerThumbSrc = $counterpartIcon;
+        } else {
+            $iconRel = ltrim($counterpartIcon, '/');
+            if (str_starts_with($iconRel, 'storage/')) {
+                $iconRel = substr($iconRel, strlen('storage/'));
             }
+            $headerThumbSrc = asset('storage/' . $iconRel);
+        }
+    }
 
-            $avatarSrc = !empty($counterpartIcon)
-                ? (str_starts_with($counterpartIcon, 'http') ? $counterpartIcon : asset('storage/' . ltrim($counterpartIcon, '/')))
-                : null;
+    $messages = ($messages ?? collect())->whereNull('deleted_at')->sortBy('sent_at')->values();
+    $viewerName = $viewerProfile?->display_name ?? 'フリーランス';
+    $viewerInitial = mb_substr($viewerName, 0, 1);
 
-            $messages = ($messages ?? collect())->whereNull('deleted_at')->sortBy('sent_at')->values();
-            $latestMessage = $messages->last();
-            $viewerName = $viewerProfile?->display_name ?? 'フリーランス';
-            $viewerInitial = mb_substr($viewerName, 0, 1);
-        @endphp
+    $meIcon = $viewerProfile->icon_path ?? null;
+    $meAvatarSrc = null;
+    if (!empty($meIcon)) {
+        if (str_starts_with($meIcon, 'http://') || str_starts_with($meIcon, 'https://')) {
+            $meAvatarSrc = $meIcon;
+        } else {
+            $iconRel = ltrim($meIcon, '/');
+            if (str_starts_with($iconRel, 'storage/')) {
+                $iconRel = substr($iconRel, strlen('storage/'));
+            }
+            $meAvatarSrc = asset('storage/' . $iconRel);
+        }
+    }
 
-        <div class="container mx-auto px-4 py-6">
-            @if (session('success') || session('error'))
-                <div class="mb-4 space-y-2">
-                    @if (session('success'))
-                        <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">{{ session('success') }}</div>
-                    @endif
-                    @if (session('error'))
-                        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800">{{ session('error') }}</div>
-                    @endif
+    $headerStickyTop = auth('freelancer')->check()
+        ? 'calc(var(--public-header-height) + var(--freelancer-header-height))'
+        : 'var(--public-header-height)';
+@endphp
+
+<div class="pscc-container">
+    @include('partials.error-panel')
+
+    @if (session('success') || session('error'))
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+            @if (session('success'))
+                <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800 mt-2">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 mt-2">
+                    {{ session('error') }}
+                </div>
+            @endif
+        </div>
+    @endif
+
+    <div class="pscc-header" style="top: {{ $headerStickyTop }};">
+        <div class="pscc-header-content">
+            <a class="pscc-back-button" href="{{ route('direct-messages.index') }}" aria-label="戻る">
+                <svg class="pscc-back-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+
+            @if (!empty($headerThumbSrc))
+                <img src="{{ $headerThumbSrc }}" alt="{{ $counterpartName }}" class="pscc-skill-image">
+            @else
+                <div class="pscc-skill-image" style="background:#E5E7EB; display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:12px; font-weight:600;">
+                    {{ mb_substr($counterpartName, 0, 1) }}
                 </div>
             @endif
 
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                {{-- ヘッダー --}}
-                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-4 bg-gradient-to-b from-white to-gray-50">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <a href="{{ route('direct-messages.index') }}"
-                           class="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 flex-shrink-0">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                        </a>
-
-                        @if($avatarSrc)
-                            <img src="{{ $avatarSrc }}" alt="{{ $counterpartName }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
-                        @else
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0">
-                                {{ mb_substr($counterpartName, 0, 1) }}
-                            </div>
-                        @endif
-
-                        <div class="min-w-0">
-                            <div class="font-bold text-gray-900 truncate">{{ $counterpartName }}</div>
-                            @if($counterpartUserId)
-                                <div class="text-sm text-gray-500">
-                                    ・<a href="{{ route('profiles.show', $counterpartUserId) }}" class="text-blue-600 hover:underline font-medium">プロフィールを見る</a>
-                                </div>
-                            @endif
-                        </div>
+            <div class="pscc-header-info">
+                <h1 class="pscc-skill-title">{{ $counterpartName }}</h1>
+                <div class="pscc-header-meta">
+                    <div class="pscc-meta-item">
+                        <svg class="pscc-meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>{{ $counterpartRole }}</span>
                     </div>
-
-                    <div class="text-sm font-medium text-gray-500 flex-shrink-0">
-                        {{ $conversation->latest_message_at?->format('Y/m/d H:i') ?? '-' }}
+                    @if ($counterpartUserId)
+                        <div class="pscc-meta-item">
+                            <a href="{{ route('profiles.show', $counterpartUserId) }}" class="text-blue-600 hover:underline font-medium">プロフィールを見る</a>
+                        </div>
+                    @endif
+                    <div class="pscc-meta-item">
+                        <svg class="pscc-meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>{{ $conversation->latest_message_at?->format('Y/m/d H:i') ?? '-' }}</span>
                     </div>
-                </div>
-
-                {{-- メッセージ一覧 --}}
-                <div class="p-4 max-h-[600px] overflow-y-auto bg-gradient-to-b from-white to-gray-50" id="dmMessages">
-                    @forelse($messages as $message)
-                        @php
-                            $isMe = $message->sender_type === 'freelancer' && $message->sender_id === $viewerProfile->id;
-                            $sentAt = $message->sent_at?->format('Y/m/d H:i') ?? '';
-                            $senderName = $isMe ? $viewerName : $counterpartName;
-                        @endphp
-
-                        <div class="flex gap-3 mb-4 {{ $isMe ? 'justify-end' : '' }}">
-                            @if(!$isMe)
-                                @if($avatarSrc)
-                                    <img src="{{ $avatarSrc }}" alt="{{ $senderName }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
-                                @else
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0">
-                                        {{ mb_substr($senderName, 0, 1) }}
-                                    </div>
-                                @endif
-                            @endif
-
-                            <div class="max-w-[75%] rounded-xl px-4 py-3 border {{ $isMe ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200' }}">
-                                <div class="font-bold text-gray-900 mb-1">{{ $senderName }}</div>
-                                <div class="text-gray-700 whitespace-pre-wrap">{{ $message->body }}</div>
-                                <div class="text-xs text-gray-500 mt-1 text-right">{{ $sentAt }}</div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-gray-500 py-8">まだメッセージはありません。</div>
-                    @endforelse
-                </div>
-
-                {{-- 送信フォーム --}}
-                <div class="border-t border-gray-200 p-4 bg-white">
-                    <form method="POST"
-                          action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}"
-                          class="space-y-3">
-                        @csrf
-                        <textarea
-                            id="dmContent"
-                            name="content"
-                            rows="4"
-                            class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none resize-vertical @error('content') border-red-500 ring-2 ring-red-100 @enderror"
-                            placeholder="メッセージを入力..."
-                        >{{ old('content') }}</textarea>
-                        @error('content')
-                            <div class="text-red-600 text-sm font-medium">{{ $message }}</div>
-                        @enderror
-
-                        <div class="flex justify-end">
-                            <button id="dmSendButton" type="submit"
-                                    class="px-6 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                                    disabled>
-                                送信
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
+
+            <span class="pscc-status-badge pscc-status-progress">ダイレクト</span>
         </div>
-        <script>
-            (function () {
-                const messages = document.getElementById('dmMessages');
-                if (messages) messages.scrollTop = messages.scrollHeight;
+    </div>
 
-                const textarea = document.getElementById('dmContent');
-                const button = document.getElementById('dmSendButton');
-                if (!textarea || !button) return;
+    <div class="pscc-chat-area" id="dmChatArea">
+        <div class="pscc-chat-content">
+            <div class="pscc-messages">
+                @forelse ($messages as $message)
+                    @php
+                        $isMe = $message->sender_type === 'freelancer' && $message->sender_id === $viewerProfile->id;
+                        $msgAvatarSrc = null;
 
-                const toggle = () => {
-                    button.disabled = !textarea.value || !textarea.value.trim();
-                };
+                        if ($message->sender_type === 'company') {
+                            $senderCompany = \App\Models\Company::find($message->sender_id);
+                            $senderName = $senderCompany?->contact_name ?? $senderCompany?->name ?? '企業';
+                            $iconPath = $senderCompany?->icon_path;
+                        } else {
+                            $senderFr = $message->sender_id === $viewerProfile->id
+                                ? $viewerProfile
+                                : \App\Models\Freelancer::find($message->sender_id);
+                            $senderName = $senderFr?->display_name ?? 'フリーランス';
+                            $iconPath = $senderFr?->icon_path;
+                        }
 
-                textarea.addEventListener('input', toggle);
-                toggle();
-            })();
-        </script>
-    </main>
-</body>
-</html>
+                        if (!empty($iconPath)) {
+                            if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                $msgAvatarSrc = $iconPath;
+                            } else {
+                                $iconRel = ltrim($iconPath, '/');
+                                if (str_starts_with($iconRel, 'storage/')) {
+                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                }
+                                $msgAvatarSrc = asset('storage/' . $iconRel);
+                            }
+                        }
 
+                        $senderInitial = mb_substr($senderName, 0, 1);
+                    @endphp
+
+                    <div class="pscc-message">
+                        @if ($msgAvatarSrc)
+                            <img src="{{ $msgAvatarSrc }}" alt="{{ $senderName }}" class="pscc-avatar">
+                        @else
+                            <div class="pscc-avatar-initial" style="background:#E5E7EB; color:#374151;">{{ $senderInitial }}</div>
+                        @endif
+                        <div class="pscc-message-card">
+                            <div class="pscc-message-card-header">
+                                <div class="pscc-message-card-header-left">
+                                    <div class="pscc-message-meta">
+                                        <span class="pscc-sender-name">{{ $senderName }}</span>
+                                        <div class="pscc-message-time-row">
+                                            <span class="pscc-message-time">{{ $message->sent_at?->format('Y-m-d H:i:s') }}</span>
+                                            @if ($isMe)
+                                                <span class="pscc-read-status">既読</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @if ($isMe)
+                                    <button type="button" class="pscc-message-options" aria-label="メッセージオプション" title="オプション">
+                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/>
+                                        </svg>
+                                    </button>
+                                @endif
+                            </div>
+                            <p class="pscc-message-body">{{ $message->body }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="pscc-message-system">
+                        <div class="pscc-system-bubble">
+                            <p class="pscc-system-text">まだメッセージはありません。</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div class="pscc-input-area">
+        <form class="pscc-input-content" method="POST" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
+            @csrf
+            @if ($meAvatarSrc)
+                <img src="{{ $meAvatarSrc }}" alt="{{ $viewerName }}" class="pscc-input-avatar">
+            @else
+                <div class="pscc-input-avatar-initial" aria-hidden="true">{{ $viewerInitial }}</div>
+            @endif
+            <button class="pscc-attach-button" title="ファイル添付（未実装）" type="button" disabled aria-disabled="true">
+                <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+            </button>
+            <input
+                type="text"
+                class="pscc-input-field @error('content') pscc-input-error @enderror"
+                placeholder="メッセージを入力..."
+                id="messageInput"
+                name="content"
+                value="{{ old('content') }}"
+                autocomplete="off"
+            >
+            <button class="pscc-send-button" type="submit" id="sendButton" disabled>
+                <svg class="pscc-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                送信
+            </button>
+        </form>
+        @error('content')
+            <div class="pscc-field-error"><span>{{ $message }}</span></div>
+        @enderror
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const chatArea = document.getElementById('dmChatArea');
+        if (chatArea) {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        const input = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendButton');
+        if (!input || !sendBtn) return;
+        const toggle = () => {
+            sendBtn.disabled = !input.value || !input.value.trim();
+        };
+        input.addEventListener('input', toggle);
+        toggle();
+    })();
+</script>
+@endpush

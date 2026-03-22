@@ -68,11 +68,13 @@
                                 <img src="{{ $a->eyecatch_image_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $a->title }}" class="w-full h-full object-cover">
                             </div>
                             <div class="p-6">
-                                <div class="flex flex-wrap gap-2 mb-2">
+                                <div class="grid grid-cols-[auto_1fr] items-start gap-3 mb-2">
                                     <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">{{ $a->category ?? 'その他' }}</span>
-                                    @foreach($a->tags->take(2) as $tag)
-                                        <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">#{{ $tag->name }}</span>
-                                    @endforeach
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($a->tags->take(2) as $tag)
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">#{{ $tag->name }}</span>
+                                        @endforeach
+                                    </div>
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $a->title }}</h3>
                                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit($a->excerpt ?? '', 80) }}</p>
@@ -103,6 +105,19 @@
                                             ?: ($author->name ?? null)
                                             ?: $authorCompany->name
                                             ?: ($author->email ?? '匿名');
+                                        // 企業アイコンがあれば表示する
+                                        $iconPath = $authorCompany->icon_path ?? null;
+                                        if (!empty($iconPath)) {
+                                            if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                                $avatarSrc = $iconPath;
+                                            } else {
+                                                $iconRel = ltrim($iconPath, '/');
+                                                if (str_starts_with($iconRel, 'storage/')) {
+                                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                                }
+                                                $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                            }
+                                        }
                                     } elseif ($author) {
                                         $displayName = $author->name ?? $author->email ?? '匿名';
                                     }

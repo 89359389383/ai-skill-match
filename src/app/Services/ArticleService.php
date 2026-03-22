@@ -20,6 +20,9 @@ class ArticleService
     public function store(User $user, array $data): Article
     {
         return DB::transaction(function () use ($user, $data): Article {
+            // 公開設定の判定（デフォルトは公開）
+            $isPublished = isset($data['is_published']) ? (int) $data['is_published'] : 1;
+
             $article = Article::create([
                 'user_id' => $user->id,
                 'title' => $data['title'],
@@ -29,9 +32,9 @@ class ArticleService
                 'body_html' => $this->sanitizeBodyHtml($data['body_html'] ?? null),
                 // 旧フォーマット互換のため残す（Quill 本文は body_html を優先して表示）
                 'structure' => $data['structure'] ?? null,
-                // まずは公開（仕様が固まったら下書き導線を追加）
-                'status' => 1,
-                'published_at' => Carbon::now(),
+                // 公開設定に応じてstatusとpublished_atを設定
+                'status' => $isPublished ? 1 : 0,
+                'published_at' => $isPublished ? Carbon::now() : null,
             ]);
 
             // タグは「存在すれば使う、なければ作る」方式にしておくと入力が楽
@@ -51,6 +54,20 @@ class ArticleService
     public function update(Article $article, array $data): Article
     {
         return DB::transaction(function () use ($article, $data): Article {
+            // 公開設定が送信されている場合は更新
+            if (array_key_exists('is_published', $data)) {
+                $isPublished = (int) $data['is_published'];
+                $article->status = $isPublished ? 1 : 0;
+                // 公開に変更する場合で、まだ公開日時がない場合は現在時刻を設定
+                if ($isPublished && !$article->published_at) {
+                    $article->published_at = Carbon::now();
+                }
+                // 非公開に変更する場合はpublished_atをnullに
+                if (!$isPublished) {
+                    $article->published_at = null;
+                }
+            }
+
             $article->fill([
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],

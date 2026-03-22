@@ -84,9 +84,18 @@
                         @foreach($listing->reviews->take(5) as $review)
                             <div class="border-b border-gray-200 pb-6 last:border-0">
                                 <div class="flex items-start gap-4">
-                                    @php $reviewer = $review->user?->freelancer ?? $review->user; @endphp
                                     @php
-                                        $reviewIconPath = $reviewer?->icon_path ?? null;
+                                        $reviewerF = $review->user?->freelancer;
+                                        $reviewerC = $review->user?->company;
+                                        $isCompanyReviewer = $reviewerC !== null;
+
+                                        $reviewName = $isCompanyReviewer
+                                            ? ($reviewerC->contact_name ?? $reviewerC->name ?? $review->user?->email ?? '匿名')
+                                            : ($reviewerF?->display_name ?? $review->user?->email ?? '匿名');
+
+                                        $reviewIconPath = $isCompanyReviewer
+                                            ? ($reviewerC?->icon_path ?? null)
+                                            : ($reviewerF?->icon_path ?? null);
                                         $reviewDefaultIcon = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop';
                                         $reviewAvatarSrc = $reviewDefaultIcon;
 
@@ -102,10 +111,10 @@
                                             }
                                         }
                                     @endphp
-                                    <img src="{{ $reviewAvatarSrc }}" alt="" class="w-12 h-12 rounded-full object-cover">
+                                    <img src="{{ $reviewAvatarSrc }}" alt="{{ $reviewName }}" class="w-12 h-12 rounded-full object-cover">
                                     <div class="flex-1">
                                         <div class="flex items-center justify-between mb-2">
-                                            <div class="font-bold text-gray-900">{{ $reviewer?->display_name ?? $review->user?->email ?? '匿名' }}</div>
+                                            <div class="font-bold text-gray-900">{{ $reviewName }}</div>
                                             <div class="text-sm text-gray-500">{{ $review->created_at?->format('Y/m/d') }}</div>
                                         </div>
                                         <div class="flex items-center gap-2 mb-2">

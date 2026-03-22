@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <div class="fixed inset-0 -z-10 bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-100"></div>
+    <div class="fixed inset-0 -z-10 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100"></div>
 
     <div class="min-h-screen flex items-center justify-center px-4 md:px-6 lg:px-8 py-10">
         <div class="w-full max-w-md md:max-w-lg bg-white/90 backdrop-blur-xl border border-white/70 rounded-xl shadow-xl p-6 md:p-10">
@@ -46,7 +46,7 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="w-full rounded-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm md:text-base font-extrabold text-white shadow hover:shadow-md active:shadow">
+                <button type="submit" class="w-full rounded-md bg-[#FC4C0C] hover:bg-[#f14005] px-4 py-3 text-sm md:text-base font-extrabold text-white shadow hover:shadow-md active:shadow">
                     送信
                 </button>
 

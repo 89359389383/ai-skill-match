@@ -96,18 +96,50 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">タグ</label>
-                                <div class="flex gap-2 mb-2">
-                                    <input type="text" id="tagInput" placeholder="タグを入力してEnter"
-                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                                    <button type="button" onclick="addTag()" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:shadow-md transition-all">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
+                                @php
+                                    $skillNameSlots = old('skill_names', $listing->skills->pluck('name')->values()->all());
+                                    if (!is_array($skillNameSlots)) {
+                                        $skillNameSlots = $skillNameSlots ? [$skillNameSlots] : [];
+                                    }
+                                    $skillNameSlots = array_values($skillNameSlots);
+                                    $skillNameSlots = array_slice($skillNameSlots, 0, 16);
+
+                                    $minSlots = 4;
+                                    $maxSlots = 16;
+                                    $styleRows = (int) max(1, ceil(max(count($skillNameSlots), $minSlots) / 4));
+                                    $styleRows = min(4, $styleRows);
+                                    $skillNameSlots = array_pad($skillNameSlots, $styleRows * 4, '');
+                                @endphp
+
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">タグ（スキル名）</label>
+
+                                <div id="skill-tag-items-container" class="space-y-3">
+                                    @for($row = 0; $row < $styleRows; $row++)
+                                        <div class="skill-tag-input-row grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            @for($col = 0; $col < 4; $col++)
+                                                @php $idx = $row * 4 + $col; @endphp
+                                                <input
+                                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                    name="skill_names[]"
+                                                    type="text"
+                                                    value="{{ $skillNameSlots[$idx] ?? '' }}"
+                                                    placeholder="例: Laravel"
+                                                >
+                                            @endfor
+                                        </div>
+                                    @endfor
+                                </div>
+
+                                <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.75rem;">
+                                    <button type="button" id="add-skill-tags-row" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:shadow-md transition-all">
+                                        追加する
+                                    </button>
+                                    <button type="button" id="remove-skill-tags-row" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all" aria-label="タグ入力行を減らす">
+                                        ×
                                     </button>
                                 </div>
-                                <div id="tagsContainer" class="flex flex-wrap gap-2 mb-2"></div>
-                                <p class="text-sm text-gray-500 mt-1">例：ChatGPT、プロンプト、業務効率化</p>
+
+                                <p class="text-sm text-gray-500 mt-2">1行4件で入力できます（4〜16件）</p>
                             </div>
                         </div>
                     </div>
@@ -213,19 +245,58 @@
 
 @push('scripts')
 <script>
-    let tags = @json($listing->skills->pluck('name')->values()->all());
     let imageData = null;
     let skillFormAllowNativeSubmit = false;
 
     document.addEventListener('DOMContentLoaded', function() {
-        const tagInput = document.getElementById('tagInput');
-        if (tagInput) {
-            tagInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag();
-                }
+        const tagItemsContainer = document.getElementById('skill-tag-items-container');
+        const addTagRowBtn = document.getElementById('add-skill-tags-row');
+        const removeTagRowBtn = document.getElementById('remove-skill-tags-row');
+
+        const MAX_ROWS = 4; // 16 slots (4 inputs per row)
+        const MIN_ROWS = 1; // 4 slots  (1 row)
+
+        function buildTagRow() {
+            const row = document.createElement('div');
+            row.className = 'skill-tag-input-row grid grid-cols-2 sm:grid-cols-4 gap-3';
+
+            for (let col = 0; col < 4; col++) {
+                const input = document.createElement('input');
+                input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent';
+                input.name = 'skill_names[]';
+                input.type = 'text';
+                input.placeholder = '例: Laravel';
+                row.appendChild(input);
+            }
+            return row;
+        }
+
+        function syncTagRowButtons() {
+            if (!tagItemsContainer || !addTagRowBtn || !removeTagRowBtn) return;
+            const rowCount = tagItemsContainer.querySelectorAll('.skill-tag-input-row').length;
+            addTagRowBtn.disabled = rowCount >= MAX_ROWS;
+            removeTagRowBtn.disabled = rowCount <= MIN_ROWS;
+            addTagRowBtn.setAttribute('aria-disabled', String(rowCount >= MAX_ROWS));
+            removeTagRowBtn.setAttribute('aria-disabled', String(rowCount <= MIN_ROWS));
+        }
+
+        if (tagItemsContainer && addTagRowBtn && removeTagRowBtn) {
+            addTagRowBtn.addEventListener('click', function () {
+                const rowCount = tagItemsContainer.querySelectorAll('.skill-tag-input-row').length;
+                if (rowCount >= MAX_ROWS) return;
+                tagItemsContainer.appendChild(buildTagRow());
+                syncTagRowButtons();
             });
+
+            removeTagRowBtn.addEventListener('click', function () {
+                const rows = tagItemsContainer.querySelectorAll('.skill-tag-input-row');
+                if (rows.length <= MIN_ROWS) return;
+                const last = rows[rows.length - 1];
+                if (last) last.remove();
+                syncTagRowButtons();
+            });
+
+            syncTagRowButtons();
         }
 
         const skillForm = document.getElementById('skillForm');
@@ -239,9 +310,6 @@
                 runSkillFormValidationAndSubmit();
             });
         }
-
-        // 編集対象の既存タグを表示
-        renderTags();
     });
 
     function scrollToSection(sectionId) {
@@ -249,36 +317,6 @@
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-    }
-
-    function addTag() {
-        const input = document.getElementById('tagInput');
-        const tag = input.value.trim();
-        if (tag && !tags.includes(tag)) {
-            tags.push(tag);
-            renderTags();
-            input.value = '';
-        }
-    }
-
-    function removeTag(tag) {
-        tags = tags.filter(t => t !== tag);
-        renderTags();
-    }
-
-    function renderTags() {
-        const container = document.getElementById('tagsContainer');
-        if (!container) return;
-        container.innerHTML = tags.map(tag => `
-            <span class="px-3 py-1 bg-orange-100 text-orange-700 text-sm font-medium rounded-full flex items-center gap-2">
-                ${tag}
-                <button type="button" onclick="removeTag('${tag}')" class="hover:text-orange-900">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </span>
-        `).join('');
     }
 
     function handleImageUpload(event) {
@@ -315,22 +353,8 @@
         const price = document.getElementById('price').value;
         const duration = document.getElementById('duration').value;
 
-        if (!title || !description || !price || !duration) {
-            alert('全ての必須項目を入力してください');
-            return;
-        }
-
         const form = document.getElementById('skillForm');
         if (!form) return;
-
-        form.querySelectorAll('input[name="skill_names[]"]').forEach(el => el.remove());
-        tags.forEach(t => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'skill_names[]';
-            input.value = t;
-            form.appendChild(input);
-        });
 
         skillFormAllowNativeSubmit = true;
         form.requestSubmit();

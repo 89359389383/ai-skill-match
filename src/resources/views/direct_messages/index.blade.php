@@ -217,12 +217,25 @@
                     $counterpart = $viewerRole === 'company' ? $conversation->freelancer : $conversation->company;
                     $counterpartName = $viewerRole === 'company'
                         ? ($conversation->freelancer?->display_name ?? 'フリーランス')
-                        : ($conversation->company?->name ?? '企業');
+                        : ($conversation->company?->contact_name
+                            ?? $conversation->company?->name
+                            ?? '企業');
                     $counterpartRole = $viewerRole === 'company' ? 'フリーランス' : '企業';
-                    $counterpartIcon = $viewerRole === 'company' ? ($conversation->freelancer?->icon_path ?? null) : null;
-                    $avatarSrc = !empty($counterpartIcon)
-                        ? (str_starts_with($counterpartIcon, 'http') ? $counterpartIcon : asset('storage/' . $counterpartIcon))
-                        : null;
+                    $counterpartIcon = $viewerRole === 'company'
+                        ? ($conversation->freelancer?->icon_path ?? null)
+                        : ($conversation->company?->icon_path ?? null);
+                    $avatarSrc = null;
+                    if (!empty($counterpartIcon)) {
+                        if (str_starts_with($counterpartIcon, 'http://') || str_starts_with($counterpartIcon, 'https://')) {
+                            $avatarSrc = $counterpartIcon;
+                        } else {
+                            $iconRel = ltrim($counterpartIcon, '/');
+                            if (str_starts_with($iconRel, 'storage/')) {
+                                $iconRel = substr($iconRel, strlen('storage/'));
+                            }
+                            $avatarSrc = asset('storage/' . $iconRel);
+                        }
+                    }
                     $latestMessage = $conversation->messages->last();
                     $preview = $latestMessage?->body ?? 'まだメッセージはありません。';
                     $sentAt = $conversation->latest_message_at?->format('Y/m/d H:i') ?? '-';

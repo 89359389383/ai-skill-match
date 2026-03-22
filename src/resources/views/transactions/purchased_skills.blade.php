@@ -466,10 +466,22 @@
                                                 @php
                                                     $sellerName = $seller?->display_name ?? '出品者';
                                                     $sellerIcon = $seller?->icon_path;
+                                                    $sellerAvatarSrc = null;
+                                                    if (!empty($sellerIcon)) {
+                                                        if (str_starts_with($sellerIcon, 'http://') || str_starts_with($sellerIcon, 'https://')) {
+                                                            $sellerAvatarSrc = $sellerIcon;
+                                                        } else {
+                                                            $iconRel = ltrim($sellerIcon, '/');
+                                                            if (str_starts_with($iconRel, 'storage/')) {
+                                                                $iconRel = substr($iconRel, strlen('storage/'));
+                                                            }
+                                                            $sellerAvatarSrc = asset('storage/' . $iconRel);
+                                                        }
+                                                    }
                                                     $sellerInitial = mb_substr($sellerName, 0, 1);
                                                 @endphp
-                                                @if (!empty($sellerIcon))
-                                                    <img src="{{ $sellerIcon }}" alt="{{ $sellerName }}" class="ps-seller-avatar">
+                                                @if (!empty($sellerAvatarSrc))
+                                                    <img src="{{ $sellerAvatarSrc }}" alt="{{ $sellerName }}" class="ps-seller-avatar">
                                                 @else
                                                     <div class="ps-seller-avatar" style="background:#E5E7EB; display:flex; align-items:center; justify-content:center; color:#374151; font-weight:700;">
                                                         {{ $sellerInitial }}

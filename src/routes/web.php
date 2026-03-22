@@ -23,6 +23,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\MyArticleController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AnswerController;
+use App\Http\Controllers\AnswerCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DirectMessageController;
 
@@ -295,6 +296,12 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::post('/questions/{question}/answers', [AnswerController::class, 'store'])
         ->whereNumber('question')
         ->name('questions.answers.store');
+
+    // 回答へのコメント投稿
+    Route::post('/questions/{question}/answers/{answer}/comments', [AnswerCommentController::class, 'store'])
+        ->whereNumber('question')
+        ->whereNumber('answer')
+        ->name('questions.answers.comments.store');
 
     // スキル購入/問い合わせ（将来想定：現時点はルートのみ）
     Route::post('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'store'])

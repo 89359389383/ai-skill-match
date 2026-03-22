@@ -364,22 +364,95 @@
                         <div class="help">成果（数値/期間/担当範囲）を入れると伝わりやすいです。</div>
                     </div>
 
+                    @php
+                        // 対応業務 / 得意業種 / 資格: 複数入力（min=4, max=16 / 各カテゴリ）
+                        $servicesOfferedRaw = old('services_offered', '');
+                        $industrySpecialtiesRaw = old('industry_specialties', '');
+                        $certificationsRaw = old('certifications', '');
+
+                        $splitByCommaLike = function ($raw) {
+                            $raw = (string) $raw;
+                            if ($raw === '') return [];
+                            // '、' と ',' の両方を区切りとして扱う
+                            $parts = preg_split('/[、,]/u', $raw, -1, PREG_SPLIT_NO_EMPTY);
+                            return array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
+                        };
+
+                        $splitByNewline = function ($raw) {
+                            $raw = (string) $raw;
+                            if ($raw === '') return [];
+                            $parts = preg_split("/\r\n|\n|\r/u", $raw, -1, PREG_SPLIT_NO_EMPTY);
+                            return array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
+                        };
+
+                        $servicesOfferedValues = $splitByCommaLike($servicesOfferedRaw);
+                        $industrySpecialtiesValues = $splitByCommaLike($industrySpecialtiesRaw);
+                        $certificationsValues = $splitByNewline($certificationsRaw);
+
+                        $maxCount = max(4, count($servicesOfferedValues), count($industrySpecialtiesValues), count($certificationsValues));
+                        $styleRows = min(4, max(1, (int) ceil($maxCount / 4)));
+
+                        $servicesOfferedValues = array_pad(array_slice($servicesOfferedValues, 0, 16), $styleRows * 4, '');
+                        $industrySpecialtiesValues = array_pad(array_slice($industrySpecialtiesValues, 0, 16), $styleRows * 4, '');
+                        $certificationsValues = array_pad(array_slice($certificationsValues, 0, 16), $styleRows * 4, '');
+                    @endphp
+
                     <div class="row">
-                        <label class="label" for="services_offered">対応業務（任意）</label>
-                        <input class="input @error('services_offered') is-invalid @enderror" id="services_offered" name="services_offered" type="text" value="{{ old('services_offered') }}" placeholder="例: Webアプリ開発、システム設計">
+                        <label class="label" for="services_offered_hidden">対応業務（任意）</label>
+                        <input type="hidden" id="services_offered_hidden" name="services_offered" value="{{ old('services_offered', '') }}">
+                        <div id="services_offered_items_container">
+                            @for($row = 0; $row < $styleRows; $row++)
+                                <div class="style-input-row grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    @for($col = 0; $col < 4; $col++)
+                                        @php $idx = $row * 4 + $col; @endphp
+                                        <input
+                                            class="input services-offered-item"
+                                            name="services_offered_items[]"
+                                            type="text"
+                                            value="{{ $servicesOfferedValues[$idx] ?? '' }}"
+                                            placeholder="例: Webアプリ開発"
+                                        >
+                                    @endfor
+                                </div>
+                            @endfor
+                        </div>
                         @error('services_offered')
-                        <span class="error-message">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
-                        <div class="help">カンマ区切りで複数入力できます</div>
+                        
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.75rem;">
+                            <button type="button" class="btn btn-outline" id="add-services-row">追加する</button>
+                            <button type="button" class="btn btn-outline" id="remove-services-row" aria-label="対応業務の入力行を減らす">×</button>
+                        </div>
                     </div>
 
                     <div class="row">
-                        <label class="label" for="industry_specialties">得意業種（任意）</label>
-                        <input class="input @error('industry_specialties') is-invalid @enderror" id="industry_specialties" name="industry_specialties" type="text" value="{{ old('industry_specialties') }}" placeholder="例: IT・Web、コンサルティング">
+                        <label class="label" for="industry_specialties_hidden">得意業界（任意）</label>
+                        <input type="hidden" id="industry_specialties_hidden" name="industry_specialties" value="{{ old('industry_specialties', '') }}">
+                        <div id="industry_specialties_items_container">
+                            @for($row = 0; $row < $styleRows; $row++)
+                                <div class="style-input-row grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    @for($col = 0; $col < 4; $col++)
+                                        @php $idx = $row * 4 + $col; @endphp
+                                        <input
+                                            class="input industry-specialties-item"
+                                            name="industry_specialties_items[]"
+                                            type="text"
+                                            value="{{ $industrySpecialtiesValues[$idx] ?? '' }}"
+                                            placeholder="例: IT・Web"
+                                        >
+                                    @endfor
+                                </div>
+                            @endfor
+                        </div>
                         @error('industry_specialties')
-                        <span class="error-message">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
-                        <div class="help">カンマ区切りで複数入力できます</div>
+                        
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.75rem;">
+                            <button type="button" class="btn btn-outline" id="add-industry-row">追加する</button>
+                            <button type="button" class="btn btn-outline" id="remove-industry-row" aria-label="得意業界の入力行を減らす">×</button>
+                        </div>
                     </div>
 
                     <div class="row">
@@ -390,21 +463,35 @@
                         @enderror
                     </div>
 
-                    <div class="row">
-                        <label class="label" for="experience_companies">経験企業（任意）</label>
-                        <textarea class="textarea @error('experience_companies') is-invalid @enderror" id="experience_companies" name="experience_companies" placeholder="例) 株式会社◯◯（2021-2023）&#10;株式会社△△（2019-2021）">{{ old('experience_companies') }}</textarea>
-                        @error('experience_companies')
-                        <span class="error-message">{{ $message }}</span>
-                        @enderror
-                    </div>
+                    {{-- 単一フォーム（担当業務・得意業務）に統合するため、experience_companies 用入力欄は削除 --}}
 
                     <div class="row">
-                        <label class="label" for="certifications">資格（任意）</label>
-                        <textarea class="textarea @error('certifications') is-invalid @enderror" id="certifications" name="certifications" placeholder="例) AWS認定ソリューションアーキテクト&#10;基本情報技術者">{{ old('certifications') }}</textarea>
+                        <label class="label" for="certifications_hidden">資格（任意）</label>
+                        <input type="hidden" id="certifications_hidden" name="certifications" value="{{ old('certifications', '') }}">
+                        <div id="certifications_items_container">
+                            @for($row = 0; $row < $styleRows; $row++)
+                                <div class="style-input-row grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    @for($col = 0; $col < 4; $col++)
+                                        @php $idx = $row * 4 + $col; @endphp
+                                        <input
+                                            class="input certifications-item"
+                                            name="certifications_items[]"
+                                            type="text"
+                                            value="{{ $certificationsValues[$idx] ?? '' }}"
+                                            placeholder="例: 基本情報技術者"
+                                        >
+                                    @endfor
+                                </div>
+                            @endfor
+                        </div>
                         @error('certifications')
-                        <span class="error-message">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
-                        <div class="help">1行に1つずつ入力してください</div>
+                        
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.75rem;">
+                            <button type="button" class="btn btn-outline" id="add-certifications-row">追加する</button>
+                            <button type="button" class="btn btn-outline" id="remove-certifications-row" aria-label="資格の入力行を減らす">×</button>
+                        </div>
                     </div>
 
                     <div class="divider"></div>
@@ -548,8 +635,8 @@
                     </div>
 
                     <div class="row" style="margin-top:1.25rem;">
-                        <label class="label" for="work_style_text">働き方（自由入力テキスト）</label>
-                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text" placeholder="例) リモート中心、平日10-18で稼働可能">{{ old('work_style_text') }}</textarea>
+                        <label class="label" for="work_style_text">担当業務・得意業務（自由入力テキスト）</label>
+                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text" placeholder="例) 担当：要件整理〜設計・実装まで\n得意：Web/DB設計など">{{ old('work_style_text') }}</textarea>
                         @error('work_style_text')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -716,6 +803,125 @@
                     }
 
                     portfolioCount++;
+                });
+            }
+        })();
+
+        // 対応業務 / 得意業種 / 資格: 複数入力（min=4, max=16 / 各項目独立）
+        (function () {
+            const servicesContainer = document.getElementById('services_offered_items_container');
+            const industryContainer = document.getElementById('industry_specialties_items_container');
+            const certificationsContainer = document.getElementById('certifications_items_container');
+
+            const hiddenServices = document.getElementById('services_offered_hidden');
+            const hiddenIndustry = document.getElementById('industry_specialties_hidden');
+            const hiddenCertifications = document.getElementById('certifications_hidden');
+
+            const addServicesBtn = document.getElementById('add-services-row');
+            const removeServicesBtn = document.getElementById('remove-services-row');
+            const addIndustryBtn = document.getElementById('add-industry-row');
+            const removeIndustryBtn = document.getElementById('remove-industry-row');
+            const addCertBtn = document.getElementById('add-certifications-row');
+            const removeCertBtn = document.getElementById('remove-certifications-row');
+
+            const MAX_ROWS = 4;
+            const MIN_ROWS = 1;
+
+            if (!servicesContainer || !industryContainer || !certificationsContainer || !hiddenServices || !hiddenIndustry || !hiddenCertifications) {
+                return;
+            }
+
+            function buildRow({ inputClass, inputName, placeholder }) {
+                const row = document.createElement('div');
+                row.className = 'style-input-row grid grid-cols-2 sm:grid-cols-4 gap-3';
+                for (let col = 0; col < 4; col++) {
+                    const input = document.createElement('input');
+                    input.className = 'input ' + inputClass;
+                    input.name = inputName;
+                    input.type = 'text';
+                    input.placeholder = placeholder;
+                    row.appendChild(input);
+                }
+                return row;
+            }
+
+            function syncHiddenFields() {
+                const services = Array.from(servicesContainer.querySelectorAll('.services-offered-item'))
+                    .map(el => (el.value || '').trim())
+                    .filter(Boolean);
+                const industries = Array.from(industryContainer.querySelectorAll('.industry-specialties-item'))
+                    .map(el => (el.value || '').trim())
+                    .filter(Boolean);
+                const certifications = Array.from(certificationsContainer.querySelectorAll('.certifications-item'))
+                    .map(el => (el.value || '').trim())
+                    .filter(Boolean);
+
+                hiddenServices.value = services.join(',');
+                hiddenIndustry.value = industries.join(',');
+                hiddenCertifications.value = certifications.join('\n');
+            }
+
+            function setRowButtonState(container, addBtn, removeBtn) {
+                const rowCount = container.querySelectorAll('.style-input-row').length;
+                if (addBtn) addBtn.disabled = rowCount >= MAX_ROWS;
+                if (removeBtn) removeBtn.disabled = rowCount <= MIN_ROWS;
+            }
+
+            function bindControls({ container, addBtn, removeBtn, rowTemplate }) {
+                if (!container) return;
+
+                if (addBtn) {
+                    addBtn.addEventListener('click', function () {
+                        const rowCount = container.querySelectorAll('.style-input-row').length;
+                        if (rowCount >= MAX_ROWS) return;
+                        container.appendChild(buildRow(rowTemplate));
+                        setRowButtonState(container, addBtn, removeBtn);
+                        syncHiddenFields();
+                    });
+                }
+
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function () {
+                        const rows = container.querySelectorAll('.style-input-row');
+                        rows.forEach((row, idx) => {
+                            if (idx >= MIN_ROWS) row.remove();
+                        });
+                        setRowButtonState(container, addBtn, removeBtn);
+                        syncHiddenFields();
+                    });
+                }
+
+                container.addEventListener('input', syncHiddenFields);
+            }
+
+            bindControls({
+                container: servicesContainer,
+                addBtn: addServicesBtn,
+                removeBtn: removeServicesBtn,
+                rowTemplate: { inputClass: 'services-offered-item', inputName: 'services_offered_items[]', placeholder: '例: Webアプリ開発' }
+            });
+            bindControls({
+                container: industryContainer,
+                addBtn: addIndustryBtn,
+                removeBtn: removeIndustryBtn,
+                rowTemplate: { inputClass: 'industry-specialties-item', inputName: 'industry_specialties_items[]', placeholder: '例: IT・Web' }
+            });
+            bindControls({
+                container: certificationsContainer,
+                addBtn: addCertBtn,
+                removeBtn: removeCertBtn,
+                rowTemplate: { inputClass: 'certifications-item', inputName: 'certifications_items[]', placeholder: '例: 基本情報技術者' }
+            });
+
+            setRowButtonState(servicesContainer, addServicesBtn, removeServicesBtn);
+            setRowButtonState(industryContainer, addIndustryBtn, removeIndustryBtn);
+            setRowButtonState(certificationsContainer, addCertBtn, removeCertBtn);
+            syncHiddenFields();
+
+            const form = document.querySelector('form[action="{{ route('freelancer.profile.store') }}"]');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    syncHiddenFields();
                 });
             }
         })();

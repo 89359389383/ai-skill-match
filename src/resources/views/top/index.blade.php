@@ -893,21 +893,6 @@ section {
 @section('content')
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="hero-nav">
-            <div class="hero-logo">
-                <p class="hero-logo-small">AIプロ人材をご紹介</p>
-                <div class="hero-logo-main">
-                    <span class="logo-ai">AI </span><span class="logo-skill-match">Skill Match</span>
-                    <div class="hero-logo-badge"></div>
-                </div>
-            </div>
-            <div class="hero-nav-menu">
-                <a href="{{ route('top') }}" class="hero-nav-link">ホーム</a>
-                <a href="#reasons" class="hero-nav-link">選ばれる理由</a>
-                <a href="#faq" class="hero-nav-link">よくある質問</a>
-                <a href="{{ route('auth.login.form') }}" class="hero-nav-cta">無料相談を予約する</a>
-            </div>
-        </div>
         <div class="hero-main">
             <div class="hero-content-left">
                 <h1 class="hero-main-title">
@@ -932,12 +917,6 @@ section {
                         <p class="hero-feature-subtitle">にコミット</p>
                     </div>
                 </div>
-                <a href="{{ route('auth.login.form') }}" class="hero-cta-button">
-                    無料相談を予約する
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </a>
             </div>
             <div class="hero-image-container">
                 <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&h=800&fit=crop" alt="AI Professional" class="hero-image">
@@ -1065,7 +1044,7 @@ section {
                 @forelse($freelancers ?? collect() as $f)
                     <a href="{{ route('profiles.show', ['user' => $f->user_id]) }}" class="freelancer-card">
                         <div class="freelancer-header">
-                            <img src="{{ $f->icon_path ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' }}" alt="{{ $f->display_name }}" class="freelancer-avatar">
+                            <img src="{{ !empty($f->icon_path) ? asset('storage/' . $f->icon_path) : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' }}" alt="{{ $f->display_name }}" class="freelancer-avatar">
                             <div class="freelancer-info">
                                 <h3 class="freelancer-name">{{ $f->display_name ?? '名前未設定' }}</h3>
                                 <p class="freelancer-role">職種: {{ $f->job_title ?? '未設定' }}</p>
@@ -1124,10 +1103,31 @@ section {
                         <h3 class="question-title">{{ Str::limit($q->title, 60) }}</h3>
                         <p class="question-content">{{ Str::limit($q->content, 80) }}</p>
                         <div class="question-author">
-                            @php $authorF = $q->user?->freelancer; @endphp
-                            <img src="{{ $authorF?->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
+                            @php
+                                $authorF = $q->user?->freelancer;
+                                $authorC = $q->user?->company;
+                                $authorName = $authorF?->display_name
+                                    ?? $authorC?->contact_name
+                                    ?? $authorC?->name
+                                    ?? $q->user?->email
+                                    ?? '匿名';
+                                $iconPath = $authorF?->icon_path ?? $authorC?->icon_path;
+                                $avatarSrc = null;
+                                if (!empty($iconPath)) {
+                                    if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                        $avatarSrc = $iconPath;
+                                    } else {
+                                        $iconRel = ltrim($iconPath, '/');
+                                        if (str_starts_with($iconRel, 'storage/')) {
+                                            $iconRel = substr($iconRel, strlen('storage/'));
+                                        }
+                                        $avatarSrc = asset('storage/' . $iconRel);
+                                    }
+                                }
+                            @endphp
+                            <img src="{{ $avatarSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
                             <div>
-                                <div class="author-name">{{ $authorF?->display_name ?? $q->user?->email ?? '匿名' }}</div>
+                                <div class="author-name">{{ $authorName }}</div>
                                 <div class="question-date">{{ $q->created_at?->format('Y/m/d') }}</div>
                             </div>
                         </div>
@@ -1162,7 +1162,7 @@ section {
                         <div class="skill-content">
                             <div class="seller-info">
                                 @php $seller = $l->freelancer; @endphp
-                                <img src="{{ $seller->icon_path ?? 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop' }}" alt="{{ $seller->display_name }}" class="seller-avatar">
+                                <img src="{{ !empty($seller?->icon_path) ? asset('storage/' . $seller->icon_path) : 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop' }}" alt="{{ $seller->display_name }}" class="seller-avatar">
                                 <div>
                                     <div class="seller-name">{{ $seller->display_name ?? '出品者' }}</div>
                                     <div class="seller-role">職種: {{ $seller->job_title ?? '-' }}</div>
@@ -1211,10 +1211,31 @@ section {
                             <h3 class="article-title">{{ Str::limit($a->title, 60) }}</h3>
                             <p class="article-excerpt">{{ Str::limit($a->excerpt ?? '', 80) }}</p>
                             <div class="article-author">
-                                @php $authorF = $a->user?->freelancer; @endphp
-                                <img src="{{ $authorF?->icon_path ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
+                                @php
+                                    $authorF = $a->user?->freelancer;
+                                    $authorC = $a->user?->company;
+                                    $authorName = $authorF?->display_name
+                                        ?? $authorC?->contact_name
+                                        ?? $authorC?->name
+                                        ?? $a->user?->email
+                                        ?? '匿名';
+                                    $iconPath = $authorF?->icon_path ?? $authorC?->icon_path;
+                                    $avatarSrc = null;
+                                    if (!empty($iconPath)) {
+                                        if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                            $avatarSrc = $iconPath;
+                                        } else {
+                                            $iconRel = ltrim($iconPath, '/');
+                                            if (str_starts_with($iconRel, 'storage/')) {
+                                                $iconRel = substr($iconRel, strlen('storage/'));
+                                            }
+                                            $avatarSrc = asset('storage/' . $iconRel);
+                                        }
+                                    }
+                                @endphp
+                                <img src="{{ $avatarSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
                                 <div>
-                                    <div class="author-name">{{ $authorF?->display_name ?? $a->user?->email ?? '匿名' }}</div>
+                                    <div class="author-name">{{ $authorName }}</div>
                                     <div class="question-date">{{ $a->published_at?->format('Y/m/d') ?? $a->created_at?->format('Y/m/d') }}</div>
                                 </div>
                             </div>
@@ -1227,7 +1248,8 @@ section {
         </div>
     </section>
 
-    <!-- CTA Section -->
+    {{-- CTA Section (非表示) --}}
+    {{-- 
     <section class="cta-section">
         <div class="container">
             <div class="cta-content">
@@ -1243,6 +1265,7 @@ section {
             </div>
         </div>
     </section>
+    --}}
 
 @endsection
 

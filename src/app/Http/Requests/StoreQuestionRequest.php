@@ -38,7 +38,7 @@ class StoreQuestionRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
 
             // 本文（必須）
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', 'max:5000'],
 
             // カテゴリー（任意：未指定なら Service 側でデフォルトに寄せる）
             'category' => ['nullable', 'string', 'max:50'],
@@ -54,6 +54,7 @@ class StoreQuestionRequest extends FormRequest
         return [
             'title.required' => '質問タイトルは必須です。',
             'content.required' => '質問内容は必須です。',
+            'content.max' => '質問内容は5000文字以内で入力してください。',
             'tags.array' => 'タグの形式が不正です。',
             'tags.*.max' => 'タグは50文字以内で入力してください。',
         ];
