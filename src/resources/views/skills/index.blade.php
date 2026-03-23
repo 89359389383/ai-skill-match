@@ -11,6 +11,70 @@
     overflow: hidden;
 }
 </style>
+<style>
+.profiles-pagination-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.profiles-pagination-bar a,
+.profiles-pagination-bar span.profiles-page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.35rem;
+    border-radius: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.profiles-pagination-bar a.profiles-page-link {
+    background-color: #f3f4f6;
+    color: #111827;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profiles-pagination-bar a.profiles-page-link:hover:not(.profiles-page-active) {
+    background-color: #e5e7eb;
+}
+
+.profiles-pagination-bar a.profiles-page-active {
+    background-color: #FC4C0C;
+    color: #fff;
+    pointer-events: none;
+    cursor: default;
+}
+
+.profiles-pagination-bar span.profiles-page-ellipsis {
+    min-width: 1.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    user-select: none;
+}
+
+.profiles-pagination-bar a.profiles-page-nav {
+    background-color: #f3f4f6;
+    color: #92400e;
+}
+
+.profiles-pagination-bar a.profiles-page-nav:hover:not(.profiles-page-nav-disabled) {
+    background-color: #e5e7eb;
+}
+
+.profiles-pagination-bar span.profiles-page-nav-disabled {
+    background-color: #f3f4f6;
+    color: #d1d5db;
+    cursor: not-allowed;
+    user-select: none;
+}
+</style>
+</style>
 @endpush
 
 @section('content')
@@ -136,9 +200,79 @@
                 @endforeach
             </div>
 
-            <div class="mt-8">
-                {{ $listings->links() }}
-            </div>
+            @php
+                $pLast = $listings->lastPage();
+                $pCur = $listings->currentPage();
+                $listingsPaginationElements = [];
+
+                if ($pLast <= 1) {
+                    if ($pLast === 1) {
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    }
+                } elseif ($pLast <= 15) {
+                    for ($n = 1; $n <= $pLast; $n++) {
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                } elseif ($pCur <= 7) {
+                    $upto = min(13, $pLast);
+                    for ($n = 1; $n <= $upto; $n++) {
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                    if ($upto < $pLast) {
+                        $listingsPaginationElements[] = ['type' => 'ellipsis'];
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $pLast];
+                    }
+                } elseif ($pCur >= $pLast - 6) {
+                    $listingsPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    $listingsPaginationElements[] = ['type' => 'ellipsis'];
+                    $from = max(2, $pLast - 12);
+                    for ($n = $from; $n <= $pLast; $n++) {
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                } else {
+                    $listingsPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    $listingsPaginationElements[] = ['type' => 'ellipsis'];
+                    $from = max(2, $pCur - 6);
+                    $to = min($pLast - 1, $pCur + 6);
+                    for ($n = $from; $n <= $to; $n++) {
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                    if ($to < $pLast) {
+                        if ($to + 1 < $pLast) {
+                            $listingsPaginationElements[] = ['type' => 'ellipsis'];
+                        }
+                        $listingsPaginationElements[] = ['type' => 'page', 'n' => $pLast];
+                    }
+                }
+            @endphp
+
+            @if($pLast >= 1 && count($listingsPaginationElements) > 0)
+                <nav class="profiles-pagination-bar mt-8" aria-label="ページ送り">
+                    @if($listings->onFirstPage())
+                        <span class="profiles-page-nav profiles-page-nav-disabled" aria-disabled="true">&lt;</span>
+                    @else
+                        <a href="{{ $listings->previousPageUrl() }}" class="profiles-page-nav" rel="prev" aria-label="前のページ">&lt;</a>
+                    @endif
+
+                    @foreach($listingsPaginationElements as $el)
+                        @if($el['type'] === 'ellipsis')
+                            <span class="profiles-page-ellipsis" aria-hidden="true">...</span>
+                        @else
+                            @if($el['n'] === $pCur)
+                                <span class="profiles-page-link profiles-page-active">{{ $el['n'] }}</span>
+                            @else
+                                <a href="{{ $listings->url($el['n']) }}" class="profiles-page-link">{{ $el['n'] }}</a>
+                            @endif
+                        @endif
+                    @endforeach
+
+                    @if($listings->hasMorePages())
+                        <a href="{{ $listings->nextPageUrl() }}" class="profiles-page-nav" rel="next" aria-label="次のページ">&gt;</a>
+                    @else
+                        <span class="profiles-page-nav profiles-page-nav-disabled" aria-disabled="true">&gt;</span>
+                    @endif
+                </nav>
+            @endif
         @endif
     </div>
 </div>

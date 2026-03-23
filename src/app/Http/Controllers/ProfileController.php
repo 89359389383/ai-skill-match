@@ -33,7 +33,7 @@ class ProfileController extends Controller
 
         $freelancers = $query
             ->orderByDesc('id')
-            ->paginate(12)
+            ->paginate(30)
             ->withQueryString();
 
         if (view()->exists('profiles.index')) {

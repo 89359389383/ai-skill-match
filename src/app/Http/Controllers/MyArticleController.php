@@ -26,7 +26,8 @@ class MyArticleController extends Controller
         $articles = Article::query()
             ->where('user_id', $user->id)
             ->orderByDesc('id')
-            ->paginate(12);
+            ->paginate(30)
+            ->withQueryString();
 
         if (view()->exists('my-articles.index')) {
             return view('my-articles.index', compact('articles'));

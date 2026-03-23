@@ -28,7 +28,7 @@ class ArticleController extends Controller
                 $q->where('user_id', (int) $request->query('user'));
             })
             ->orderByDesc('published_at')
-            ->paginate(12)
+            ->paginate(30)
             ->withQueryString();
 
         if (view()->exists('articles.index')) {
