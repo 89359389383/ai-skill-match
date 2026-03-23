@@ -35,6 +35,17 @@
 
 <div class="min-h-screen py-12 bg-gray-50">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        @if(session('success'))
+            <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800" role="status">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+
         {{-- ナビゲーション --}}
         <div class="flex justify-between items-center mb-6">
             <a href="{{ route('questions.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
@@ -133,99 +144,25 @@
                 </div>
             @else
                 <div class="space-y-6">
-                    @foreach($question->answers as $answer)
-                        @php
-                            $isAnswerAuthor = $currentUserId && (int)$currentUserId === (int)$answer->user_id;
-                            $lastComment = $answer->comments?->last();
-                            $isLastCommentByQuestioner = $lastComment && (int)$lastComment->user_id === (int)$question->user_id;
-
-                            // 質問者は常にコメント可能。回答者は「質問者が直前にコメントした場合のみ」返信可能。
-                            $canComment = $currentUser && (
-                                $isQuestioner ||
-                                ($isAnswerAuthor && $isLastCommentByQuestioner)
-                            );
-                        @endphp
-                        <div id="answer-{{ $answer->id }}" class="bg-white rounded-xl shadow-md overflow-hidden {{ $question->accepted_answer_id === $answer->id ? 'ring-2 ring-green-500 ring-offset-2' : '' }}">
-                            {{-- 回答本体 --}}
-                            <div class="p-6">
-                                @if($question->accepted_answer_id === $answer->id)
-                                    <div class="flex items-center gap-2 text-green-600 mb-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                        <span class="font-semibold">ベストアンサー</span>
-                                    </div>
-                                @endif
-
-                                <div class="prose max-w-none mb-4">
-                                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $answer->content }}</p>
-                                </div>
-
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <img src="{{ $answer->author_icon_url ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-10 h-10 rounded-full object-cover">
-                                        <div>
-                                            <div class="font-medium text-sm text-gray-900">{{ $answer->author_name }}</div>
-                                            <div class="text-xs text-gray-500">{{ $answer->created_at?->format('Y/m/d H:i') }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- コメントスレッド --}}
-                            @if($answer->comments && $answer->comments->count() > 0)
-                                <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">この回答へのコメント</h4>
-                                    <div class="space-y-3">
-                                        @foreach($answer->comments as $comment)
-                                            @php
-                                                $isCommentByQuestioner = (int)$comment->user_id === (int)$question->user_id;
-                                                $commentLabel = $isCommentByQuestioner ? '質問者' : '回答者';
-                                                $commentBgClass = $isCommentByQuestioner ? 'bg-indigo-50 border-indigo-200' : 'bg-green-50 border-green-200';
-                                            @endphp
-                                            <div class="flex gap-3 {{ $commentBgClass }} rounded-lg p-3 border">
-                                                <img src="{{ $comment->author_icon_url ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-center gap-2 mb-1">
-                                                        <span class="font-medium text-sm text-gray-900">{{ $comment->author_name }}</span>
-                                                        <span class="text-xs px-2 py-0.5 rounded-full {{ $isCommentByQuestioner ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700' }}">{{ $commentLabel }}</span>
-                                                        <span class="text-xs text-gray-500">{{ $comment->created_at?->format('Y/m/d H:i') }}</span>
-                                                    </div>
-                                                    <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $comment->content }}</p>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- コメント入力欄（質問者または回答者のみ表示） --}}
-                            @if($canComment)
-                                <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
-                                    <form action="{{ route('questions.answers.comments.store', ['question' => $question->id, 'answer' => $answer->id]) }}" method="POST" class="space-y-3">
-                                        @csrf
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                @if($isQuestioner)
-                                                    回答者へのコメント（質問者）
-                                                @else
-                                                    質問者への返信（回答者）
-                                                @endif
-                                            </label>
-                                            <textarea name="content" rows="3" maxlength="2000"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                                                placeholder="コメントを入力してください">{{ old('content') }}</textarea>
-                                            @error('content')
-                                                <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div class="flex justify-end">
-                                            <button type="submit" class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-sm shadow hover:shadow-md transition-all">
-                                                コメントを投稿
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            @endif
-                        </div>
+                    @if($bestAnswer)
+                        @include('questions.partials.answer-card', [
+                            'question' => $question,
+                            'answer' => $bestAnswer,
+                            'currentUser' => $currentUser,
+                            'currentUserId' => $currentUserId,
+                            'isQuestioner' => $isQuestioner,
+                            'featuredBest' => true,
+                        ])
+                    @endif
+                    @foreach($restAnswers as $answer)
+                        @include('questions.partials.answer-card', [
+                            'question' => $question,
+                            'answer' => $answer,
+                            'currentUser' => $currentUser,
+                            'currentUserId' => $currentUserId,
+                            'isQuestioner' => $isQuestioner,
+                            'featuredBest' => false,
+                        ])
                     @endforeach
                 </div>
             @endif

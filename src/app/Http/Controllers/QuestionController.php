@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreQuestionRequest;
+use App\Models\Answer;
 use App\Models\Question;
 use App\Services\QuestionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class QuestionController extends Controller
@@ -22,13 +24,26 @@ class QuestionController extends Controller
      */
     public function index(Request $request)
     {
-        $questions = Question::query()
-            ->with(['user', 'tags'])
-            ->orderByDesc('id')
-            ->paginate(12);
+        $tab = $request->query('tab', 'open');
+        if (! in_array($tab, ['open', 'resolved'], true)) {
+            $tab = 'open';
+        }
+
+        $query = Question::query()
+            ->with(['user.freelancer', 'user.company', 'tags', 'bestAnswer']);
+
+        if ($tab === 'resolved') {
+            $query->where('status', Question::STATUS_RESOLVED)
+                ->orderByDesc('updated_at');
+        } else {
+            $query->where('status', Question::STATUS_OPEN)
+                ->orderByDesc('id');
+        }
+
+        $questions = $query->paginate(12)->appends(['tab' => $tab]);
 
         if (view()->exists('questions.index')) {
-            return view('questions.index', compact('questions'));
+            return view('questions.index', compact('questions', 'tab'));
         }
 
         return view('welcome');
@@ -51,7 +66,7 @@ class QuestionController extends Controller
             'answers' => function ($query) {
                 $query->with(['user', 'comments.user'])->orderBy('created_at', 'asc');
             },
-            'acceptedAnswer.user'
+            'bestAnswer.user',
         ]);
 
         // 閲覧数カウント（詳細ページ表示時のみ +1）
@@ -92,8 +107,17 @@ class QuestionController extends Controller
             }
         }
 
+        $bestAnswer = null;
+        $restAnswers = $question->answers;
+        if ($question->best_answer_id) {
+            $bestAnswer = $question->answers->firstWhere('id', (int) $question->best_answer_id);
+            if ($bestAnswer) {
+                $restAnswers = $question->answers->where('id', '!=', (int) $question->best_answer_id)->values();
+            }
+        }
+
         if (view()->exists('questions.show')) {
-            $response = response()->view('questions.show', compact('question'));
+            $response = response()->view('questions.show', compact('question', 'bestAnswer', 'restAnswers'));
             if ($needsGuestCookie) {
                 $response->withCookie(cookie('guest_token', $guestToken, 60 * 24 * 365));
             }
@@ -123,14 +147,27 @@ class QuestionController extends Controller
             return redirect()->route('auth.login.form');
         }
 
-        $questions = Question::query()
-            ->with(['user', 'tags'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('id')
-            ->paginate(12);
+        $tab = $request->query('tab', 'open');
+        if (! in_array($tab, ['open', 'resolved'], true)) {
+            $tab = 'open';
+        }
+
+        $query = Question::query()
+            ->with(['user.freelancer', 'user.company', 'tags', 'bestAnswer'])
+            ->where('user_id', $user->id);
+
+        if ($tab === 'resolved') {
+            $query->where('status', Question::STATUS_RESOLVED)
+                ->orderByDesc('updated_at');
+        } else {
+            $query->where('status', Question::STATUS_OPEN)
+                ->orderByDesc('id');
+        }
+
+        $questions = $query->paginate(12)->appends(['tab' => $tab]);
 
         if (view()->exists('questions.my-questions')) {
-            return view('questions.my-questions', compact('questions'));
+            return view('questions.my-questions', compact('questions', 'tab'));
         }
 
         return view('welcome');
@@ -191,6 +228,44 @@ class QuestionController extends Controller
         $question = $service->store($user, $validated);
 
         return redirect()->route('questions.show', ['question' => $question->id]);
+    }
+
+    /**
+     * ベストアンサー決定（質問投稿者のみ・1回限り）。
+     */
+    public function setBestAnswer(Request $request, Question $question, Answer $answer)
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(403);
+        }
+
+        if ((int) $question->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        if ($question->status === Question::STATUS_RESOLVED || $question->best_answer_id !== null) {
+            return redirect()
+                ->route('questions.show', ['question' => $question->id])
+                ->with('error', 'ベストアンサーは既に決まっています。');
+        }
+
+        if ((int) $answer->question_id !== (int) $question->id) {
+            abort(404);
+        }
+
+        DB::transaction(function () use ($question, $answer): void {
+            $question->answers()->update(['is_accepted' => false]);
+            $answer->update(['is_accepted' => true]);
+            $question->update([
+                'status' => Question::STATUS_RESOLVED,
+                'best_answer_id' => $answer->id,
+            ]);
+        });
+
+        return redirect()
+            ->route('questions.show', ['question' => $question->id])
+            ->with('success', 'ベストアンサーを選びました。');
     }
 }
 

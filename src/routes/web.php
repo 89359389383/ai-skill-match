@@ -297,6 +297,11 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
         ->whereNumber('question')
         ->name('questions.answers.store');
 
+    Route::post('/questions/{question}/answers/{answer}/best', [QuestionController::class, 'setBestAnswer'])
+        ->whereNumber('question')
+        ->whereNumber('answer')
+        ->name('questions.answers.best');
+
     // 回答へのコメント投稿
     Route::post('/questions/{question}/answers/{answer}/comments', [AnswerCommentController::class, 'store'])
         ->whereNumber('question')
