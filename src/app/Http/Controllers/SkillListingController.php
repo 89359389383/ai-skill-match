@@ -33,7 +33,7 @@ class SkillListingController extends Controller
 
         // 将来: query, price_min/max, category(skill) などをここに追加
 
-        $listings = $query->paginate(12);
+        $listings = $query->paginate(30)->withQueryString();
 
         Log::info('[SkillListingController::index] スキル一覧取得完了', [
             'total' => $listings->total(),
@@ -230,7 +230,8 @@ class SkillListingController extends Controller
             ->where('freelancer_id', $freelancer->id)
             ->where('status', 1)
             ->orderByDesc('id')
-            ->paginate(12);
+            ->paginate(30)
+            ->withQueryString();
 
         if (view()->exists('skills.index')) {
             return view('skills.index', compact('listings', 'freelancer'));

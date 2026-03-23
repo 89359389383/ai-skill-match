@@ -141,7 +141,7 @@
                         <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-6 mb-6">
                             <div class="text-3xl font-bold mb-2">¥{{ number_format($listing->price) }}</div>
                             @if($listing->delivery_days)
-                                <div class="text-sm">納期: {{ $listing->delivery_days }}日</div>
+                                <div class="text-left align-bottom font-bold text-[22px]">納期: {{ $listing->delivery_days }}日</div>
                             @endif
                         </div>
 

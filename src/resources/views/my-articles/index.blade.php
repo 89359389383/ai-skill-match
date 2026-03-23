@@ -10,6 +10,68 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+.profiles-pagination-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.profiles-pagination-bar a,
+.profiles-pagination-bar span.profiles-page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.35rem;
+    border-radius: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.profiles-pagination-bar a.profiles-page-link {
+    background-color: #f3f4f6;
+    color: #111827;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profiles-pagination-bar a.profiles-page-link:hover:not(.profiles-page-active) {
+    background-color: #e5e7eb;
+}
+
+.profiles-pagination-bar a.profiles-page-active {
+    background-color: #FC4C0C;
+    color: #fff;
+    pointer-events: none;
+    cursor: default;
+}
+
+.profiles-pagination-bar span.profiles-page-ellipsis {
+    min-width: 1.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    user-select: none;
+}
+
+.profiles-pagination-bar a.profiles-page-nav {
+    background-color: #f3f4f6;
+    color: #92400e;
+}
+
+.profiles-pagination-bar a.profiles-page-nav:hover:not(.profiles-page-nav-disabled) {
+    background-color: #e5e7eb;
+}
+
+.profiles-pagination-bar span.profiles-page-nav-disabled {
+    background-color: #f3f4f6;
+    color: #d1d5db;
+    cursor: not-allowed;
+    user-select: none;
+}
 </style>
 @endpush
 
@@ -50,6 +112,11 @@
                 </a>
             </div>
         @else
+            <p class="text-sm text-gray-600 mb-4">
+                {{ number_format($articles->total()) }} 件中
+                {{ number_format($articles->firstItem()) }} - {{ number_format($articles->lastItem()) }} 件表示
+            </p>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($articles as $a)
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden flex flex-col">
@@ -90,9 +157,79 @@
                 @endforeach
             </div>
 
-            <div class="mt-8">
-                {{ $articles->links() }}
-            </div>
+            @php
+                $pLast = $articles->lastPage();
+                $pCur = $articles->currentPage();
+                $articlesPaginationElements = [];
+
+                if ($pLast <= 1) {
+                    if ($pLast === 1) {
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    }
+                } elseif ($pLast <= 15) {
+                    for ($n = 1; $n <= $pLast; $n++) {
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                } elseif ($pCur <= 7) {
+                    $upto = min(13, $pLast);
+                    for ($n = 1; $n <= $upto; $n++) {
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                    if ($upto < $pLast) {
+                        $articlesPaginationElements[] = ['type' => 'ellipsis'];
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $pLast];
+                    }
+                } elseif ($pCur >= $pLast - 6) {
+                    $articlesPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    $articlesPaginationElements[] = ['type' => 'ellipsis'];
+                    $from = max(2, $pLast - 12);
+                    for ($n = $from; $n <= $pLast; $n++) {
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                } else {
+                    $articlesPaginationElements[] = ['type' => 'page', 'n' => 1];
+                    $articlesPaginationElements[] = ['type' => 'ellipsis'];
+                    $from = max(2, $pCur - 6);
+                    $to = min($pLast - 1, $pCur + 6);
+                    for ($n = $from; $n <= $to; $n++) {
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $n];
+                    }
+                    if ($to < $pLast) {
+                        if ($to + 1 < $pLast) {
+                            $articlesPaginationElements[] = ['type' => 'ellipsis'];
+                        }
+                        $articlesPaginationElements[] = ['type' => 'page', 'n' => $pLast];
+                    }
+                }
+            @endphp
+
+            @if($pLast >= 1 && count($articlesPaginationElements) > 0)
+                <nav class="profiles-pagination-bar mt-8" aria-label="ページ送り">
+                    @if($articles->onFirstPage())
+                        <span class="profiles-page-nav profiles-page-nav-disabled" aria-disabled="true">&lt;</span>
+                    @else
+                        <a href="{{ $articles->previousPageUrl() }}" class="profiles-page-nav" rel="prev" aria-label="前のページ">&lt;</a>
+                    @endif
+
+                    @foreach($articlesPaginationElements as $el)
+                        @if($el['type'] === 'ellipsis')
+                            <span class="profiles-page-ellipsis" aria-hidden="true">...</span>
+                        @else
+                            @if($el['n'] === $pCur)
+                                <span class="profiles-page-link profiles-page-active">{{ $el['n'] }}</span>
+                            @else
+                                <a href="{{ $articles->url($el['n']) }}" class="profiles-page-link">{{ $el['n'] }}</a>
+                            @endif
+                        @endif
+                    @endforeach
+
+                    @if($articles->hasMorePages())
+                        <a href="{{ $articles->nextPageUrl() }}" class="profiles-page-nav" rel="next" aria-label="次のページ">&gt;</a>
+                    @else
+                        <span class="profiles-page-nav profiles-page-nav-disabled" aria-disabled="true">&gt;</span>
+                    @endif
+                </nav>
+            @endif
         @endif
     </div>
 </div>
