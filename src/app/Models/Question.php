@@ -12,23 +12,26 @@ class Question extends Model
 {
     use HasFactory;
 
+    public const STATUS_OPEN = 'open';
+
+    public const STATUS_RESOLVED = 'resolved';
+
     protected $fillable = [
         'user_id',
         'title',
         'content',
         'category',
-        'is_resolved',
+        'status',
         'ai_answer',
         'views_count',
         'answers_count',
-        'accepted_answer_id',
+        'best_answer_id',
     ];
 
     protected $casts = [
-        'is_resolved' => 'boolean',
         'views_count' => 'integer',
         'answers_count' => 'integer',
-        'accepted_answer_id' => 'integer',
+        'best_answer_id' => 'integer',
     ];
 
     /**
@@ -56,15 +59,38 @@ class Question extends Model
     }
 
     /**
-     * 採用された回答（ベストアンサー）。
-     *
-     * 注意:
-     * - accepted_answer_id は answers.id を指す
-     * - 制約（外部キー）は現時点では貼っていない（将来の拡張ポイント）
+     * ベストアンサー（answers.id）。
      */
-    public function acceptedAnswer(): BelongsTo
+    public function bestAnswer(): BelongsTo
     {
-        return $this->belongsTo(Answer::class, 'accepted_answer_id');
+        return $this->belongsTo(Answer::class, 'best_answer_id');
+    }
+
+    /**
+     * 質問投稿者の表示名を取得（企業は担当者名を優先）。
+     */
+    public function getAuthorNameAttribute(): string
+    {
+        $freelancer = $this->user?->freelancer;
+        $company = $this->user?->company;
+
+        return $freelancer?->display_name
+            ?? $company?->contact_name
+            ?? $company?->name
+            ?? $this->user?->email
+            ?? '匿名';
+    }
+
+    /**
+     * 質問投稿者のアイコンURLを取得。
+     */
+    public function getAuthorIconUrlAttribute(): ?string
+    {
+        $freelancer = $this->user?->freelancer;
+        $company = $this->user?->company;
+        $iconPath = $freelancer?->icon_path ?? $company?->icon_path;
+
+        return $iconPath ? asset('storage/' . $iconPath) : null;
     }
 }
 

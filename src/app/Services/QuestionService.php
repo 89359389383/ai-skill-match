@@ -25,7 +25,7 @@ class QuestionService
                 'title' => $data['title'],
                 'content' => $data['content'],
                 'category' => $data['category'] ?? 'すべて',
-                'is_resolved' => false,
+                'status' => Question::STATUS_OPEN,
             ]);
 
             $tagNames = $data['tags'] ?? [];
