@@ -16,10 +16,25 @@ class ProfileController extends Controller
      */
     public function index(Request $request)
     {
-        $freelancers = Freelancer::query()
-            ->with(['user', 'skills', 'customSkills'])
+        $query = Freelancer::query()
+            ->with(['user', 'skills', 'customSkills']);
+
+        // スキル名で検索
+        if ($request->filled('skill')) {
+            $skillName = $request->input('skill');
+            $query->where(function ($q) use ($skillName) {
+                $q->whereHas('skills', function ($sq) use ($skillName) {
+                    $sq->where('name', 'like', '%' . $skillName . '%');
+                })->orWhereHas('customSkills', function ($sq) use ($skillName) {
+                    $sq->where('name', 'like', '%' . $skillName . '%');
+                });
+            });
+        }
+
+        $freelancers = $query
             ->orderByDesc('id')
-            ->paginate(12);
+            ->paginate(12)
+            ->withQueryString();
 
         if (view()->exists('profiles.index')) {
             return view('profiles.index', compact('freelancers'));

@@ -163,6 +163,22 @@
                                 && (int) auth('freelancer')->user()->freelancer->id === (int) $listing->freelancer_id;
                         @endphp
 
+                        @php
+                            $isGuest = !auth()->check() && !auth('freelancer')->check() && !auth('company')->check();
+                            $currentUserId = auth('company')->check()
+                                ? auth('company')->user()->id
+                                : (auth('freelancer')->check() ? auth('freelancer')->user()->id : null);
+                            $isOwnProfile = $currentUserId && (int) $currentUserId === (int) $sellerUserId;
+                            $canStartDirectMessage = !$isGuest && !$isOwnProfile;
+                            $loginRedirectUrl = route('auth.login.form', [
+                                'redirect' => route('skills.show', [
+                                    'skill_listing' => $listing->id,
+                                    'open_message_modal' => 1,
+                                ]),
+                            ]);
+                            $defaultMessageContent = '(' . ($listing->title ?? 'スキル') . ')について相談させてください。';
+                        @endphp
+
                         @if (!$isOwnListing)
                             <form action="{{ route('skills.purchase', ['skill_listing' => $listing->id]) }}" method="POST" class="mb-4">
                                 @csrf
@@ -171,13 +187,23 @@
                                 </button>
                             </form>
 
-                            <form action="{{ route('skills.inquiry', ['skill_listing' => $listing->id]) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                            @if($isGuest)
+                                <a href="{{ $loginRedirectUrl }}" class="w-full px-6 py-3 bg-purple-50 border-2 border-purple-200 text-purple-700 rounded-xl font-semibold hover:bg-purple-100 transition-all inline-flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                    </svg>
+                                    ログインして問い合わせる
+                                </a>
+                            @elseif($canStartDirectMessage)
+                                <button
+                                    type="button"
+                                    onclick="openDirectMessageModal()"
+                                    class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all inline-flex items-center justify-center gap-2"
+                                >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                                     問い合わせる
                                 </button>
-                            </form>
+                            @endif
                         @else
                             <p class="text-center text-gray-500 font-medium py-4">あなたの出品です</p>
                             <div class="flex flex-col gap-3">
@@ -208,6 +234,50 @@
             </div>
         </div>
     </div>
+
+    @if($canStartDirectMessage)
+        <div id="directMessageModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
+            <div class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">メッセージを送る</h3>
+                        <p class="text-sm text-gray-500">{{ $listing->freelancer?->display_name ?? '相手' }}さんへ最初のメッセージを送信します。</p>
+                    </div>
+                    <button type="button" onclick="closeDirectMessageModal()" class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('direct-messages.start', ['user' => $sellerUserId]) }}" class="px-6 py-5 space-y-4">
+                    @csrf
+                    <div>
+                        <label for="directMessageContent" class="mb-2 block text-sm font-semibold text-gray-700">メッセージ本文</label>
+                        <textarea
+                            id="directMessageContent"
+                            name="content"
+                            rows="6"
+                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 @error('content') border-red-500 ring-2 ring-red-100 @enderror"
+                            placeholder="最初のメッセージを入力してください"
+                        >{{ old('content') ?: $defaultMessageContent }}</textarea>
+                        @error('content')
+                            <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" onclick="closeDirectMessageModal()" class="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
+                            送信してチャットを開始
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     <div id="skillDeleteModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4 bg-black/50">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -250,6 +320,39 @@
         document.getElementById('skillDeleteModal')?.addEventListener('click', function(e) {
             if (e.target === this) closeSkillDeleteModal();
         });
+
+        (function () {
+            const modal = document.getElementById('directMessageModal');
+            if (!modal) return;
+
+            const shouldOpen = @json((bool) request()->boolean('open_message_modal') || $errors->has('content') || old('content'));
+
+            window.openDirectMessageModal = function () {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            };
+
+            window.closeDirectMessageModal = function () {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    window.closeDirectMessageModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    window.closeDirectMessageModal();
+                }
+            });
+
+            if (shouldOpen) {
+                window.openDirectMessageModal();
+            }
+        })();
     </script>
 </div>
 @endsection
