@@ -10,6 +10,14 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+.profile-skill-search-form {
+    max-width: 600px;
+    min-height: 60px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
 </style>
 @endpush
 
@@ -21,6 +29,27 @@
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">AIプロフェッショナル</h1>
                 <p class="text-gray-600">経験豊富なAIスペシャリストと繋がろう</p>
             </div>
+        </div>
+
+        <div class="mb-8">
+            <form action="{{ route('profiles.index') }}" method="GET" class="profile-skill-search-form flex items-center gap-2 bg-gray-200 rounded-lg px-4 py-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-gray-500 flex-shrink-0">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input
+                    type="text"
+                    name="skill"
+                    value="{{ request('skill') }}"
+                    placeholder="n8nなど スキル名で検索"
+                    class="flex-1 bg-transparent border-none outline-none text-gray-700 placeholder-gray-500"
+                >
+                @if(request('skill'))
+                    <a href="{{ route('profiles.index') }}" class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
+                        クリア
+                    </a>
+                @endif
+            </form>
         </div>
 
         @if($freelancers->isEmpty())
@@ -67,6 +96,21 @@
                         <div class="pt-16 px-6 pb-6 text-center">
                             <h3 class="text-xl font-bold text-gray-900 mb-1">{{ $f->display_name ?? '名前未設定' }}</h3>
                             <p class="text-sm text-gray-600 mb-2">職種: {{ $f->job_title ?? '未設定' }}</p>
+                            @php
+                                $allSkills = $f->skills->pluck('name')->merge($f->customSkills->pluck('name'))->values();
+                            @endphp
+                            <div class="mb-3">
+                                <div class="flex flex-wrap gap-2 justify-center">
+                                    @forelse($allSkills->take(3) as $skillName)
+                                        <span class="px-3 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">{{ $skillName }}</span>
+                                    @empty
+                                        <span class="text-xs text-gray-500">スキル未設定</span>
+                                    @endforelse
+                                    @if($allSkills->count() > 3)
+                                        <span class="px-3 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">+{{ $allSkills->count() - 3 }}</span>
+                                    @endif
+                                </div>
+                            </div>
                                 <p class="text-sm mb-3">
                                     <span class="font-bold text-gray-700">希望単価: </span>
                                     <span class="font-bold text-orange-600">
@@ -78,14 +122,6 @@
                                     </span>
                                 </p>
                             <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
-                            <div class="flex flex-wrap gap-2 justify-center">
-                                @foreach($f->skills->take(3) as $skill)
-                                    <span class="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full">{{ $skill->name }}</span>
-                                @endforeach
-                                @if($f->skills->count() > 3)
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">+{{ $f->skills->count() - 3 }}</span>
-                                @endif
-                            </div>
                         </div>
                     </a>
                 @endforeach
