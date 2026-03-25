@@ -30,6 +30,20 @@ class AuthController extends Controller
             }
         }
 
+        // debug: 企業ログイン時の「戻り先（intended）」追跡用
+        try {
+            Log::info('[AuthController::showLoginForm] ログイン画面表示（意図URL追跡）', [
+                'full_url' => $request->fullUrl(),
+                'path' => $request->path(),
+                'query_keys' => array_keys($request->query->all()),
+                'redirect_param' => $request->query('redirect'),
+                'intended_in_session' => $request->session()->get('url.intended'),
+                'session_id' => $request->hasSession() ? $request->session()->getId() : null,
+            ]);
+        } catch (\Throwable $e) {
+            // 計測失敗は本番挙動へ影響させない
+        }
+
         // ログイン画面のBladeを返すだけ（認証処理はしない）
         return view('auth.login');
     }
@@ -82,24 +96,101 @@ class AuthController extends Controller
     {
         $credentials = $request->validated();
 
-        if (!Auth::guard('company')->attempt($credentials)) {
-            throw ValidationException::withMessages(['email' => 'メールアドレスまたはパスワードが正しくありません']);
+        // debug: 企業ログイン開始（バリデーションエラー以外の“止まり”を特定）
+        Log::info('[AuthController::loginCompany] ログイン開始', [
+            'full_url' => $request->fullUrl(),
+            'path' => $request->path(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'query_keys' => array_keys($request->query->all()),
+            'slot' => $request->query('slot'),
+            'email' => $credentials['email'] ?? null,
+            'password_present' => isset($credentials['password']) && is_string($credentials['password']),
+            'password_length' => isset($credentials['password']) ? strlen((string) $credentials['password']) : null,
+            'session_exists' => $request->hasSession(),
+            'session_id_before_regenerate' => $request->hasSession() ? $request->session()->getId() : null,
+            'session_url_intended' => $request->hasSession() ? $request->session()->get('url.intended') : null,
+            'csrf_token_present' => $request->has('_token'),
+            'csrf_token_length_session' => $request->hasSession() ? strlen((string) $request->session()->token()) : null,
+        ]);
+
+        try {
+            if (!Auth::guard('company')->attempt($credentials)) {
+                Log::warning('[AuthController::loginCompany] 認証失敗（company guard attempt false）', [
+                    'email' => $credentials['email'] ?? null,
+                    'session_id' => $request->hasSession() ? $request->session()->getId() : null,
+                ]);
+                throw ValidationException::withMessages(['email' => 'メールアドレスまたはパスワードが正しくありません']);
+            }
+
+            Log::info('[AuthController::loginCompany] 認証成功（company guard）', [
+                'session_id_before_regenerate' => $request->hasSession() ? $request->session()->getId() : null,
+                'url_intended_before_regenerate' => $request->hasSession() ? $request->session()->get('url.intended') : null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[AuthController::loginCompany] 認証処理例外', [
+                'email' => $credentials['email'] ?? null,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+            ]);
+            throw $e;
         }
 
         $request->session()->regenerate();
+        Log::info('[AuthController::loginCompany] セッション再生成完了', [
+            'session_id_after_regenerate' => $request->session()->getId(),
+            'url_intended_after_regenerate' => $request->session()->get('url.intended'),
+        ]);
 
         /** @var User $user */
         $user = Auth::guard('company')->user();
+        Log::info('[AuthController::loginCompany] guardユーザー取得結果', [
+            'user_id' => $user?->id,
+            'user_role' => $user?->role,
+            'auth_check_company' => Auth::guard('company')->check(),
+            'auth_check_default' => Auth::check(),
+            'default_user_id' => Auth::user()?->id,
+            'default_user_role' => Auth::user()?->role,
+        ]);
 
         if (!$user || $user->role !== 'company') {
+            Log::warning('[AuthController::loginCompany] ロール不一致でログアウト', [
+                'user_id' => $user?->id,
+                'user_role' => $user?->role,
+            ]);
+
             Auth::guard('company')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+
             return redirect('/login')->withErrors(['email' => '企業アカウントではありません']);
         }
 
-        // 元々アクセスしようとしていたURL（例: 質問投稿・記事投稿）があればそこへ、なければ案件一覧へ
-        return redirect()->intended(route('company.jobs.index'));
+        // NOTE:
+        // companyログインのときは、以前のアクセス先（url.intended）が freelancer 専用ページ
+        // （例: /skills/new）を指しているケースがあり、認証ミドルウェアで止まる。
+        // そのため、意図URLを無視して必ず企業側の案件一覧へ固定する。
+        if ($request->hasSession()) {
+            try {
+                $request->session()->forget('url.intended');
+                Log::info('[AuthController::loginCompany] url.intended を無視してクリア', [
+                    'cleared' => true,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('[AuthController::loginCompany] url.intended クリア失敗', [
+                    'cleared' => false,
+                    'exception_class' => get_class($e),
+                ]);
+            }
+        }
+
+        // 企業側（company）のデフォルト遷移
+        Log::info('[AuthController::loginCompany] リダイレクト直前', [
+            'url_intended' => $request->hasSession() ? $request->session()->get('url.intended') : null,
+            'fallback_route' => route('company.jobs.index'),
+        ]);
+
+        return redirect()->route('company.jobs.index');
     }
 
     /**

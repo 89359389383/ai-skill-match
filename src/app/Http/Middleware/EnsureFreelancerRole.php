@@ -20,7 +20,8 @@ class EnsureFreelancerRole
 
         // 未ログインなら、ログイン画面へ誘導する（guest()で元のURLを保存し、ログイン後に戻れるようにする）
         if (!auth('freelancer')->check()) {
-            return redirect()->guest(route('auth.login.form'));
+            // ログイン後に /skills/new 等へ戻せるよう、目的URLを redirect として渡す
+            return redirect()->guest(route('auth.login.form', ['redirect' => $request->fullUrl()]));
         }
 
         // roleがfreelancer以外なら、権限エラーとして拒否する

@@ -80,15 +80,25 @@ class DirectMessageController extends Controller
         $profileClass = get_class($profile);
         $profileType = $profileClass === 'App\Models\Company' ? 'company' : 'freelancer';
 
+        // 重要:
+        // companyが閲覧しているのに freelancer_id を company.id で突合してしまうと、
+        // 別ユーザー側の会話まで混ざる（ID空間が一致/重複し得るため）。
+        // そのため、viewerが関与する参加軸（company_id or freelancer_id）を role ごとに固定する。
         $baseQuery = DirectConversation::query()
-            ->where(function ($q) use ($profile, $profileType) {
-                $q->where('company_id', $profile->id)
-                  ->orWhere('freelancer_id', $profile->id)
-                  ->orWhere(function ($sq) use ($profile, $profileType) {
-                      // initiatorとして参加している会話も検索
-                      $sq->where('initiator_id', $profile->id)
-                         ->where('initiator_type', $profileType);
-                  });
+            ->where(function ($q) use ($profile) {
+                if ($profile instanceof \App\Models\Company) {
+                    $q->where('company_id', $profile->id)
+                      ->orWhere(function ($sq) use ($profile) {
+                          $sq->where('initiator_id', $profile->id)
+                             ->where('initiator_type', 'company');
+                      });
+                } else {
+                    $q->where('freelancer_id', $profile->id)
+                      ->orWhere(function ($sq) use ($profile) {
+                          $sq->where('initiator_id', $profile->id)
+                             ->where('initiator_type', 'freelancer');
+                      });
+                }
             })
             ->with([
                 'company',
@@ -118,28 +128,16 @@ class DirectMessageController extends Controller
                     [$profile->id]
                 );
         } else {
-            // 企業側は従来ロジックのまま
+            // 企業側: viewer companyが関与している会話のみを未読判定する
+            // （freelancer_id = company.id を使う分岐は削除して漏れを防ぐ）
             $unreadCountQuery = (clone $baseQuery)
-                ->where(function ($q) use ($profile, $profileType) {
-                    $q->where(function ($sq) use ($profile, $profileType) {
-                        $sq->where('company_id', $profile->id)
-                           ->where('is_unread_for_company', true);
-                    })->orWhere(function ($sq) use ($profile, $profileType) {
-                        $sq->where('freelancer_id', $profile->id)
-                           ->where('is_unread_for_freelancer', true);
-                    })->orWhere(function ($sq) use ($profile, $profileType) {
-                        $sq->where('initiator_id', $profile->id)
-                           ->where('initiator_type', $profileType)
-                           ->where(function ($ssq) use ($profileType) {
-                               $ssq->where(function ($s) use ($profileType) {
-                                   $s->where('initiator_type', 'company')
-                                     ->where('is_unread_for_company', true);
-                               })->orWhere(function ($s) use ($profileType) {
-                                   $s->where('initiator_type', 'freelancer')
-                                     ->where('is_unread_for_freelancer', true);
-                               });
-                           });
-                    });
+                ->where('is_unread_for_company', true)
+                ->where(function ($q) use ($profile) {
+                    $q->where('company_id', $profile->id)
+                      ->orWhere(function ($sq) use ($profile) {
+                          $sq->where('initiator_id', $profile->id)
+                             ->where('initiator_type', 'company');
+                      });
                 });
         }
 
@@ -164,27 +162,15 @@ class DirectMessageController extends Controller
                         [$profile->id]
                     );
             } else {
-                $query->where(function ($q) use ($profile, $profileType) {
-                    $q->where(function ($sq) use ($profile, $profileType) {
-                        $sq->where('company_id', $profile->id)
-                           ->where('is_unread_for_company', true);
-                    })->orWhere(function ($sq) use ($profile, $profileType) {
-                        $sq->where('freelancer_id', $profile->id)
-                           ->where('is_unread_for_freelancer', true);
-                    })->orWhere(function ($sq) use ($profile, $profileType) {
-                        $sq->where('initiator_id', $profile->id)
-                           ->where('initiator_type', $profileType)
-                           ->where(function ($ssq) use ($profileType) {
-                               $ssq->where(function ($s) use ($profileType) {
-                                   $s->where('initiator_type', 'company')
-                                     ->where('is_unread_for_company', true);
-                               })->orWhere(function ($s) use ($profileType) {
-                                   $s->where('initiator_type', 'freelancer')
-                                     ->where('is_unread_for_freelancer', true);
-                               });
-                           });
+                // 企業側の未読フィルタも同様に viewer company が関与しているものだけに限定
+                $query->where('is_unread_for_company', true)
+                    ->where(function ($q) use ($profile) {
+                        $q->where('company_id', $profile->id)
+                          ->orWhere(function ($sq) use ($profile) {
+                              $sq->where('initiator_id', $profile->id)
+                                 ->where('initiator_type', 'company');
+                          });
                     });
-                });
             }
         }
 
