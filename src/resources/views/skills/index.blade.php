@@ -97,10 +97,12 @@
                         自分のスキル一覧
                     </a>
                 @endif
-                <a href="{{ route('skills.create', request()->filled('slot') ? ['slot' => request('slot')] : []) }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                    スキルを出品
-                </a>
+                @if(auth('freelancer')->check())
+                    <a href="{{ route('skills.create', request()->filled('slot') ? ['slot' => request('slot')] : []) }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        スキルを出品
+                    </a>
+                @endif
             </div>
         </div>
 
