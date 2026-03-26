@@ -526,7 +526,7 @@
 </head>
 <body>
     @include('partials.public-header')
-    <header class="header header-role" role="banner">
+    {{-- <header class="header header-role" role="banner">
         <div class="header-content">
             <div class="header-left">
                 <div class="logo" aria-hidden="true">
@@ -611,7 +611,7 @@
                 </a>
             </div>
         </div>
-    </header>
+    </header> --}}
 
     <main class="main-content max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
         @include('partials.error-panel')

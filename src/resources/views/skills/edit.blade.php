@@ -35,13 +35,14 @@
                         <button onclick="scrollToSection('image')" type="button" class="w-full text-left px-6 py-3 text-sm transition-colors text-gray-700 hover:bg-gray-50">画像</button>
                     </nav>
                     <div class="p-6 space-y-3">
-                        <a href="javascript:void(0)" onclick="handlePreview()" class="block w-full py-3 border-2 border-orange-500 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition-all flex items-center justify-center gap-2">
+                        {{-- プレビュー機能は準備中のため非表示 --}}
+                        {{-- <a href="javascript:void(0)" onclick="handlePreview()" class="block w-full py-3 border-2 border-orange-500 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition-all flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                             </svg>
                             プレビュー
-                        </a>
+                        </a> --}}
                         <a href="{{ route('profiles.skills.index', ['user' => $listing->freelancer->user_id]) }}"
                            class="block w-full py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all text-center">
                             キャンセル
@@ -245,7 +246,6 @@
                     <!-- Submit Buttons (Mobile) -->
                     <div class="lg:hidden bg-white rounded-lg shadow-sm p-6">
                         <div class="space-y-3">
-                            <button onclick="handlePreview()" type="button" class="w-full py-3 border-2 border-orange-500 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition-all flex items-center justify-center gap-2">プレビュー</button>
                             <a href="{{ route('profiles.skills.index', ['user' => $listing->freelancer->user_id]) }}"
                                class="w-full py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center justify-center">
                                 キャンセル

@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>応募する - AITECH</title>
-    @auth('freelancer')
-        @include('partials.freelancer-header-style')
-    @endauth
     <style>
         :root {
             --header-height: 72px;       /* 80px * 1.3 */
@@ -471,7 +468,7 @@
 <body>
     @include('partials.public-header')
     <!-- Header -->
-    <header class="header header-role" role="banner">
+    {{-- <header class="header header-role" role="banner">
         <div class="header-content">
             <div class="header-left">
                 <div class="logo" aria-hidden="true">
@@ -549,7 +546,7 @@
                 </a>
             </div>
         </div>
-    </header>
+    </header> --}}
 
     <main class="main-content max-w-5xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10">
         <div class="content-area">
