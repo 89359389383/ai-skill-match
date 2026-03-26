@@ -140,12 +140,25 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">アイキャッチ画像（任意）</label>
-                    <div class="flex gap-2 items-center">
-                        <input type="file" name="eyecatch_image" id="eyecatchImage" accept="image/*"
-                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('eyecatch_image') border-red-500 @enderror">
-                        <button type="button" id="removeEyecatchBtn" class="px-3 py-2 border rounded-lg text-sm text-gray-600">削除</button>
+                    <div id="imagePreview" style="display: none;" class="relative mb-4">
+                        <img id="previewImg" src="" alt="Preview" class="w-full aspect-video object-cover rounded-lg">
+                        <button type="button" onclick="removeImage()" class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
-                    <div id="imagePreviewContainer" class="mt-3"></div>
+
+                    <label id="uploadLabel" class="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-all bg-gray-50">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">クリックして画像をアップロード</span></p>
+                            <p class="text-xs text-gray-500">PNG, JPG, GIF</p>
+                        </div>
+                        <input type="file" id="imageInput" name="eyecatch_image" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+                    </label>
                     @error('eyecatch_image')
                         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                     @enderror
@@ -206,6 +219,7 @@
 @push('scripts')
 <script>
     var existingEyecatchUrl = @json($article->eyecatch_image_url);
+    var currentEyecatchUrl = existingEyecatchUrl;
 
     document.addEventListener('DOMContentLoaded', function() {
         const tagItemsContainer = document.getElementById('article-tag-items-container');
@@ -258,40 +272,22 @@
             syncTagRowButtons();
         }
 
-        var eyecatchInput = document.getElementById('eyecatchImage');
-        var imagePreviewContainer = document.getElementById('imagePreviewContainer');
-        var removeEyecatchBtn = document.getElementById('removeEyecatchBtn');
+        // 既存のアイキャッチ画像を、skills/create と同じDOMに反映
+        var imageInput = document.getElementById('imageInput');
+        var imagePreview = document.getElementById('imagePreview');
+        var previewImg = document.getElementById('previewImg');
+        var uploadLabel = document.getElementById('uploadLabel');
 
         function setPreviewFromUrl(url) {
-            if (!imagePreviewContainer || !url) return;
-            imagePreviewContainer.innerHTML = '<div class="mt-3 rounded-xl overflow-hidden"><img src="' + escapeAttr(url) + '" alt="Preview" class="w-full h-48 object-cover"></div>';
+            if (!imagePreview || !previewImg || !uploadLabel || !url) return;
+            previewImg.src = url;
+            imagePreview.style.display = 'block';
+            uploadLabel.style.display = 'none';
+            currentEyecatchUrl = url;
         }
 
-        if (existingEyecatchUrl && imagePreviewContainer && (!eyecatchInput || !eyecatchInput.files || !eyecatchInput.files.length)) {
+        if (existingEyecatchUrl && imagePreview && previewImg && uploadLabel && (!imageInput || !imageInput.files || !imageInput.files.length)) {
             setPreviewFromUrl(existingEyecatchUrl);
-        }
-
-        if (eyecatchInput && imagePreviewContainer) {
-            eyecatchInput.addEventListener('change', function (e) {
-                var file = e.target.files && e.target.files[0];
-                imagePreviewContainer.innerHTML = '';
-                if (!file) return;
-                if (!file.type.startsWith('image/')) {
-                    imagePreviewContainer.innerHTML = '<p class="text-red-500 text-sm mt-3">画像ファイルを選択してください</p>';
-                    return;
-                }
-                var reader = new FileReader();
-                reader.onload = function (ev) {
-                    imagePreviewContainer.innerHTML = '<div class="mt-3 rounded-xl overflow-hidden"><img src="' + ev.target.result + '" alt="Preview" class="w-full h-48 object-cover"></div>';
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-        if (removeEyecatchBtn) {
-            removeEyecatchBtn.addEventListener('click', function () {
-                if (eyecatchInput) eyecatchInput.value = '';
-                if (imagePreviewContainer) imagePreviewContainer.innerHTML = '';
-            });
         }
     });
 
@@ -329,22 +325,59 @@
     }
 
     function handlePreview() {
-        var fileInput = document.getElementById('eyecatchImage');
+        var fileInput = document.getElementById('imageInput');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             var reader = new FileReader();
             reader.onload = function(ev) {
+                currentEyecatchUrl = ev.target.result;
                 document.getElementById('previewContent').innerHTML = buildPreviewHtml(ev.target.result);
                 document.getElementById('previewModal').classList.remove('hidden');
             };
             reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            document.getElementById('previewContent').innerHTML = buildPreviewHtml(existingEyecatchUrl || '');
-            document.getElementById('previewModal').classList.remove('hidden');
+            return;
         }
+
+        document.getElementById('previewContent').innerHTML = buildPreviewHtml(currentEyecatchUrl || '');
+        document.getElementById('previewModal').classList.remove('hidden');
     }
 
     function closePreview() {
         document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    // skills/create と同等のプレビュー制御（編集画面でも削除・再選択できるように）
+    function handleImageUpload(event) {
+        var file = event && event.target && event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+        if (!file.type || !file.type.startsWith('image/')) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            currentEyecatchUrl = e.target.result;
+
+            var previewImg = document.getElementById('previewImg');
+            var imagePreview = document.getElementById('imagePreview');
+            var uploadLabel = document.getElementById('uploadLabel');
+
+            if (previewImg) previewImg.src = currentEyecatchUrl;
+            if (imagePreview) imagePreview.style.display = 'block';
+            if (uploadLabel) uploadLabel.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        currentEyecatchUrl = '';
+
+        var previewImg = document.getElementById('previewImg');
+        var imagePreview = document.getElementById('imagePreview');
+        var uploadLabel = document.getElementById('uploadLabel');
+        var input = document.getElementById('imageInput');
+
+        if (previewImg) previewImg.src = '';
+        if (imagePreview) imagePreview.style.display = 'none';
+        if (uploadLabel) uploadLabel.style.display = 'flex';
+        if (input) input.value = '';
     }
 </script>
 @endpush

@@ -8,7 +8,18 @@
         </ul>
     </div>
     <style>
-        .error-panel-box { margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: 0.5rem; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; font-size: 0.875rem; }
+        .error-panel-box {
+            margin-bottom: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 0.875rem;
+            max-width: 44rem; /* 横幅を抑える */
+            margin-left: auto;
+            margin-right: auto;
+        }
         .error-panel-box .error-panel-title { font-weight: 800; }
         .error-panel-box .error-panel-list { margin-top: 0.5rem; list-style: disc; padding-left: 1.25rem; font-weight: 700; }
         .error-panel-box .error-panel-list li { margin-bottom: 0.25rem; }

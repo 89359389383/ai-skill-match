@@ -300,6 +300,7 @@ class SkillListingController extends Controller
         $skill_listing->fill([
             'title' => $validated['title'] ?? $skill_listing->title,
             'description' => $validated['description'] ?? $skill_listing->description,
+            'purchase_instructions' => $validated['purchase_instructions'] ?? $skill_listing->purchase_instructions,
             'price' => (int) ($validated['price'] ?? $skill_listing->price),
             'pricing_type' => $validated['pricing_type'] ?? $skill_listing->pricing_type,
             'thumbnail_url' => array_key_exists('thumbnail_url', $validated)

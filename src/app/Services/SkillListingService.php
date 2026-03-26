@@ -38,6 +38,7 @@ class SkillListingService
                 'freelancer_id' => $freelancer->id,
                 'title' => $data['title'],
                 'description' => $data['description'] ?? '',
+                'purchase_instructions' => $data['purchase_instructions'] ?? '',
                 'price' => (int) ($data['price'] ?? 0),
                 'pricing_type' => $data['pricing_type'] ?? 'fixed',
                 'thumbnail_url' => $data['thumbnail_url'] ?? null,
