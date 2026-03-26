@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>パスワード再設定 - AITECH</title>
+    <link rel="icon" href="{{ asset('aifavicon.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
