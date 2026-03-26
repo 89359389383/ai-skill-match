@@ -545,7 +545,7 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required', // パスワードリセット用のトークンが必須です。
             'email' => 'required|email', // メールアドレスが必須で、正しい形式である必要があります。
-            'password' => 'required|min:8|confirmed', // パスワードは8文字以上で、確認用と一致する必要があります。
+            'password' => 'required|min:8|max:128|confirmed', // パスワードは8〜128文字で、確認用と一致する必要があります。
         ]);
         Log::info('パスワードリセット処理: 入力内容の検証が完了');
 

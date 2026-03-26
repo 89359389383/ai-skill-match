@@ -20,7 +20,7 @@ class RegisterRequest extends FormRequest
             // 登録用メールアドレス（必須・メール形式・users.email で重複不可）
             'email' => ['required', 'email', 'unique:users,email'],
             // 登録用パスワード（必須・8文字以上・確認用パスワードと一致）
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'max:128', 'confirmed'],
             // 確認用パスワード（必須）
             'password_confirmation' => ['required'],
         ];
@@ -36,6 +36,7 @@ class RegisterRequest extends FormRequest
             'password.required' => 'パスワードを入力してください。',
             'password.string' => 'パスワードは文字列で入力してください。',
             'password.min' => 'パスワードは8文字以上で入力してください。',
+            'password.max' => 'パスワードは128文字以下で入力してください。',
             'password.confirmed' => 'パスワード（確認）が一致しません。',
 
             'password_confirmation.required' => 'パスワード（確認）を入力してください。',

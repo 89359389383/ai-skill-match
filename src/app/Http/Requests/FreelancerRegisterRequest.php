@@ -28,8 +28,8 @@ class FreelancerRegisterRequest extends FormRequest
 
             // 働き方・単価（任意）
             'work_style_text' => ['nullable', 'string', 'max:5000'],
-            'min_rate' => ['nullable', 'integer', 'min:0'],
-            'max_rate' => ['nullable', 'integer', 'min:0', 'gte:min_rate'],
+            'min_rate' => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            'max_rate' => ['nullable', 'integer', 'min:0', 'max:100000000', 'gte:min_rate'],
 
             // その他（任意）
             'experience_companies' => ['nullable', 'string', 'max:5000'],
@@ -139,9 +139,11 @@ class FreelancerRegisterRequest extends FormRequest
 
             'min_rate.integer' => '希望単価（下限）は整数で入力してください。',
             'min_rate.min' => '希望単価（下限）は0以上で入力してください。',
+            'min_rate.max' => '希望単価（下限）は100,000,000以下で入力してください。',
 
             'max_rate.integer' => '希望単価（上限）は整数で入力してください。',
             'max_rate.min' => '希望単価（上限）は0以上で入力してください。',
+            'max_rate.max' => '希望単価（上限）は100,000,000以下で入力してください。',
             'max_rate.gte' => '希望単価（上限）は希望単価（下限）以上で入力してください。',
 
             'experience_companies.string' => '得意業務は文字列で入力してください。',

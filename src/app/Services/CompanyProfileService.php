@@ -30,6 +30,7 @@ class CompanyProfileService
                 'user_id' => $user->id,
                 'payload_field_keys' => $payloadKeys,
                 'has_uploaded_icon' => isset($payload['icon']) && $payload['icon'] instanceof UploadedFile,
+                'has_icon_path' => !empty($payload['icon_path']),
             ]);
 
             // 既に企業プロフィールがある場合は二重登録を防ぐ（Controllerでも防ぐが二重防御）
@@ -44,7 +45,13 @@ class CompanyProfileService
             }
 
             // アイコン（icon）を保存して icon_path を保持する
-            $iconPath = null;
+            $iconPath = $payload['icon_path'] ?? null;
+            if (!empty($iconPath)) {
+                Log::info('[企業登録] CompanyProfileService::register 一時保存済みアイコンを利用', [
+                    'user_id' => $user->id,
+                    'stored_icon_path' => $iconPath,
+                ]);
+            }
             if (isset($payload['icon']) && $payload['icon'] instanceof UploadedFile) {
                 $iconPath = $payload['icon']->store('company_icons', 'public');
                 Log::info('[企業登録] CompanyProfileService::register アイコン保存', [

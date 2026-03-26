@@ -331,6 +331,7 @@
                             name="password"
                             id="password"
                             class="form-input @error('password') is-invalid @enderror"
+                            maxlength="128"
                             placeholder="パスワード（8文字以上）"
                             autocomplete="new-password">
                         <button
@@ -357,6 +358,7 @@
                             name="password_confirmation"
                             id="password_confirmation"
                             class="form-input @error('password_confirmation') is-invalid @enderror"
+                            maxlength="128"
                             placeholder="パスワード確認"
                             autocomplete="new-password">
                         <button

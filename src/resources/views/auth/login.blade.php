@@ -337,6 +337,7 @@
                             name="password"
                             id="password"
                             class="form-input @error('password') is-invalid @enderror"
+                            maxlength="128"
                             placeholder="パスワード"
                             autocomplete="current-password">
                         <button

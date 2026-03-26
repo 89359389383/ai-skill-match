@@ -341,14 +341,14 @@
                     <div class="grid-2">
                         <div class="row">
                             <label class="label" for="display_name">表示名 <span class="required">必須</span></label>
-                            <input class="input @error('display_name') is-invalid @enderror" id="display_name" name="display_name" type="text" value="{{ old('display_name') }}" placeholder="例: 山田 太郎">
+                            <input class="input @error('display_name') is-invalid @enderror" id="display_name" name="display_name" type="text" maxlength="255" value="{{ old('display_name') }}" placeholder="例: 山田 太郎">
                             @error('display_name')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="row">
                             <label class="label" for="job_title">職種（自由入力） <span class="required">必須</span></label>
-                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" value="{{ old('job_title') }}" placeholder="例: Laravelエンジニア">
+                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" maxlength="255" value="{{ old('job_title') }}" placeholder="例: Laravelエンジニア">
                             @error('job_title')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
@@ -357,7 +357,7 @@
 
                     <div class="row">
                         <label class="label" for="bio">自己紹介文 <span class="required">必須</span></label>
-                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" placeholder="例) Laravelを中心にWeb開発を5年経験。EC/在庫管理などの業務ドメインに強みがあります。">{{ old('bio') }}</textarea>
+                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" maxlength="5000" placeholder="例) Laravelを中心にWeb開発を5年経験。EC/在庫管理などの業務ドメインに強みがあります。">{{ old('bio') }}</textarea>
                         @error('bio')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -579,8 +579,8 @@
                                 <label class="label" for="min_rate">希望単価（下限〜上限）</label>
                                 <div class="help">未入力の場合は「未設定」として登録されます（あとから変更できます）。</div>
                                 <div class="grid-2" style="align-items: stretch;">
-                                    <input class="input @error('min_rate') is-invalid @enderror" id="min_rate" name="min_rate" type="number" value="{{ old('min_rate') }}" placeholder="下限（万円）" min="0" step="1">
-                                    <input class="input @error('max_rate') is-invalid @enderror" name="max_rate" type="number" value="{{ old('max_rate') }}" placeholder="上限（万円）" min="0" step="1">
+                                    <input class="input @error('min_rate') is-invalid @enderror" id="min_rate" name="min_rate" type="number" value="{{ old('min_rate') }}" placeholder="下限（万円）" min="0" max="100000000" step="1">
+                                    <input class="input @error('max_rate') is-invalid @enderror" name="max_rate" type="number" value="{{ old('max_rate') }}" placeholder="上限（万円）" min="0" max="100000000" step="1">
                                 </div>
                                 @error('min_rate')
                                 <span class="error-message">{{ $message }}</span>
@@ -596,14 +596,14 @@
                                     <div style="font-weight: 700; color: #586069; font-size: 0.85rem; margin-bottom:0.5rem;">週間稼働時間</div>
                                     <div class="grid-2" style="align-items: stretch;">
                                         <div class="row" style="gap:0.4rem;">
-                                            <input class="input @error('min_hours_per_week') is-invalid @enderror" name="min_hours_per_week" type="number" value="{{ old('min_hours_per_week') }}" placeholder="例: 20">
+                                            <input class="input @error('min_hours_per_week') is-invalid @enderror" name="min_hours_per_week" type="number" value="{{ old('min_hours_per_week') }}" placeholder="例: 20" min="0" max="168" step="1">
                                             <div class="help" style="margin:0; font-size:0.8rem;">週間の最小稼働時間（時間）</div>
                                             @error('min_hours_per_week')
                                             <span class="error-message">{{ $message }}</span>
                                             @enderror
                                         </div>
                                         <div class="row" style="gap:0.4rem;">
-                                            <input class="input @error('max_hours_per_week') is-invalid @enderror" name="max_hours_per_week" type="number" value="{{ old('max_hours_per_week') }}" placeholder="例: 40">
+                                            <input class="input @error('max_hours_per_week') is-invalid @enderror" name="max_hours_per_week" type="number" value="{{ old('max_hours_per_week') }}" placeholder="例: 40" min="0" max="168" step="1">
                                             <div class="help" style="margin:0; font-size:0.8rem;">週間の最大稼働時間（時間）</div>
                                             @error('max_hours_per_week')
                                             <span class="error-message">{{ $message }}</span>
@@ -615,14 +615,14 @@
                                     <div style="font-weight: 700; color: #586069; font-size: 0.85rem; margin-bottom:0.5rem;">1日あたりの稼働時間・稼働日数</div>
                                     <div class="grid-2" style="align-items: stretch;">
                                         <div class="row" style="gap:0.4rem;">
-                                            <input class="input @error('hours_per_day') is-invalid @enderror" name="hours_per_day" type="number" value="{{ old('hours_per_day') }}" placeholder="例: 8">
+                                            <input class="input @error('hours_per_day') is-invalid @enderror" name="hours_per_day" type="number" value="{{ old('hours_per_day') }}" placeholder="例: 8" min="0" max="24" step="1">
                                             <div class="help" style="margin:0; font-size:0.8rem;">1日あたりの稼働時間（時間）</div>
                                             @error('hours_per_day')
                                             <span class="error-message">{{ $message }}</span>
                                             @enderror
                                         </div>
                                         <div class="row" style="gap:0.4rem;">
-                                            <input class="input @error('days_per_week') is-invalid @enderror" name="days_per_week" type="number" value="{{ old('days_per_week') }}" placeholder="例: 5">
+                                            <input class="input @error('days_per_week') is-invalid @enderror" name="days_per_week" type="number" value="{{ old('days_per_week') }}" placeholder="例: 5" min="0" max="7" step="1">
                                             <div class="help" style="margin:0; font-size:0.8rem;">1週間あたりの稼働日数（日）</div>
                                             @error('days_per_week')
                                             <span class="error-message">{{ $message }}</span>
@@ -995,12 +995,48 @@
             }
         };
 
+        // 数値入力を即座に min/max の範囲へクランプ（不正値が入った瞬間に補正）
+        function clampNumericInput(el) {
+            if (!el) return;
+            if (el.type !== 'number') return;
+
+            const minAttr = el.getAttribute('min');
+            const maxAttr = el.getAttribute('max');
+            const min = minAttr === null || minAttr === '' ? null : Number(minAttr);
+            const max = maxAttr === null || maxAttr === '' ? null : Number(maxAttr);
+
+            const raw = el.value;
+            if (raw === '' || raw === null || raw === undefined) return;
+
+            const val = Number(raw);
+            if (Number.isNaN(val)) return;
+
+            let next = val;
+            if (min !== null && next < min) next = min;
+            if (max !== null && next > max) next = max;
+
+            if (next !== val) el.value = String(next);
+        }
+
         // フォーム入力時にプレビューを更新
         (function () {
             const formInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea');
             formInputs.forEach(input => {
-                input.addEventListener('input', updatePreview);
-                input.addEventListener('change', updatePreview);
+                input.addEventListener('input', function() {
+                    clampNumericInput(input);
+                    // テキスト上限も念のため即時クランプ（貼り付け等でズレるケース対策）
+                    if (input.maxLength && Number(input.maxLength) > 0 && input.value && input.value.length > Number(input.maxLength)) {
+                        input.value = input.value.slice(0, Number(input.maxLength));
+                    }
+                    updatePreview();
+                });
+                input.addEventListener('change', function() {
+                    clampNumericInput(input);
+                    if (input.maxLength && Number(input.maxLength) > 0 && input.value && input.value.length > Number(input.maxLength)) {
+                        input.value = input.value.slice(0, Number(input.maxLength));
+                    }
+                    updatePreview();
+                });
                 input.setAttribute('data-listener-added', 'true');
             });
 
