@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'AIスキルマッチ')</title>
+    <link rel="icon" href="{{ asset('aifavicon.png') }}">
 
     {{-- CDN版Tailwind（まずは素早く画面を出すため） --}}
     <script src="https://cdn.tailwindcss.com"></script>

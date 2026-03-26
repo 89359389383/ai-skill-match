@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スカウト詳細 - AITECH</title>
+    <link rel="icon" href="{{ asset('aifavicon.png') }}">
     @auth('freelancer')
         @include('partials.freelancer-header-style')
     @endauth

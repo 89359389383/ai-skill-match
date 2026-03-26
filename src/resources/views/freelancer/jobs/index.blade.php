@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フリーランス案件一覧 - AITECH</title>
+    <link rel="icon" href="{{ asset('aifavicon.png') }}">
     {{-- ヘッダーに必要なスタイルのみをここに記載 --}}
     <style>
         /* Header (企業側と同じレスポンシブ構造: 640 / 768 / 1024 / 1280) */
