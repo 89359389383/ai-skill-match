@@ -43,6 +43,64 @@ class AnswerCommentController extends Controller
                 ->with('error', 'この回答にコメントする権限がありません。');
         }
 
+        // 解決済み（ベストアンサー確定後）のコメント制御
+        // - ベストアンサーへ: 質問者は1回だけコメント可能
+        // - 上記以外: 質問者/回答者ともコメント不可
+        $isResolved = $question->status === Question::STATUS_RESOLVED || $question->best_answer_id !== null;
+        if ($isResolved) {
+            $isBestAnswer = $question->best_answer_id !== null && (int) $answer->id === (int) $question->best_answer_id;
+
+            // ベストアンサーでなければコメント不可
+            if (! $isBestAnswer) {
+                return redirect()->route('questions.show', $question)
+                    ->with('error', 'この質問は解決済みのためコメントできません。');
+            }
+
+            // 質問者以外はコメント不可
+            if (! $isQuestioner) {
+                return redirect()->route('questions.show', $question)
+                    ->with('error', 'ベストアンサー確定後は質問者のみコメントできます。');
+            }
+
+            // 質問者は同一回答（ベストアンサー）へ1回のみ
+            $alreadyCommented = AnswerComment::query()
+                ->where('answer_id', $answer->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if ($alreadyCommented) {
+                return redirect()->route('questions.show', $question)
+                    ->with('error', 'ベストアンサー確定後のコメントは1回のみ可能です。');
+            }
+        } else {
+            // 未解決時：
+            // - 質問者は、直前のコメントが質問者本人ではないときだけコメント可能
+            // - 回答者は、直前のコメントが質問者のときだけコメント可能
+            $lastComment = AnswerComment::query()
+                ->where('answer_id', $answer->id)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->first();
+
+            $lastCommentUserId = $lastComment?->user_id;
+
+            if ($isQuestioner) {
+                // 直前が質問者本人なら連投NG
+                if ($lastCommentUserId !== null && (int) $lastCommentUserId === (int) $question->user_id) {
+                    return redirect()->route('questions.show', $question)
+                        ->with('error', '相手からの返信があるまで、コメントは送信できません。');
+                }
+            }
+
+            if ($isAnswerer) {
+                // 直前が質問者でないならNG（= 相手からの返信がない）
+                if ($lastCommentUserId === null || (int) $lastCommentUserId !== (int) $question->user_id) {
+                    return redirect()->route('questions.show', $question)
+                        ->with('error', '質問者からのコメントがあるまで、コメントは送信できません。');
+                }
+            }
+        }
+
         // バリデーション
         $validator = Validator::make($request->all(), [
             'content' => ['required', 'string', 'max:2000'],

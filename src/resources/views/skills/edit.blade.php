@@ -159,6 +159,18 @@
                             @enderror
                             <p class="text-sm text-gray-500 mt-1">購入者が理解しやすいよう、具体的に記載しましょう</p>
                         </div>
+
+                        <div class="mt-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">購入にあたって <span class="text-red-500">*</span></label>
+                            <textarea id="purchase_instructions" name="purchase_instructions"
+                                      rows="12"
+                                      placeholder="購入にあたっての注意点・前提条件・準備してほしい情報・進め方などを具体的に記載してください。"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none @error('purchase_instructions') border-red-500 @enderror">{{ old('purchase_instructions', $listing->purchase_instructions) }}</textarea>
+                            @error('purchase_instructions')
+                                <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                            @enderror
+                            <p class="text-sm text-gray-500 mt-1">購入者が安心して進められるよう、具体的に記載しましょう</p>
+                        </div>
                     </div>
 
                     <!-- Pricing Section -->

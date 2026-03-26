@@ -46,6 +46,9 @@
             </div>
         @endif
 
+        {{-- バリデーションエラー一覧（ログイン画面と同じく上部に表示） --}}
+        @include('partials.error-panel')
+
         {{-- ナビゲーション --}}
         <div class="flex justify-between items-center mb-6">
             <a href="{{ route('questions.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">

@@ -33,6 +33,8 @@
 
     {{-- 固定ヘッダー分の余白（共通ヘッダー1段分） --}}
     <main class="pt-16">
+        {{-- 共通のエラーパネル表示は無効化（ページ個別で制御） --}}
+        {{-- @include('partials.error-panel') --}}
         @yield('content')
     </main>
 

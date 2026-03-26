@@ -23,11 +23,55 @@
 
                 <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
                     <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $listing->title }}</h1>
+
+                    @php
+                        // 出品者アイコン表示用（null/ローカルパス/storage対応）
+                        $seller = $listing->freelancer;
+                        $sellerIconPath = $seller?->icon_path ?? null;
+                        $sellerDefaultIcon = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop';
+                        $sellerAvatarSrc = $sellerDefaultIcon;
+
+                        if (!empty($sellerIconPath)) {
+                            if (str_starts_with($sellerIconPath, 'http://') || str_starts_with($sellerIconPath, 'https://')) {
+                                $sellerAvatarSrc = $sellerIconPath;
+                            } else {
+                                $iconRel = ltrim((string) $sellerIconPath, '/');
+                                if (str_starts_with($iconRel, 'storage/')) {
+                                    $iconRel = substr($iconRel, strlen('storage/'));
+                                }
+                                $sellerAvatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                            }
+                        }
+                    @endphp
+
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                            <span class="font-bold">{{ $listing->rating_average ?? '0' }}</span>
-                            <span class="text-sm text-gray-500">({{ $listing->reviews_count ?? 0 }}件のレビュー)</span>
+                        <div class="flex items-center gap-3">
+                            <a
+                                href="{{ route('profiles.show', ['user' => $seller->user_id]) }}"
+                                class="shrink-0"
+                                aria-label="出品者プロフィールへ"
+                            >
+                                <img
+                                    src="{{ $sellerAvatarSrc }}"
+                                    alt="{{ $seller->display_name ?? '出品者' }}"
+                                    class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+                                >
+                            </a>
+                            <div class="flex flex-col">
+                                <a
+                                    href="{{ route('profiles.show', ['user' => $seller->user_id]) }}"
+                                    class="font-bold text-gray-900 text-sm hover:underline"
+                                >
+                                    {{ $seller->display_name ?? '出品者' }}
+                                </a>
+                                <div class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-yellow-400">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                    <span class="font-bold text-gray-900">{{ $listing->rating_average ?? '0' }}</span>
+                                    <span class="text-sm text-gray-500">({{ $listing->reviews_count ?? 0 }}件のレビュー)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -39,32 +83,18 @@
 
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">サービス内容</h2>
                     <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $listing->description }}</p>
+
+                    <h2 class="text-2xl font-bold text-gray-900 mt-8 mb-4">購入にあたって</h2>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $listing->purchase_instructions }}</p>
                 </div>
 
-                @php $seller = $listing->freelancer; @endphp
-                <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+                {{-- 販売者情報セクション（不要なため非表示） --}}
+                {{-- <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">販売者情報</h2>
                     <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6">
                         <div class="bg-white rounded-xl p-6 relative">
                             <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
-                                @php
-                                    $iconPath = $seller?->icon_path ?? null;
-                                    $defaultIcon = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop';
-                                    $avatarSrc = $defaultIcon;
-
-                                    if (!empty($iconPath)) {
-                                        if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
-                                            $avatarSrc = $iconPath;
-                                        } else {
-                                            $iconRel = ltrim((string) $iconPath, '/');
-                                            if (str_starts_with($iconRel, 'storage/')) {
-                                                $iconRel = substr($iconRel, strlen('storage/'));
-                                            }
-                                            $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
-                                        }
-                                    }
-                                @endphp
-                                <img src="{{ $avatarSrc }}" alt="{{ $seller->display_name }}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
+                                <img src="{{ $sellerAvatarSrc }}" alt="{{ $seller->display_name }}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
                             </div>
                             <div class="mt-16 text-center">
                                 <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $seller->display_name ?? '出品者' }}</h3>
@@ -75,7 +105,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 @if($listing->reviews->isNotEmpty())
                 <div class="bg-white rounded-2xl shadow-xl p-8">

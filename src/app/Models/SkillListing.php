@@ -20,6 +20,7 @@ class SkillListing extends Model
         'freelancer_id',
         'title',
         'description',
+        'purchase_instructions',
         'price',
         'pricing_type',
         'thumbnail_url',

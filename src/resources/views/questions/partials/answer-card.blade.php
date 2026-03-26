@@ -2,10 +2,30 @@
     $featuredBest = $featuredBest ?? false;
     $isAnswerAuthor = $currentUserId && (int) $currentUserId === (int) $answer->user_id;
     $lastComment = $answer->comments?->last();
-    $isLastCommentByQuestioner = $lastComment && (int) $lastComment->user_id === (int) $question->user_id;
+    $isLastCommentByQuestioner = (bool) ($lastComment && (int) $lastComment->user_id === (int) $question->user_id);
+    $isLastCommentByAnswerer = (bool) ($lastComment && (int) $lastComment->user_id === (int) $answer->user_id);
+
+    // 質問が解決済み（ベストアンサー確定）後のコメント制御
+    // - ベストアンサーへ：質問者だけが1回だけコメント可能
+    // - それ以外（質問者/回答者を問わず）：コメント不可
+    $isResolved = $question->status === \App\Models\Question::STATUS_RESOLVED || $question->best_answer_id !== null;
+    $questionerHasCommentOnThisAnswer = $answer->comments?->where('user_id', (int) $question->user_id)->isNotEmpty();
+
     $canComment = $currentUser && (
-        $isQuestioner ||
-        ($isAnswerAuthor && $isLastCommentByQuestioner)
+        $isResolved
+            ? (
+                $featuredBest
+                && $isQuestioner
+                && ! $questionerHasCommentOnThisAnswer
+            )
+            : (
+                // 未解決時：
+                // - 質問者は「直前のコメントが質問者本人ではないとき」だけコメント可能
+                // - 回答者は「直前のコメントが質問者のとき」だけコメント可能
+                //   => 相手からの返信がない限り連投できない
+                ($isQuestioner && ! $isLastCommentByQuestioner)
+                || ($isAnswerAuthor && $isLastCommentByQuestioner)
+            )
     );
     $canChooseBest = $isQuestioner
         && $question->status === \App\Models\Question::STATUS_OPEN

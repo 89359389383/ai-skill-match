@@ -143,6 +143,17 @@
                             @enderror
                             <p class="text-sm text-gray-500 mt-1">購入者が理解しやすいよう、具体的に記載しましょう</p>
                         </div>
+
+                        <div class="mt-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">購入にあたって <span class="text-red-500">*</span></label>
+                            <textarea id="purchase_instructions" name="purchase_instructions" rows="12"
+                                      placeholder="購入にあたっての注意点・前提条件・準備してほしい情報・進め方などを具体的に記載してください。"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none @error('purchase_instructions') border-red-500 @enderror">{{ old('purchase_instructions') }}</textarea>
+                            @error('purchase_instructions')
+                                <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                            @enderror
+                            <p class="text-sm text-gray-500 mt-1">購入者が安心して進められるよう、具体的に記載しましょう</p>
+                        </div>
                     </div>
 
                     <!-- Pricing Section -->
@@ -223,7 +234,11 @@
                     </div>
 
                     <!-- Service Features -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
+                    {{-- 
+                        Service Features は現在使用しないため非表示
+                        （作成画面のこのサービスの特徴セクション）
+                    --}}
+                    {{-- <div class="bg-white rounded-lg shadow-sm p-6">
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">このサービスの特徴</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
@@ -243,7 +258,7 @@
                                 <label for="feature4" class="font-medium text-gray-900">著作権譲渡</label>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Submit Buttons (Mobile) -->
                     <div class="lg:hidden bg-white rounded-lg shadow-sm p-6">

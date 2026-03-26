@@ -22,6 +22,9 @@ class StoreSkillListingRequest extends FormRequest
             // 説明（必須）
             'description' => ['required', 'string', 'max:5000'],
 
+            // 購入にあたって（必須）
+            'purchase_instructions' => ['required', 'string', 'max:5000'],
+
             // 価格（必須・0以上）
             'price' => ['required', 'integer', 'min:0', 'max:100000000'],
 
@@ -63,6 +66,8 @@ class StoreSkillListingRequest extends FormRequest
             'title.max' => 'タイトルは100文字以内で入力してください。',
             'description.required' => '説明文は必須です。',
             'description.max' => '説明文は5000文字以内で入力してください。',
+            'purchase_instructions.required' => '購入にあたっての説明は必須です。',
+            'purchase_instructions.max' => '購入にあたっての説明は5000文字以内で入力してください。',
             'price.required' => '価格は必須です。',
             'price.integer' => '価格は整数で入力してください。',
             'price.min' => '価格は0以上で入力してください。',
