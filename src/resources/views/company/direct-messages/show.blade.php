@@ -181,7 +181,7 @@
                                         <div class="pscc-message-time-row">
                                             <span class="pscc-message-time">{{ $message->sent_at?->format('Y-m-d H:i:s') }}</span>
                                             @if ($isMe)
-                                                <span class="pscc-read-status">既読</span>
+                                                {{-- <span class="pscc-read-status">既読</span> --}}
                                             @endif
                                         </div>
                                     </div>
@@ -194,7 +194,44 @@
                                     </button>
                                 @endif
                             </div>
-                            <p class="pscc-message-body">{{ $message->body }}</p>
+                            @if(filled($message->body))
+                                <p class="pscc-message-body">{{ $message->body }}</p>
+                            @endif
+                            @if(!empty($message->attachments) && $message->attachments->count() > 0)
+                                <div style="margin-top: 0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
+                                    @foreach($message->attachments as $att)
+                                        @php
+                                            $attUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($att->attachment_path);
+                                            $attName = $att->attachment_name ?? basename($att->attachment_path);
+                                            $sizeMb = $att->attachment_size ? round(((int)$att->attachment_size) / (1024 * 1024), 2) : null;
+                                        @endphp
+                                        <a
+                                            href="{{ $attUrl }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style="display:inline-flex; align-items:center; gap:0.35rem; color:#2563eb; text-decoration:underline; font-weight:700; word-break:break-all;"
+                                        >
+                                            <span>添付:</span>
+                                            <span>{{ $attName }}</span>
+                                            @if($sizeMb !== null)
+                                                <span style="color:#6b7280; font-weight:800; font-size:0.8125rem;">({{ $sizeMb }}MB)</span>
+                                            @endif
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @elseif(!empty($message->attachment_path))
+                                <div style="margin-top: 0.5rem;">
+                                    <a
+                                        href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($message->attachment_path) }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style="display:inline-flex; align-items:center; gap:0.35rem; color:#2563eb; text-decoration:underline; font-weight:700; word-break:break-all;"
+                                    >
+                                        <span>添付:</span>
+                                        <span>{{ $message->attachment_name ?? basename($message->attachment_path) }}</span>
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @empty
@@ -209,27 +246,32 @@
     </div>
 
     <div class="pscc-input-area">
-        <form class="pscc-input-content" method="POST" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
+        <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
             @csrf
             @if ($meAvatarSrc)
                 <img src="{{ $meAvatarSrc }}" alt="{{ $viewerName }}" class="pscc-input-avatar">
             @else
                 <div class="pscc-input-avatar-initial" aria-hidden="true">{{ $viewerInitial }}</div>
             @endif
-            <button class="pscc-attach-button" title="ファイル添付（未実装）" type="button" disabled aria-disabled="true">
+            <input type="file" id="dmAttachment" name="attachments[]" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp" style="display:none;">
+            <button class="pscc-attach-button" id="attachButton" title="ファイルを添付" type="button" aria-label="ファイルを添付">
                 <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                 </svg>
             </button>
-            <input
-                type="text"
-                class="pscc-input-field @error('content') pscc-input-error @enderror"
-                placeholder="メッセージを入力..."
+            <textarea
                 id="messageInput"
                 name="content"
-                value="{{ old('content') }}"
+                class="pscc-input-field @error('content') pscc-input-error @enderror resize-none"
+                placeholder="メッセージを入力..."
+                style="min-height:150px;"
                 autocomplete="off"
-            >
+                rows="4"
+            >{{ old('content') }}</textarea>
+            <div
+                id="dmAttachmentList"
+                style="font-size:0.875rem; color:#64748b; max-width:460px; word-break:break-word; line-height:1.5; display:none;"
+            ></div>
             <button class="pscc-send-button" type="submit" id="sendButton" disabled>
                 <svg class="pscc-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -238,6 +280,12 @@
             </button>
         </form>
         @error('content')
+            <div class="pscc-field-error"><span>{{ $message }}</span></div>
+        @enderror
+        @error('attachments')
+            <div class="pscc-field-error"><span>{{ $message }}</span></div>
+        @enderror
+        @error('attachments.*')
             <div class="pscc-field-error"><span>{{ $message }}</span></div>
         @enderror
     </div>
@@ -254,11 +302,65 @@
 
         const input = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendButton');
+        const attachBtn = document.getElementById('attachButton');
+        const fileInput = document.getElementById('dmAttachment');
+        const attachmentList = document.getElementById('dmAttachmentList');
+        let selectedFiles = [];
         if (!input || !sendBtn) return;
         const toggle = () => {
-            sendBtn.disabled = !input.value || !input.value.trim();
+            const hasText = !!(input.value && input.value.trim());
+            const hasFile = !!(fileInput && fileInput.files && fileInput.files.length > 0);
+            sendBtn.disabled = !(hasText || hasFile);
         };
         input.addEventListener('input', toggle);
+        if (attachBtn && fileInput) {
+            attachBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => {
+                const pickedFiles = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+                if (pickedFiles.length <= 0) {
+                    toggle();
+                    return;
+                }
+
+                const nextFiles = [...selectedFiles];
+                pickedFiles.forEach((picked) => {
+                    if (nextFiles.length >= 3) return;
+                    const dup = nextFiles.some((current) =>
+                        current.name === picked.name &&
+                        current.size === picked.size &&
+                        current.lastModified === picked.lastModified
+                    );
+                    if (!dup) {
+                        nextFiles.push(picked);
+                    }
+                });
+
+                selectedFiles = nextFiles.slice(0, 3);
+
+                const dt = new DataTransfer();
+                selectedFiles.forEach((f) => dt.items.add(f));
+                fileInput.files = dt.files;
+
+                const safeName = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                }[c] || c));
+
+                if (!attachmentList) return;
+
+                if (selectedFiles.length <= 0) {
+                    attachmentList.style.display = 'none';
+                    attachmentList.innerHTML = '';
+                } else {
+                    attachmentList.style.display = 'block';
+                    attachmentList.innerHTML = selectedFiles.map((f) => `<div>・${safeName(f.name)}</div>`).join('');
+                }
+                toggle();
+            });
+        }
         toggle();
     })();
 </script>

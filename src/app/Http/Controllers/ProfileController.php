@@ -17,7 +17,15 @@ class ProfileController extends Controller
     public function index(Request $request)
     {
         $query = Freelancer::query()
-            ->with(['user', 'skills', 'customSkills']);
+            ->with([
+                'user',
+                'skills',
+                'customSkills',
+                // プロフィール一覧では「掲載中のスキルサービス」だけを使って平均評価/件数を出す
+                'skillListings' => fn ($q) => $q
+                    ->where('status', 1)
+                    ->select('id', 'freelancer_id', 'rating_average', 'reviews_count', 'status'),
+            ]);
 
         // スキル名で検索
         if ($request->filled('skill')) {

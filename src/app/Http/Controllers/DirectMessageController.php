@@ -287,7 +287,7 @@ class DirectMessageController extends Controller
         $directConversation->load([
             'company',
             'freelancer',
-            'messages',
+            'messages.attachments',
         ]);
 
         $this->markRead($directConversation, $role, $profile->id);
@@ -395,10 +395,57 @@ class DirectMessageController extends Controller
             abort(404);
         }
 
-        $validated = $request->validated();
-        Log::info('[DirectMessageController@start] バリデーション通過', [
-            'content_length' => strlen($validated['content'] ?? ''),
+        // リクエスト受信時点のサイズを先に記録（本文そのものはログ出ししない）
+        $rawContent = (string) $request->input('content', '');
+        $rawContentByteLength = strlen($rawContent);
+        $rawContentCharLength = function_exists('mb_strlen') ? mb_strlen($rawContent, 'UTF-8') : null;
+
+        $attachments = $request->file('attachments', []);
+        $attachmentCount = is_array($attachments) ? count($attachments) : 0;
+        $attachmentTotalSizeBytes = 0;
+        $attachmentDetails = [];
+        if (is_array($attachments)) {
+            foreach ($attachments as $idx => $file) {
+                if (!$file) continue;
+                $sizeBytes = (int) ($file->getSize() ?? 0);
+                $attachmentTotalSizeBytes += $sizeBytes;
+
+                // ログ肥大化防止で先頭のみ
+                if (count($attachmentDetails) < 8) {
+                    $attachmentDetails[] = [
+                        'index' => $idx,
+                        'client_original_name' => $file->getClientOriginalName(),
+                        'mime' => $file->getClientMimeType(),
+                        'size_bytes' => $sizeBytes,
+                    ];
+                }
+            }
+        }
+
+        Log::info('[DirectMessageController@start] 受信リクエスト情報', [
+            'raw_content_byte_length' => $rawContentByteLength,
+            'raw_content_char_length' => $rawContentCharLength,
+            // 本文内容の代わりにハッシュだけ残して追跡可能にする
+            'raw_content_sha256' => hash('sha256', $rawContent),
+            'attachment_count' => $attachmentCount,
+            'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+            'attachment_details_preview' => $attachmentDetails,
         ]);
+
+        try {
+            $validated = $request->validated();
+            Log::info('[DirectMessageController@start] バリデーション通過', [
+                'validated_content_byte_length' => strlen($validated['content'] ?? ''),
+            ]);
+        } catch (ValidationException $e) {
+            Log::warning('[DirectMessageController@start] バリデーション失敗（送信前）', [
+                'validated_content_byte_length' => strlen((string) ($request->input('content') ?? '')),
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+                'validation_errors' => $e->errors(),
+            ]);
+            throw $e;
+        }
 
         // #region agent debug log
         $this->debugNDJSON(
@@ -417,7 +464,35 @@ class DirectMessageController extends Controller
         );
         // #endregion agent debug log
 
-        $conversation = DB::transaction(function () use ($currentRole, $currentProfile, $counterpart, $validated) {
+        // 添付保存（アップロード/保存で失敗する可能性があるため例外もログ化）
+        try {
+            Log::info('[DirectMessageController@start] 添付保存開始', [
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+            ]);
+            $attachmentDataList = $attachments ? $this->storeMessageAttachments($attachments) : [];
+
+            $savedAttachmentCount = count($attachmentDataList);
+            $savedTotalSizeBytes = 0;
+            foreach ($attachmentDataList as $a) {
+                $savedTotalSizeBytes += (int) ($a['size'] ?? 0);
+            }
+
+            Log::info('[DirectMessageController@start] 添付保存完了', [
+                'saved_attachment_count' => $savedAttachmentCount,
+                'saved_total_size_bytes' => $savedTotalSizeBytes,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[DirectMessageController@start] 添付保存失敗', [
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        $conversation = DB::transaction(function () use ($currentRole, $currentProfile, $counterpart, $validated, $attachmentDataList) {
             // 異なるrole間の場合: 従来通り
             // 同じrole同士の場合: 片方をNULLにする（テーブル制約対応）
             $companyId = null;
@@ -556,8 +631,29 @@ class DirectMessageController extends Controller
                 ]
             );
             // #endregion agent debug log
-
-            $this->sendMessage($conversation, $currentRole, $senderId, $validated['content']);
+            try {
+                $createdMessage = $this->sendMessage(
+                    $conversation,
+                    $currentRole,
+                    $senderId,
+                    $validated['content'] ?? '',
+                    $attachmentDataList
+                );
+                Log::info('[DirectMessageController@start] sendMessage完了', [
+                    'message_id' => $createdMessage->id,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('[DirectMessageController@start] sendMessage失敗', [
+                    'conversation_id' => $conversation->id,
+                    'sender_type' => $currentRole,
+                    'sender_id' => $senderId,
+                    'body_byte_length' => strlen((string) ($validated['content'] ?? '')),
+                    'attachment_count' => count($attachmentDataList),
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
 
             return $conversation;
         });
@@ -613,15 +709,115 @@ class DirectMessageController extends Controller
 
         $this->assertParticipant($directConversation, $role, $profile->id);
 
-        $validated = $request->validated();
-        Log::info('[DirectMessageController@reply] 返信処理', [
+        // リクエスト受信時点のサイズを先に記録（本文そのものはログ出ししない）
+        $rawContent = (string) $request->input('content', '');
+        $rawContentByteLength = strlen($rawContent);
+        $rawContentCharLength = function_exists('mb_strlen') ? mb_strlen($rawContent, 'UTF-8') : null;
+
+        $attachments = $request->file('attachments', []);
+        $attachmentCount = is_array($attachments) ? count($attachments) : 0;
+        $attachmentTotalSizeBytes = 0;
+        $attachmentDetails = [];
+        if (is_array($attachments)) {
+            foreach ($attachments as $idx => $file) {
+                if (!$file) continue;
+                $sizeBytes = (int) ($file->getSize() ?? 0);
+                $attachmentTotalSizeBytes += $sizeBytes;
+                if (count($attachmentDetails) < 8) {
+                    $attachmentDetails[] = [
+                        'index' => $idx,
+                        'client_original_name' => $file->getClientOriginalName(),
+                        'mime' => $file->getClientMimeType(),
+                        'size_bytes' => $sizeBytes,
+                    ];
+                }
+            }
+        }
+
+        Log::info('[DirectMessageController@reply] 受信リクエスト情報', [
+            'conversation_id' => $directConversation->id,
             'profile_id' => $profile->id,
             'role' => $role,
-            'content_length' => strlen($validated['content'] ?? ''),
+            'raw_content_byte_length' => $rawContentByteLength,
+            'raw_content_char_length' => $rawContentCharLength,
+            'raw_content_sha256' => hash('sha256', $rawContent),
+            'attachment_count' => $attachmentCount,
+            'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+            'attachment_details_preview' => $attachmentDetails,
         ]);
 
-        DB::transaction(function () use ($directConversation, $role, $profile, $validated) {
-            $this->sendMessage($directConversation, $role, $profile->id, $validated['content']);
+        try {
+            $validated = $request->validated();
+            Log::info('[DirectMessageController@reply] 返信バリデーション通過', [
+                'validated_content_byte_length' => strlen($validated['content'] ?? ''),
+            ]);
+        } catch (ValidationException $e) {
+            Log::warning('[DirectMessageController@reply] 返信バリデーション失敗（送信前）', [
+                'conversation_id' => $directConversation->id,
+                'profile_id' => $profile->id,
+                'role' => $role,
+                'validated_content_byte_length' => strlen((string) ($request->input('content') ?? '')),
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+                'validation_errors' => $e->errors(),
+            ]);
+            throw $e;
+        }
+
+        // 添付保存（アップロード/保存で失敗する可能性があるため例外もログ化）
+        try {
+            Log::info('[DirectMessageController@reply] 添付保存開始', [
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+            ]);
+            $attachmentDataList = $attachments ? $this->storeMessageAttachments($attachments) : [];
+
+            $savedAttachmentCount = count($attachmentDataList);
+            $savedTotalSizeBytes = 0;
+            foreach ($attachmentDataList as $a) {
+                $savedTotalSizeBytes += (int) ($a['size'] ?? 0);
+            }
+
+            Log::info('[DirectMessageController@reply] 添付保存完了', [
+                'saved_attachment_count' => $savedAttachmentCount,
+                'saved_total_size_bytes' => $savedTotalSizeBytes,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[DirectMessageController@reply] 添付保存失敗', [
+                'conversation_id' => $directConversation->id,
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        DB::transaction(function () use ($directConversation, $role, $profile, $validated, $attachmentDataList) {
+            try {
+                $createdMessage = $this->sendMessage(
+                    $directConversation,
+                    $role,
+                    $profile->id,
+                    $validated['content'] ?? '',
+                    $attachmentDataList
+                );
+                Log::info('[DirectMessageController@reply] sendMessage完了', [
+                    'conversation_id' => $directConversation->id,
+                    'message_id' => $createdMessage->id,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('[DirectMessageController@reply] sendMessage失敗', [
+                    'conversation_id' => $directConversation->id,
+                    'sender_type' => $role,
+                    'sender_id' => $profile->id,
+                    'body_byte_length' => strlen((string) ($validated['content'] ?? '')),
+                    'attachment_count' => count($attachmentDataList),
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
         });
 
         Log::info('[DirectMessageController@reply] 返信完了');
@@ -826,33 +1022,72 @@ class DirectMessageController extends Controller
         }
     }
 
-    private function sendMessage(DirectConversation $conversation, string $senderType, int $senderId, string $body): DirectConversationMessage
+    private function sendMessage(
+        DirectConversation $conversation,
+        string $senderType,
+        int $senderId,
+        string $body,
+        array $attachmentDataList = []
+    ): DirectConversationMessage
     {
         $body = trim($body);
+        $bodyByteLength = strlen($body);
+        $attachmentCount = count($attachmentDataList);
+        $attachmentTotalSizeBytes = 0;
+        foreach ($attachmentDataList as $a) {
+            $attachmentTotalSizeBytes += (int) ($a['size'] ?? 0);
+        }
 
-        if ($body === '') {
-            Log::warning('[DirectMessageController@sendMessage] 空のメッセージ');
+        if ($body === '' && empty($attachmentDataList)) {
+            Log::warning('[DirectMessageController@sendMessage] 空のメッセージ（本文/添付なし）', [
+                'conversation_id' => $conversation->id,
+                'sender_type' => $senderType,
+                'sender_id' => $senderId,
+                'body_byte_length' => $bodyByteLength,
+                'attachment_count' => $attachmentCount,
+            ]);
             throw ValidationException::withMessages([
-                'content' => 'メッセージを入力してください。',
+                'content' => 'メッセージまたは添付ファイルを入力してください。',
             ]);
         }
 
         $now = Carbon::now();
 
-        Log::info('[DirectMessageController@sendMessage] メッセージ作成', [
+        Log::info('[DirectMessageController@sendMessage] メッセージ作成（要求）', [
             'conversation_id' => $conversation->id,
             'sender_type' => $senderType,
             'sender_id' => $senderId,
-            'body_length' => strlen($body),
+            'body_byte_length' => $bodyByteLength,
+            'attachment_count' => $attachmentCount,
+            'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
         ]);
 
         $message = DirectConversationMessage::create([
             'direct_conversation_id' => $conversation->id,
             'sender_type' => $senderType,
             'sender_id' => $senderId,
+            // direct_conversation_messages.body は nullable でないため、本文なしでも '' を保存する
             'body' => $body,
+            // 互換用：単一添付カラムは今後使わないが、既存カラムへは未設定のまま
             'sent_at' => $now,
         ]);
+
+        if (!empty($attachmentDataList)) {
+            Log::debug('[DirectMessageController@sendMessage] 添付のDB登録開始', [
+                'message_id' => $message->id,
+                'attachment_count' => $attachmentCount,
+                'attachment_total_size_bytes' => $attachmentTotalSizeBytes,
+            ]);
+            foreach ($attachmentDataList as $attachmentData) {
+                \App\Models\DirectConversationMessageAttachment::create([
+                    'direct_conversation_message_id' => $message->id,
+                    'attachment_name' => $attachmentData['name'] ?? null,
+                    'attachment_path' => $attachmentData['path'] ?? null,
+                    'attachment_mime' => $attachmentData['mime'] ?? null,
+                    'attachment_size' => $attachmentData['size'] ?? null,
+                ]);
+            }
+        }
 
         // 未読状態の計算
         // 通常の会話: senderTypeと異なるroleが未読
@@ -885,8 +1120,69 @@ class DirectMessageController extends Controller
 
         Log::info('[DirectMessageController@sendMessage] メッセージ作成完了', [
             'message_id' => $message->id,
+            'conversation_id' => $conversation->id,
+            'attachment_count' => $attachmentCount,
         ]);
 
         return $message;
+    }
+
+    /**
+     * 複数添付を保存してメタ情報配列を返す
+     *
+     * @param array<\Illuminate\Http\UploadedFile> $files
+     * @return array<int, array<string, mixed>>
+     */
+    private function storeMessageAttachments(array $files): array
+    {
+        $result = [];
+        $totalBytes = 0;
+        $storedCount = 0;
+        foreach ($files as $file) {
+            if (!$file) continue;
+
+            $clientName = $file->getClientOriginalName();
+            $mime = $file->getClientMimeType();
+            $sizeBytes = (int) ($file->getSize() ?? 0);
+            $totalBytes += $sizeBytes;
+
+            Log::debug('[DirectMessageController@storeMessageAttachments] 添付保存準備', [
+                'client_original_name' => $clientName,
+                'mime' => $mime,
+                'size_bytes' => $sizeBytes,
+            ]);
+
+            try {
+                $storedPath = $file->store('direct-message-attachments', 'public');
+                $result[] = [
+                    'name' => $clientName,
+                    'path' => $storedPath,
+                    'mime' => $mime,
+                    'size' => $sizeBytes,
+                ];
+                $storedCount++;
+
+                Log::debug('[DirectMessageController@storeMessageAttachments] 添付保存完了', [
+                    'client_original_name' => $clientName,
+                    'stored_path' => $storedPath,
+                    'size_bytes' => $sizeBytes,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('[DirectMessageController@storeMessageAttachments] 添付保存失敗', [
+                    'client_original_name' => $clientName,
+                    'mime' => $mime,
+                    'size_bytes' => $sizeBytes,
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
+        }
+
+        Log::info('[DirectMessageController@storeMessageAttachments] 添付全体サマリ', [
+            'stored_count' => $storedCount,
+            'total_size_bytes' => $totalBytes,
+        ]);
+        return $result;
     }
 }

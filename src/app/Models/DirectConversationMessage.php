@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DirectConversationMessage extends Model
@@ -17,12 +18,17 @@ class DirectConversationMessage extends Model
         'sender_type',
         'sender_id',
         'body',
+        'attachment_name',
+        'attachment_path',
+        'attachment_mime',
+        'attachment_size',
         'sent_at',
     ];
 
     protected $casts = [
         'direct_conversation_id' => 'integer',
         'sender_id' => 'integer',
+        'attachment_size' => 'integer',
         'sent_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
@@ -40,5 +46,11 @@ class DirectConversationMessage extends Model
     public function senderFreelancer(): BelongsTo
     {
         return $this->belongsTo(Freelancer::class, 'sender_id');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(DirectConversationMessageAttachment::class, 'direct_conversation_message_id')
+            ->orderBy('id');
     }
 }

@@ -314,7 +314,44 @@
 
                     <div class="dm-bubble {{ $isMe ? 'me' : '' }}">
                         <div class="dm-sender">{{ $senderName }}</div>
-                        <div class="dm-body">{{ $message->body }}</div>
+                        @if(filled($message->body))
+                            <div class="dm-body">{{ $message->body }}</div>
+                        @endif
+                        @if(!empty($message->attachments) && $message->attachments->count() > 0)
+                            <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
+                                @foreach($message->attachments as $att)
+                                    @php
+                                        $attUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($att->attachment_path);
+                                        $attName = $att->attachment_name ?? basename($att->attachment_path);
+                                        $sizeMb = $att->attachment_size ? round(((int)$att->attachment_size) / (1024 * 1024), 2) : null;
+                                    @endphp
+                                    <a
+                                        href="{{ $attUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style="display:inline-flex; align-items:center; gap:0.35rem; color:#2563eb; text-decoration:underline; font-weight:700; word-break:break-all;"
+                                    >
+                                        <span>添付:</span>
+                                        <span>{{ $attName }}</span>
+                                        @if($sizeMb !== null)
+                                            <span style="color:#6b7280; font-weight:800; font-size:0.8125rem;">({{ $sizeMb }}MB)</span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        @elseif(!empty($message->attachment_path))
+                            <div style="margin-top:0.5rem;">
+                                <a
+                                    href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($message->attachment_path) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style="display:inline-flex; align-items:center; gap:0.35rem; color:#2563eb; text-decoration:underline; font-weight:700; word-break:break-all;"
+                                >
+                                    <span>添付:</span>
+                                    <span>{{ $message->attachment_name ?? basename($message->attachment_path) }}</span>
+                                </a>
+                            </div>
+                        @endif
                         <div class="dm-time">{{ $sentAt }}</div>
                     </div>
                 </div>
@@ -324,7 +361,7 @@
         </div>
 
         <div class="dm-compose">
-            <form class="dm-form" method="POST" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
+            <form class="dm-form" method="POST" enctype="multipart/form-data" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
                 @csrf
                 <textarea
                     id="dmContent"
@@ -332,7 +369,24 @@
                     class="dm-textarea @error('content') is-invalid @enderror"
                     placeholder="メッセージを入力..."
                 >{{ old('content') }}</textarea>
+                <div
+                    id="dmAttachmentList"
+                    style="font-size:0.875rem; color:#64748b; max-width:720px; word-break:break-word; line-height:1.5; display:none;"
+                ></div>
+                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                    <input type="file" id="dmAttachment" name="attachments[]" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp" style="display:none;">
+                    <button type="button" id="dmAttachButton" style="padding:0.55rem 0.9rem; border:1px solid #cbd5e1; border-radius:0.65rem; background:#fff; font-weight:700; color:#334155;">
+                        ファイルを選択
+                    </button>
+                    <span id="dmAttachmentName" style="font-size:0.875rem; color:#64748b;"></span>
+                </div>
                 @error('content')
+                    <div class="dm-error">{{ $message }}</div>
+                @enderror
+                @error('attachments')
+                    <div class="dm-error">{{ $message }}</div>
+                @enderror
+                @error('attachments.*')
                     <div class="dm-error">{{ $message }}</div>
                 @enderror
                 <button id="dmSendButton" type="submit" class="dm-send" disabled>送信</button>
@@ -352,13 +406,63 @@
 
         const textarea = document.getElementById('dmContent');
         const button = document.getElementById('dmSendButton');
+        const fileInput = document.getElementById('dmAttachment');
+        const fileButton = document.getElementById('dmAttachButton');
+        const fileName = document.getElementById('dmAttachmentName');
         if (!textarea || !button) return;
 
         const toggle = () => {
-            button.disabled = !textarea.value || !textarea.value.trim();
+            const hasText = !!(textarea.value && textarea.value.trim());
+            const hasFile = !!(fileInput && fileInput.files && fileInput.files.length > 0);
+            button.disabled = !(hasText || hasFile);
         };
 
         textarea.addEventListener('input', toggle);
+        if (fileButton && fileInput) {
+            fileButton.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => {
+                const list = document.getElementById('dmAttachmentList');
+                if (fileName) fileName.textContent = '';
+
+                const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+                if (files.length > 3) {
+                    // 先頭3件だけに制限（FileListを書き換え）
+                    const dt = new DataTransfer();
+                    files.slice(0, 3).forEach((f) => dt.items.add(f));
+                    fileInput.files = dt.files;
+                }
+
+                const files2 = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+                if (files2.length <= 0) {
+                    if (list) {
+                        list.style.display = 'none';
+                        list.innerHTML = '';
+                    }
+                    toggle();
+                    return;
+                }
+
+                const safeName = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                }[c] || c));
+
+                if (list) {
+                    list.style.display = 'block';
+                    list.innerHTML = files2.map((f) => `<div>・${safeName(f.name)}</div>`).join('');
+                }
+
+                if (files2.length === 1) {
+                    fileName.textContent = files2[0].name;
+                } else {
+                    fileName.textContent = `${files2[0].name} ほか${files2.length - 1}件`;
+                }
+                toggle();
+            });
+        }
         toggle();
     })();
 </script>

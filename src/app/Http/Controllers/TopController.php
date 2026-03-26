@@ -22,7 +22,16 @@ class TopController extends Controller
         Log::info('[TopController::index] トップページ表示 開始');
 
         $freelancers = Freelancer::query()
-            ->with(['user', 'skills', 'customSkills'])
+            ->with([
+                'user',
+                'skills',
+                'customSkills',
+                // 新着フリーランスの一覧では、プロフィール一覧と同じロジックで
+                // ☆評価（weighted average）と件数を表示するために掲載中のスキルだけを取得
+                'skillListings' => fn ($q) => $q
+                    ->where('status', 1)
+                    ->select('id', 'freelancer_id', 'rating_average', 'reviews_count', 'status'),
+            ])
             ->orderByDesc('id')
             ->limit(6)
             ->get();
