@@ -231,6 +231,17 @@
             color: #64748b;
         }
 
+        /* プロフィール画像プレビュー（丸形） */
+        .avatar-preview {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(15, 23, 42, 0.10);
+            background: rgba(15, 23, 42, 0.04);
+            display: none;
+        }
+
         /* ボタン */
         .btn-row {
             display: flex;
@@ -304,6 +315,7 @@
 
             <form class="register-form" method="POST" action="{{ route('company.profile.store') }}" enctype="multipart/form-data">
                 @csrf
+                @php $oldIconData = old('icon_data'); @endphp
 
                 <div class="form-group">
                     <label class="label" for="company_name">企業名（必須）</label>
@@ -311,6 +323,7 @@
                         id="company_name"
                         type="text"
                         name="company_name"
+                        maxlength="255"
                         value="{{ old('company_name') }}"
                         class="form-input @error('company_name') is-invalid @enderror"
                         placeholder="例: 株式会社AITECH"
@@ -325,6 +338,7 @@
                     <textarea
                         id="overview"
                         name="overview"
+                        maxlength="2000"
                         class="form-textarea @error('overview') is-invalid @enderror"
                         placeholder="事業内容や特徴など（2000文字以内）">{{ old('overview') }}</textarea>
                     @error('overview')
@@ -339,6 +353,7 @@
                             id="contact_name"
                             type="text"
                             name="contact_name"
+                            maxlength="255"
                             value="{{ old('contact_name') }}"
                             class="form-input @error('contact_name') is-invalid @enderror"
                             placeholder="例: 山田 太郎">
@@ -353,6 +368,7 @@
                             id="department"
                             type="text"
                             name="department"
+                            maxlength="255"
                             value="{{ old('department') }}"
                             class="form-input @error('department') is-invalid @enderror"
                             placeholder="例: 開発部">
@@ -367,6 +383,7 @@
                     <textarea
                         id="introduction"
                         name="introduction"
+                        maxlength="2000"
                         class="form-textarea @error('introduction') is-invalid @enderror"
                         placeholder="フリーランスに伝えたいこと（募集背景/働き方など・2000文字以内）">{{ old('introduction') }}</textarea>
                     @error('introduction')
@@ -378,11 +395,24 @@
                 <div class="form-group">
                     <label class="label" for="icon">プロフィール画像（必須）</label>
                     <input
+                        type="hidden"
+                        name="icon_data"
+                        id="icon_data"
+                        value="{{ $oldIconData }}"
+                    >
+                    <input
                         id="icon"
                         name="icon"
                         type="file"
                         accept="image/*"
                         class="form-input @error('icon') is-invalid @enderror"
+                    >
+                    <img
+                        id="icon_preview"
+                        class="avatar-preview"
+                        alt="プロフィール画像プレビュー"
+                        src="{{ $oldIconData ?: '' }}"
+                        style="{{ $oldIconData ? 'display:block;' : '' }}"
                     >
                     @error('icon')
                         <span class="error-message">{{ $message }}</span>
@@ -397,5 +427,67 @@
             </form>
         </div>
     </div>
+    <script>
+        (function () {
+            /**
+             * maxlength 属性を超える入力（貼り付け含む）を即時に切り詰める
+             * ※サーバー側バリデーションと同じ上限値に合わせています
+             */
+            function clampTextInput(el) {
+                if (!el) return;
+                const maxLen = el.maxLength ? Number(el.maxLength) : 0;
+                if (!maxLen || maxLen <= 0) return;
+                if (el.value && el.value.length > maxLen) {
+                    el.value = el.value.slice(0, maxLen);
+                }
+            }
+
+            const fields = [
+                document.getElementById('company_name'),
+                document.getElementById('overview'),
+                document.getElementById('contact_name'),
+                document.getElementById('department'),
+                document.getElementById('introduction'),
+            ].filter(Boolean);
+
+            fields.forEach((el) => {
+                el.addEventListener('input', function () {
+                    clampTextInput(el);
+                });
+                el.addEventListener('change', function () {
+                    clampTextInput(el);
+                });
+            });
+
+            // プロフィール画像プレビュー（丸形）
+            const iconInput = document.getElementById('icon');
+            const iconPreview = document.getElementById('icon_preview');
+            const iconDataInput = document.getElementById('icon_data');
+            if (iconInput && iconPreview) {
+                iconInput.addEventListener('change', function () {
+                    const file = iconInput.files && iconInput.files[0] ? iconInput.files[0] : null;
+                    if (!file || !file.type || !file.type.startsWith('image/')) {
+                        iconPreview.src = '';
+                        iconPreview.style.display = 'none';
+                        if (iconDataInput) {
+                            iconDataInput.value = '';
+                        }
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const dataUrl = String(e.target && e.target.result ? e.target.result : '');
+                        iconPreview.src = dataUrl;
+                        iconPreview.style.display = 'block';
+                        if (iconDataInput) {
+                            iconDataInput.value = dataUrl;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

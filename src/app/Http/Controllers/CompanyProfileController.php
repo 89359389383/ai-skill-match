@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\CompanyRegisterRequest;
 use App\Http\Requests\CompanyProfileUpdateRequest;
 use App\Models\Thread;
@@ -77,7 +78,16 @@ class CompanyProfileController extends Controller
 
         // バリデーションを行う（CompanyRegisterRequest に委譲）
         $validated = $request->validated();
-        $validated['icon'] = $request->file('icon');
+
+        // icon_data があれば一時保存した画像を正規のアップロード扱いに変換する
+        if (!$request->hasFile('icon') && is_string($validated['icon_data'] ?? null) && $validated['icon_data'] !== '') {
+            $storedIconPath = $this->storeBase64Icon((string) $validated['icon_data']);
+            if ($storedIconPath !== null) {
+                $validated['icon_path'] = $storedIconPath;
+            }
+        } else {
+            $validated['icon'] = $request->file('icon');
+        }
 
         // 実処理を Service へ委譲する（CompanyProfileService::register）
         $company = $companyProfileService->register($user, $validated);
@@ -203,5 +213,36 @@ class CompanyProfileController extends Controller
 
         // 設定画面へ戻す
         return redirect()->route('company.profile.settings')->with('success', '企業プロフィールを更新しました');
+    }
+
+    /**
+     * data URL 形式の画像を public disk に保存する
+     */
+    private function storeBase64Icon(string $dataUrl): ?string
+    {
+        if (!preg_match('/^data:image\/([a-zA-Z0-9.+-]+);base64,(.+)$/', $dataUrl, $matches)) {
+            return null;
+        }
+
+        $mimeType = strtolower($matches[1]);
+        $extension = match ($mimeType) {
+            'jpeg', 'pjpeg' => 'jpg',
+            default => $mimeType,
+        };
+
+        $binary = base64_decode($matches[2], true);
+        if ($binary === false) {
+            return null;
+        }
+
+        $path = 'company_icons/temp_' . uniqid((string) $this->guessTempPrefix(), true) . '.' . $extension;
+        Storage::disk('public')->put($path, $binary);
+
+        return $path;
+    }
+
+    private function guessTempPrefix(): string
+    {
+        return 'company';
     }
 }

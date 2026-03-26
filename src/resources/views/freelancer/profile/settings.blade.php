@@ -643,14 +643,14 @@
                     <div class="grid-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div class="row">
                             <div class="label">表示名</div>
-                            <input class="input @error('display_name') is-invalid @enderror" id="display_name" name="display_name" type="text" value="{{ old('display_name', $freelancer->display_name ?? '') }}">
+                            <input class="input @error('display_name') is-invalid @enderror" id="display_name" name="display_name" type="text" maxlength="255" value="{{ old('display_name', $freelancer->display_name ?? '') }}">
                             @error('display_name')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="row">
                             <div class="label">職種（自由入力）</div>
-                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" value="{{ old('job_title', $freelancer->job_title ?? '') }}">
+                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" maxlength="255" value="{{ old('job_title', $freelancer->job_title ?? '') }}">
                             @error('job_title')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
@@ -659,7 +659,7 @@
 
                     <div class="row">
                         <div class="label">自己紹介</div>
-                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" placeholder="あなたの経験や得意分野について教えてください">{{ old('bio', $freelancer->bio ?? '') }}</textarea>
+                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" maxlength="5000" placeholder="あなたの経験や得意分野について教えてください">{{ old('bio', $freelancer->bio ?? '') }}</textarea>
                         @error('bio')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -842,13 +842,13 @@
                         <div class="label">希望単価（万円/月）</div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <input class="input @error('min_rate') is-invalid @enderror" id="min_rate" name="min_rate" type="number" placeholder="下限" value="{{ old('min_rate', $freelancer->min_rate ?? '') }}" min="0">
+                                <input class="input @error('min_rate') is-invalid @enderror" id="min_rate" name="min_rate" type="number" placeholder="下限" value="{{ old('min_rate', $freelancer->min_rate ?? '') }}" min="0" max="100000000">
                                 @error('min_rate')
                                 <span class="error-message">{{ $message }}</span>
                                 @enderror
                             </div>
                             <div>
-                                <input class="input @error('max_rate') is-invalid @enderror" id="max_rate" name="max_rate" type="number" placeholder="上限" value="{{ old('max_rate', $freelancer->max_rate ?? '') }}" min="0">
+                                <input class="input @error('max_rate') is-invalid @enderror" id="max_rate" name="max_rate" type="number" placeholder="上限" value="{{ old('max_rate', $freelancer->max_rate ?? '') }}" min="0" max="100000000">
                                 @error('max_rate')
                                 <span class="error-message">{{ $message }}</span>
                                 @enderror
@@ -860,13 +860,13 @@
                         <div class="label">稼働時間（時間/週）</div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <input class="input @error('min_hours_per_week') is-invalid @enderror" id="min_hours_per_week" name="min_hours_per_week" type="number" placeholder="下限" value="{{ old('min_hours_per_week', $freelancer->min_hours_per_week ?? '') }}" min="0">
+                                <input class="input @error('min_hours_per_week') is-invalid @enderror" id="min_hours_per_week" name="min_hours_per_week" type="number" placeholder="下限" value="{{ old('min_hours_per_week', $freelancer->min_hours_per_week ?? '') }}" min="0" max="168">
                                 @error('min_hours_per_week')
                                 <span class="error-message">{{ $message }}</span>
                                 @enderror
                             </div>
                             <div>
-                                <input class="input @error('max_hours_per_week') is-invalid @enderror" id="max_hours_per_week" name="max_hours_per_week" type="number" placeholder="上限" value="{{ old('max_hours_per_week', $freelancer->max_hours_per_week ?? '') }}" min="0">
+                                <input class="input @error('max_hours_per_week') is-invalid @enderror" id="max_hours_per_week" name="max_hours_per_week" type="number" placeholder="上限" value="{{ old('max_hours_per_week', $freelancer->max_hours_per_week ?? '') }}" min="0" max="168">
                                 @error('max_hours_per_week')
                                 <span class="error-message">{{ $message }}</span>
                                 @enderror
@@ -876,7 +876,7 @@
 
                     <div class="row">
                         <div class="label">1日の稼働時間</div>
-                        <input class="input @error('hours_per_day') is-invalid @enderror" id="hours_per_day" name="hours_per_day" type="number" value="{{ old('hours_per_day', $freelancer->hours_per_day ?? '') }}" min="0" placeholder="例: 8">
+                        <input class="input @error('hours_per_day') is-invalid @enderror" id="hours_per_day" name="hours_per_day" type="number" value="{{ old('hours_per_day', $freelancer->hours_per_day ?? '') }}" min="0" max="24" placeholder="例: 8">
                         @error('hours_per_day')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -947,6 +947,7 @@
         (function () {
             const displayName = document.getElementById('display_name');
             const jobTitle = document.getElementById('job_title');
+            const bio = document.getElementById('bio');
             const minRate = document.getElementById('min_rate');
             const maxRate = document.getElementById('max_rate');
             const minHours = document.getElementById('min_hours_per_week');
@@ -1030,10 +1031,56 @@
                 }
             }
 
+            // 数値入力を即座に min/max の範囲へクランプ（不正値が入った瞬間に補正）
+            function clampNumericInput(el) {
+                if (!el) return;
+                if (el.type !== 'number') return;
+
+                const minAttr = el.getAttribute('min');
+                const maxAttr = el.getAttribute('max');
+                const min = minAttr === null || minAttr === '' ? null : Number(minAttr);
+                const max = maxAttr === null || maxAttr === '' ? null : Number(maxAttr);
+
+                const raw = el.value;
+                if (raw === '' || raw === null || raw === undefined) return;
+
+                const val = Number(raw);
+                if (Number.isNaN(val)) return;
+
+                let next = val;
+                if (min !== null && next < min) next = min;
+                if (max !== null && next > max) next = max;
+
+                if (next !== val) el.value = String(next);
+            }
+
+            function clampTextInput(el) {
+                if (!el) return;
+                const maxLenAttr = el.getAttribute('maxlength');
+                if (!maxLenAttr) return;
+                const maxLen = Number(maxLenAttr);
+                if (!maxLen || maxLen <= 0) return;
+                if (el.value && el.value.length > maxLen) {
+                    el.value = el.value.slice(0, maxLen);
+                }
+            }
+
             // イベントリスナーを追加
             [displayName, jobTitle, minRate, maxRate, minHours, maxHours, hoursPerDay, daysPerWeek].forEach(el => {
-                if (el) el.addEventListener('input', updatePreview);
+                if (!el) return;
+                el.addEventListener('input', function () {
+                    clampNumericInput(el);
+                    clampTextInput(el);
+                    updatePreview();
+                });
             });
+
+            // bio も maxlength 超過を即時クランプ
+            if (bio) {
+                bio.addEventListener('input', function () {
+                    clampTextInput(bio);
+                });
+            }
 
             // スキル入力欄追加機能（corporate/settings と同様）
             if (addSkillBtn && skillsContainer) {
@@ -1104,6 +1151,31 @@
             // 初期表示
             updatePreview();
             syncRemoveButton();
+        })();
+
+        // プロフィール画像プレビュー（選択した瞬間に差し替え）
+        (function () {
+            const iconInput = document.getElementById('icon');
+            const previewAvatar = document.getElementById('preview-avatar');
+            if (!iconInput || !previewAvatar) return;
+
+            const defaultPreviewHTML = previewAvatar.innerHTML;
+
+            iconInput.addEventListener('change', function () {
+                const file = iconInput.files && iconInput.files[0] ? iconInput.files[0] : null;
+                if (!file || !file.type || !file.type.startsWith('image/')) {
+                    previewAvatar.innerHTML = defaultPreviewHTML;
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const dataUrl = String(e.target && e.target.result ? e.target.result : '');
+                    if (!dataUrl) return;
+                    previewAvatar.innerHTML = '<img src="' + dataUrl + '" alt="プロフィール画像">';
+                };
+                reader.readAsDataURL(file);
+            });
         })();
 
         // 対応業務 / 得意業種 / 資格: 複数入力（min=4, max=16 / 各項目独立）

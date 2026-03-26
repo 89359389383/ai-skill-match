@@ -19,8 +19,10 @@ class CompanyRegisterRequest extends FormRequest
         return [
             // 会社名（必須・文字列・255文字以内）
             'company_name' => ['required', 'string', 'max:255'],
-            // アイコン（必須）
-            'icon' => ['required', 'file', 'image', 'max:5120'],
+            // アイコンはファイル選択または一時データのどちらかが必要
+            'icon' => ['nullable', 'file', 'image', 'max:5120', 'required_without:icon_data'],
+            // アイコンの一時データ（リロード後の再表示と再送信用）
+            'icon_data' => ['nullable', 'string', 'required_without:icon'],
             // 会社概要（任意・文字列・2000文字以内）
             'overview' => ['nullable', 'string', 'max:2000'],
             // 担当者名（必須・文字列・255文字以内）
@@ -39,10 +41,11 @@ class CompanyRegisterRequest extends FormRequest
             'company_name.string' => '企業名は文字列で入力してください。',
             'company_name.max' => '企業名は255文字以内で入力してください。',
 
-            'icon.required' => 'アイコン画像を選択してください。',
+            'icon.required_without' => 'アイコン画像を選択してください。',
             'icon.file' => 'アイコン画像はファイルを選択してください。',
             'icon.image' => 'アイコン画像は画像ファイルを選択してください。',
             'icon.max' => 'アイコン画像は5MB以下のファイルを選択してください。',
+            'icon_data.required_without' => 'アイコン画像を選択してください。',
 
             'overview.string' => '会社概要は文字列で入力してください。',
             'overview.max' => '会社概要は2000文字以内で入力してください。',

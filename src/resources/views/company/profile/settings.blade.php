@@ -346,35 +346,35 @@
                 @csrf
                 <div class="field">
                     <label for="name">企業名（必須）</label>
-                    <input id="name" name="name" class="input @error('name') is-invalid @enderror" type="text" value="{{ old('name', $company->name ?? '') }}">
+                    <input id="name" name="name" class="input @error('name') is-invalid @enderror" type="text" maxlength="255" value="{{ old('name', $company->name ?? '') }}">
                     @error('name')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="field">
                     <label for="overview">会社概要（任意）</label>
-                    <textarea id="overview" name="overview" class="textarea @error('overview') is-invalid @enderror">{{ old('overview', $company->overview ?? '') }}</textarea>
+                    <textarea id="overview" name="overview" class="textarea @error('overview') is-invalid @enderror" maxlength="2000">{{ old('overview', $company->overview ?? '') }}</textarea>
                     @error('overview')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="field">
                     <label for="contact_name">担当者名（必須）</label>
-                    <input id="contact_name" name="contact_name" class="input @error('contact_name') is-invalid @enderror" type="text" value="{{ old('contact_name', $company->contact_name ?? '') }}">
+                    <input id="contact_name" name="contact_name" class="input @error('contact_name') is-invalid @enderror" type="text" maxlength="255" value="{{ old('contact_name', $company->contact_name ?? '') }}">
                     @error('contact_name')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="field">
                     <label for="department">部署（任意）</label>
-                    <input id="department" name="department" class="input @error('department') is-invalid @enderror" type="text" value="{{ old('department', $company->department ?? '') }}">
+                    <input id="department" name="department" class="input @error('department') is-invalid @enderror" type="text" maxlength="255" value="{{ old('department', $company->department ?? '') }}">
                     @error('department')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="field">
                     <label for="introduction">自己紹介（任意）</label>
-                    <textarea id="introduction" name="introduction" class="textarea @error('introduction') is-invalid @enderror">{{ old('introduction', $company->introduction ?? '') }}</textarea>
+                    <textarea id="introduction" name="introduction" class="textarea @error('introduction') is-invalid @enderror" maxlength="2000">{{ old('introduction', $company->introduction ?? '') }}</textarea>
                     @error('introduction')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
@@ -391,7 +391,19 @@
                     @if($company && $company->icon_path)
                         <p class="help" style="margin-top:0.25rem;">現在の画像</p>
                         <div style="margin: 0.5rem 0;">
-                            <img src="{{ asset('storage/' . $company->icon_path) }}" alt="プロフィール画像" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
+                            <img
+                                id="icon_preview"
+                                src="{{ asset('storage/' . $company->icon_path) }}"
+                                alt="プロフィール画像"
+                                style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
+                        </div>
+                    @else
+                        <div style="margin: 0.5rem 0;">
+                            <img
+                                id="icon_preview"
+                                src=""
+                                alt="プロフィール画像"
+                                style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb; display:none;">
                         </div>
                     @endif
                     <input id="icon" name="icon" type="file" class="input @error('icon') is-invalid @enderror" accept="image/*">
@@ -424,6 +436,68 @@
             toggle.addEventListener('click', (e) => { e.stopPropagation(); isOpen() ? close() : open(); });
             document.addEventListener('click', (e) => { if (!dropdown.contains(e.target)) close(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+        })();
+    </script>
+    <script>
+        (function () {
+            /**
+             * maxlength 属性を超える入力（貼り付け含む）を即時に切り詰める
+             * ※サーバー側バリデーションと同じ上限値に合わせています
+             */
+            function clampTextInput(el) {
+                if (!el) return;
+                const maxLen = el.maxLength ? Number(el.maxLength) : 0;
+                if (!maxLen || maxLen <= 0) return;
+                if (el.value && el.value.length > maxLen) {
+                    el.value = el.value.slice(0, maxLen);
+                }
+            }
+
+            const fields = [
+                document.getElementById('name'),
+                document.getElementById('overview'),
+                document.getElementById('contact_name'),
+                document.getElementById('department'),
+                document.getElementById('introduction'),
+            ].filter(Boolean);
+
+            fields.forEach((el) => {
+                el.addEventListener('input', function () {
+                    clampTextInput(el);
+                });
+                el.addEventListener('change', function () {
+                    clampTextInput(el);
+                });
+            });
+        })();
+    </script>
+
+    <script>
+        // プロフィール画像プレビュー（選択した瞬間に差し替え）
+        (function () {
+            const iconInput = document.getElementById('icon');
+            const iconPreview = document.getElementById('icon_preview');
+            if (!iconInput || !iconPreview) return;
+
+            const defaultSrc = iconPreview.getAttribute('src') || '';
+
+            iconInput.addEventListener('change', function () {
+                const file = iconInput.files && iconInput.files[0] ? iconInput.files[0] : null;
+                if (!file || !file.type || !file.type.startsWith('image/')) {
+                    iconPreview.src = defaultSrc;
+                    iconPreview.style.display = defaultSrc ? 'block' : 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const dataUrl = String(e.target && e.target.result ? e.target.result : '');
+                    if (!dataUrl) return;
+                    iconPreview.src = dataUrl;
+                    iconPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
         })();
     </script>
 </body>
