@@ -515,7 +515,19 @@
                     </div>
                     <div class="field">
                         <label for="min_rate">最低単価（必須）</label>
-                        <input id="min_rate" name="min_rate" class="input @error('min_rate') is-invalid @enderror" type="number" placeholder="例: 300000" value="{{ old('min_rate') }}" min="0">
+                        <input
+                            id="min_rate"
+                            name="min_rate"
+                            class="input @error('min_rate') is-invalid @enderror"
+                            type="number"
+                            placeholder="例: 300000"
+                            value="{{ old('min_rate') }}"
+                            inputmode="numeric"
+                            step="1"
+                            min="0"
+                            max="100000000"
+                            oninput="if(this.value===''){return;} this.value = Math.max(0, Math.min(100000000, Math.floor(Number(this.value))));"
+                        >
                         <div class="help">円単位で入力してください</div>
                         @error('min_rate')
                             <span class="error-message">{{ $message }}</span>
@@ -523,7 +535,19 @@
                     </div>
                     <div class="field">
                         <label for="max_rate">最高単価（必須）</label>
-                        <input id="max_rate" name="max_rate" class="input @error('max_rate') is-invalid @enderror" type="number" placeholder="例: 500000" value="{{ old('max_rate') }}" min="0">
+                        <input
+                            id="max_rate"
+                            name="max_rate"
+                            class="input @error('max_rate') is-invalid @enderror"
+                            type="number"
+                            placeholder="例: 500000"
+                            value="{{ old('max_rate') }}"
+                            inputmode="numeric"
+                            step="1"
+                            min="0"
+                            max="100000000"
+                            oninput="if(this.value===''){return;} this.value = Math.max(0, Math.min(100000000, Math.floor(Number(this.value))));"
+                        >
                         <div class="help">円単位で入力してください</div>
                         @error('max_rate')
                             <span class="error-message">{{ $message }}</span>

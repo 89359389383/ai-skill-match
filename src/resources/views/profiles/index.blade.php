@@ -165,6 +165,26 @@
                             <h3 class="text-xl font-bold text-gray-900 mb-1">{{ $f->display_name ?? '名前未設定' }}</h3>
                             <p class="text-sm text-gray-600 mb-2">職種: {{ $f->job_title ?? '未設定' }}</p>
                             @php
+                                $skillListings = $f->skillListings ?? collect();
+                                // 全レビューを合算した重み付き平均
+                                // rating_average は「各出品サービスの平均点」、reviews_count は「そのサービスのレビュー件数」
+                                $reviewsCountTotal = (int) ($skillListings->sum('reviews_count') ?? 0);
+                                $weightedSum = (float) $skillListings->reduce(function ($carry, $sl) {
+                                    $rating = (float) ($sl->rating_average ?? 0);
+                                    $count = (int) ($sl->reviews_count ?? 0);
+                                    return $carry + ($rating * $count);
+                                }, 0.0);
+                                $avgRating = $reviewsCountTotal > 0 ? ($weightedSum / $reviewsCountTotal) : 0.0;
+                                $avgRatingFormatted = number_format(round($avgRating, 1), 1, '.', '');
+                            @endphp
+                            <div class="flex items-center justify-center gap-2 mb-3">
+                                <svg class="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="font-bold text-gray-900">{{ $avgRatingFormatted }}</span>
+                                <span class="text-sm text-gray-500">({{ $reviewsCountTotal }}件)</span>
+                            </div>
+                            @php
                                 $allSkills = $f->skills->pluck('name')->merge($f->customSkills->pluck('name'))->values();
                             @endphp
                             <div class="mb-3">
