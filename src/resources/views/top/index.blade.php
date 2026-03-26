@@ -387,6 +387,11 @@ section {
     background: linear-gradient(to bottom right, #22c55e, #10b981);
 }
 
+.features-section {
+    /* 薄いオレンジ系（別パターン） */
+    background: linear-gradient(to bottom right, #fff7ed, #ffedd5);
+}
+
 .icon {
     width: 1.75rem;
     height: 1.75rem;
@@ -406,7 +411,8 @@ section {
 
 /* Benefits Section */
 .benefits-section {
-    background: linear-gradient(to bottom right, #eef2ff, #faf5ff);
+    /* 薄いオレンジ系（別パターン） */
+    background: linear-gradient(to bottom right, #fffbeb, #fde68a);
 }
 
 .benefits-grid {
@@ -829,19 +835,20 @@ section {
 
 /* Section Backgrounds */
 .freelancers-section {
-    background-color: #ffffff;
+    /* もっとオレンジ寄り（赤っぽさを抑える） */
+    background: linear-gradient(to bottom right, #fff7ed, #ffedd5);
 }
 
 .questions-section {
-    background: linear-gradient(to bottom right, #eff6ff, #ecfeff);
+    background: linear-gradient(to bottom right, #fffbeb, #ffedd5);
 }
 
 .skills-section {
-    background: linear-gradient(to bottom right, #faf5ff, #fce7f3);
+    background: linear-gradient(to bottom right, #fff7ed, #ffd6a5);
 }
 
 .articles-section {
-    background-color: #ffffff;
+    background: linear-gradient(to bottom right, #ffedd5, #ffe4b5);
 }
 
 /* CTA Section */
@@ -940,28 +947,6 @@ section {
             </div>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon bg-blue">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            <circle cx="12" cy="11" r="1"></circle>
-                            <circle cx="8" cy="11" r="1"></circle>
-                            <circle cx="16" cy="11" r="1"></circle>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">AI知恵袋</h3>
-                    <p class="feature-description">AIに関する質問を投稿し、コミュニティから回答を得られます</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon bg-purple">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">スキル販売</h3>
-                    <p class="feature-description">あなたのAIスキルをサービスとして販売できます</p>
-                </div>
-                <div class="feature-card">
                     <div class="feature-icon bg-orange">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -972,6 +957,16 @@ section {
                     </div>
                     <h3 class="feature-title">プロフィール公開</h3>
                     <p class="feature-description">フリーランスとして実績とスキルを公開できます</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon bg-purple">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">スキル販売</h3>
+                    <p class="feature-description">あなたのAIスキルをサービスとして販売できます</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon bg-green">
@@ -985,6 +980,18 @@ section {
                     </div>
                     <h3 class="feature-title">記事投稿</h3>
                     <p class="feature-description">AI関連の知識や経験を記事として共有できます</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon bg-blue">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="11" r="1"></circle>
+                            <circle cx="8" cy="11" r="1"></circle>
+                            <circle cx="16" cy="11" r="1"></circle>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">知恵袋</h3>
+                    <p class="feature-description">AIに関する質問を投稿し、コミュニティから回答を得られます</p>
                 </div>
             </div>
         </div>
@@ -1037,7 +1044,6 @@ section {
             <div class="section-header-row">
                 <div>
                     <h2 class="section-title">新着フリーランス</h2>
-                    <p class="section-subtitle">スキルと実績を持つAI人材</p>
                 </div>
                 <a href="{{ route('profiles.index') }}" class="link-with-arrow">
                     すべて見る
@@ -1100,7 +1106,7 @@ section {
                                 <svg class="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                                 </svg>
-                                <span class="font-bold text-gray-900">☆{{ $avgRatingFormatted }}</span>
+                                <span class="font-bold text-gray-900">{{ $avgRatingFormatted }}</span>
                                 <span class="text-sm text-gray-500">({{ $reviewsCountTotal }}件)</span>
                             </div>
 
@@ -1148,7 +1154,6 @@ section {
             <div class="section-header-row">
                 <div>
                     <h2 class="section-title">最新の質問</h2>
-                    <p class="section-subtitle">コミュニティで活発に議論されている質問</p>
                 </div>
                 <a href="{{ route('questions.index') }}" class="link-with-arrow">
                     すべて見る
@@ -1212,8 +1217,7 @@ section {
         <div class="container">
             <div class="section-header-row">
                 <div>
-                    <h2 class="section-title">人気のスキル</h2>
-                    <p class="section-subtitle">需要の高いAIスキルサービス</p>
+                    <h2 class="section-title">最新のスキル</h2>
                 </div>
                 <a href="{{ route('skills.index') }}" class="link-with-arrow">
                     すべて見る
@@ -1260,8 +1264,7 @@ section {
         <div class="container">
             <div class="section-header-row">
                 <div>
-                    <h2 class="section-title">注目の記事</h2>
-                    <p class="section-subtitle">コミュニティメンバーが発信するAI情報</p>
+                    <h2 class="section-title">最新の記事</h2>
                 </div>
                 <a href="{{ route('articles.index') }}" class="link-with-arrow">
                     すべて見る
@@ -1336,4 +1339,3 @@ section {
     --}}
 
 @endsection
-
