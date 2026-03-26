@@ -13,6 +13,25 @@ class UpdateArticleRequest extends FormRequest
         return true;
     }
 
+    /**
+     * 入力前処理：
+     * - tags が存在する場合、個々の要素を文字列に変換して空要素を除去する。
+     *   API 経由で数値などが来ても文字列化してバリデーションに通るようにする。
+     */
+    protected function prepareForValidation(): void
+    {
+        $tags = $this->input('tags', null);
+        if (is_array($tags)) {
+            $normalized = array_values(array_filter(array_map(function ($t) {
+                if (is_null($t)) return null;
+                return (string) $t;
+            }, $tags), function ($v) {
+                return trim($v) !== '';
+            }));
+            $this->merge(['tags' => $normalized]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -32,7 +51,7 @@ class UpdateArticleRequest extends FormRequest
                 },
             ],
             'structure' => ['nullable', 'array'],
-            'tags' => ['required', 'array', 'min:4', 'max:16'],
+            'tags' => ['nullable', 'array', 'max:10'],
             'tags.*' => ['string', 'max:50'],
 
             // 公開設定（任意）
@@ -52,8 +71,8 @@ class UpdateArticleRequest extends FormRequest
             'eyecatch_image.max' => 'アイキャッチ画像は5MB以内にしてください。',
             'body_html.required' => '本文を入力してください。',
             'body_html.max' => '本文が長すぎます。',
-            'tags.min' => 'タグは最低4個入力してください。',
-            'tags.max' => 'タグは最大16個までです。',
+            'tags.array' => 'タグの形式が不正です。',
+            'tags.*.max' => 'タグは50文字以内で入力してください。',
             'is_published.in' => '公開設定の値が不正です。',
         ];
     }

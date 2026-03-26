@@ -177,7 +177,7 @@
 
                 <div class="max-w-none">
                     @if($article->excerpt)
-                        <p class="text-lg text-gray-700 leading-relaxed mb-8">{{ $article->excerpt }}</p>
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8 whitespace-pre-line">{{ $article->excerpt }}</p>
                     @endif
 
                     @if(filled($article->body_html))

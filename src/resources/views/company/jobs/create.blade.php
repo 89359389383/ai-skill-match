@@ -477,16 +477,16 @@
                     >
                     <div class="skills-container" id="required-skills-container" aria-label="必要スキル入力欄">
                         <div class="skills-row-4">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: PHP">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: Laravel">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: Vue.js">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: MySQL">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例：n8n" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
                         </div>
                         <div class="skills-row-4">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: Docker">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: AWS">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: TypeScript">
-                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" placeholder="例: Git">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
+                            <input class="input skill-input {{ $requiredSkillsInvalid ? 'is-invalid' : '' }}" type="text" maxlength="500">
                         </div>
                     @error('required_skills_text')
                         <span class="error-message">{{ $message }}</span>
@@ -773,7 +773,7 @@
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.className = 'input skill-input';
-                    input.placeholder = '例: スキル名';
+                    input.maxLength = 500;
                     row.appendChild(input);
                 }
                 return row;

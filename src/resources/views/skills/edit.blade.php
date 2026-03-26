@@ -123,7 +123,7 @@
                                                     name="skill_names[]"
                                                     type="text"
                                                     value="{{ $skillNameSlots[$idx] ?? '' }}"
-                                                    placeholder="例: Laravel"
+                                                    @if($idx === 0) placeholder="例: Laravel" @endif
                                                 >
                                             @endfor
                                         </div>
@@ -166,10 +166,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">料金 <span class="text-red-500">*</span></label>
-                                <input type="text" id="price" name="price"
-                                       value="{{ old('price', $listing->price) }}"
-                                       placeholder="例：30000"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('price') border-red-500 @enderror">
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    value="{{ old('price', $listing->price) }}"
+                                    placeholder="例：30000"
+                                    inputmode="numeric"
+                                    step="1"
+                                    min="0"
+                                    max="100000000"
+                                    oninput="if(this.value===''){return;} this.value = Math.max(0, Math.min(100000000, Math.floor(Number(this.value))))"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('price') border-red-500 @enderror">
                                 @error('price')
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
@@ -177,10 +185,18 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">納期 <span class="text-red-500">*</span></label>
-                                <input type="text" id="duration" name="delivery_days"
-                                       value="{{ old('delivery_days', $listing->delivery_days) }}"
-                                       placeholder="例：3"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('delivery_days') border-red-500 @enderror">
+                                <input
+                                    type="number"
+                                    id="duration"
+                                    name="delivery_days"
+                                    value="{{ old('delivery_days', $listing->delivery_days) }}"
+                                    placeholder="例：3"
+                                    inputmode="numeric"
+                                    step="1"
+                                    min="1"
+                                    max="365"
+                                    oninput="if(this.value===''){return;} this.value = Math.max(1, Math.min(365, Math.floor(Number(this.value))))"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('delivery_days') border-red-500 @enderror">
                                 @error('delivery_days')
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
@@ -265,7 +281,6 @@
                 input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent';
                 input.name = 'skill_names[]';
                 input.type = 'text';
-                input.placeholder = '例: Laravel';
                 row.appendChild(input);
             }
             return row;
