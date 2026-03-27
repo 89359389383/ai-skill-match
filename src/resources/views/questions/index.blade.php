@@ -105,6 +105,12 @@
 
         @php
             $tab = $tab ?? 'open';
+        $viewerUserId = null;
+        if (auth('freelancer')->check()) {
+            $viewerUserId = auth('freelancer')->user()->id ?? null;
+        } elseif (auth('company')->check()) {
+            $viewerUserId = auth('company')->user()->id ?? null;
+        }
         @endphp
 
         @if(!$questions->isEmpty())
@@ -150,7 +156,14 @@
                 @foreach($questions as $q)
                     <a href="{{ route('questions.show', ['question' => $q->id]) }}" class="block px-5 py-4 hover:bg-gray-50/80 transition-colors">
                         <p class="text-[16px] text-gray-900 mb-1.5">{{ $q->category ?? 'その他' }}</p>
-                        <h2 class="text-lg font-bold text-blue-600 line-clamp-2 mb-2 leading-snug">{{ $q->title }}</h2>
+                        <div class="flex items-start gap-3">
+                            <h2 class="text-lg font-bold text-blue-600 line-clamp-2 mb-2 leading-snug flex-1">{{ $q->title }}</h2>
+                            @if($viewerUserId && (int)$q->user_id === (int)$viewerUserId)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-700 text-[12px] font-bold whitespace-nowrap">
+                                    自分の質問
+                                </span>
+                            @endif
+                        </div>
                         @if($tab === 'resolved' && $q->bestAnswer)
                             <div class="ml-1 pl-3 border-l-4 border-gray-200 text-sm text-gray-600 mb-3 leading-relaxed">
                                 <span class="font-medium text-gray-700">ベストアンサー：</span>{{ Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($q->bestAnswer->content))), 140) }}

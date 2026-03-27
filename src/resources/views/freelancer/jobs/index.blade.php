@@ -596,7 +596,9 @@
         <aside class="sidebar w-full lg:w-80 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
             <div class="search-section">
                 <h3>検索条件</h3>
-                <form method="GET" action="{{ route('freelancer.jobs.index') }}" id="searchForm">
+                <form method="GET" action="{{ route('freelancer.jobs.index') }}" id="searchForm" novalidate>
+                {{-- slot はセッションCookie分離に使われるため、検索送信でも維持する --}}
+                <input type="hidden" name="slot" value="{{ request('slot') }}">
                 <div class="search-group">
                     <label for="keyword">キーワード</label>
                     <input type="text" id="keyword" name="keyword" class="search-input" placeholder="案件名 / 会社名 / スキル など" value="{{ old('keyword', $keyword ?? '') }}">
@@ -606,23 +608,57 @@
                     <label>報酬</label>
                     <div class="radio-group">
                         <label class="radio-option">
-                            <input type="radio" id="priceTypeMonthly" name="price-type" class="radio-input" value="monthly" checked>
+                            <input
+                                type="radio"
+                                id="priceTypeMonthly"
+                                name="price-type"
+                                class="radio-input"
+                                value="monthly"
+                                {{ old('price-type', $priceType ?? 'monthly') === 'monthly' ? 'checked' : '' }}
+                            >
                             <span>単価</span>
                         </label>
                         <label class="radio-option">
-                            <input type="radio" id="priceTypeHourly" name="price-type" class="radio-input" value="hourly">
+                            <input
+                                type="radio"
+                                id="priceTypeHourly"
+                                name="price-type"
+                                class="radio-input"
+                                value="hourly"
+                                {{ old('price-type', $priceType ?? 'monthly') === 'hourly' ? 'checked' : '' }}
+                            >
                             <span>時給</span>
                         </label>
                     </div>
                     <div class="price-range">
                         <div class="price-row">
                             <span class="price-row-label">下限</span>
-                            <input type="number" id="priceMin" class="price-input" placeholder="例: 50" min="0" step="1" inputmode="numeric">
+                            <input
+                                type="number"
+                                id="priceMin"
+                                name="reward_min"
+                                class="price-input"
+                                placeholder="例: 50"
+                                min="0"
+                                step="1"
+                                inputmode="numeric"
+                                value="{{ old('reward_min', $rewardMin ?? '') }}"
+                            >
                             <span class="price-row-unit priceUnit">万円</span>
                         </div>
                         <div class="price-row">
                             <span class="price-row-label">上限</span>
-                            <input type="number" id="priceMax" class="price-input" placeholder="例: 70" min="0" step="1" inputmode="numeric">
+                            <input
+                                type="number"
+                                id="priceMax"
+                                name="reward_max"
+                                class="price-input"
+                                placeholder="例: 70"
+                                min="0"
+                                step="1"
+                                inputmode="numeric"
+                                value="{{ old('reward_max', $rewardMax ?? '') }}"
+                            >
                             <span class="price-row-unit priceUnit">万円</span>
                         </div>
                     </div>
@@ -630,6 +666,14 @@
                 </div>
 
                 <button type="submit" class="search-btn">検索</button>
+                <button
+                    type="button"
+                    class="search-btn"
+                    style="margin-top: 0.5rem;"
+                    onclick="window.location='{{ route('freelancer.jobs.index', ['slot' => request('slot')]) }}'"
+                >
+                    クリア
+                </button>
                 </form>
             </div>
         </aside>

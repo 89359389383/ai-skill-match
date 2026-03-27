@@ -28,6 +28,21 @@ class FreelancerJobController extends Controller
         // キーワードを受け取る（keyword検索は任意）
         $keyword = $request->query('keyword');
 
+        // 報酬レンジ検索（万単位 or 円/時）
+        // - フロント側のラジオ：`price-type` = monthly|hourly
+        $priceType = $request->query('price-type', 'monthly');
+        if (!in_array($priceType, ['monthly', 'hourly'], true)) {
+            $priceType = 'monthly';
+        }
+
+        // フロント側入力：GETクエリ
+        $rewardMinRaw = $request->query('reward_min');
+        $rewardMaxRaw = $request->query('reward_max');
+
+        // 数値化（入力が空なら null）
+        $rewardMinNum = (is_numeric($rewardMinRaw) ? (int) $rewardMinRaw : null);
+        $rewardMaxNum = (is_numeric($rewardMaxRaw) ? (int) $rewardMaxRaw : null);
+
         // 公開中の案件だけを対象にする（status = publish のみ）
         $query = Job::query()
             ->where('status', Job::STATUS_PUBLISHED)
@@ -51,6 +66,36 @@ class FreelancerJobController extends Controller
                         $cq->where('name', 'like', '%' . $keyword . '%');
                     });
             });
+        }
+
+        // 報酬フィルタ（範囲の「重なり」判定）
+        // - 両方指定時：job_max >= rewardMin かつ job_min <= rewardMax
+        // - 片側指定時：job_max >= rewardMin / job_min <= rewardMax
+        // また、monthly は DB単位が円/月のため「万 -> 円」変換する。
+        $hasRewardFilter = ($rewardMinNum !== null || $rewardMaxNum !== null);
+        if ($hasRewardFilter) {
+            if ($rewardMinNum !== null && $rewardMaxNum !== null && $rewardMinNum > $rewardMaxNum) {
+                [$rewardMinNum, $rewardMaxNum] = [$rewardMaxNum, $rewardMinNum];
+            }
+
+            if ($priceType === 'monthly') {
+                $rewardMin = ($rewardMinNum !== null) ? $rewardMinNum * 10000 : null;
+                $rewardMax = ($rewardMaxNum !== null) ? $rewardMaxNum * 10000 : null;
+            } else { // hourly
+                $rewardMin = $rewardMinNum;
+                $rewardMax = $rewardMaxNum;
+            }
+
+            $query->where('reward_type', $priceType);
+
+            if ($rewardMin !== null && $rewardMax !== null) {
+                $query->where('max_rate', '>=', $rewardMin)
+                    ->where('min_rate', '<=', $rewardMax);
+            } elseif ($rewardMin !== null) {
+                $query->where('max_rate', '>=', $rewardMin);
+            } else { // $rewardMax !== null
+                $query->where('min_rate', '<=', $rewardMax);
+            }
         }
 
         // 一覧をページングして取得する（大量データ想定）
@@ -124,6 +169,10 @@ class FreelancerJobController extends Controller
             'jobs' => $jobs,
             // 入力した検索キーワード（画面で保持するため）
             'keyword' => $keyword,
+            // 報酬フィルタ保持用
+            'priceType' => $priceType,
+            'rewardMin' => $rewardMinRaw,
+            'rewardMax' => $rewardMaxRaw,
             // 応募済み案件IDの配列
             'appliedJobIds' => $appliedJobIds,
             // 案件IDをキーとしたスレッドマップ

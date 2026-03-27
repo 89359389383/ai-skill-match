@@ -35,23 +35,36 @@ class CompanyJobController extends Controller
         // フィルタ用のクエリを取得する（status/keyword は任意）
         $status = $request->query('status');
         $keyword = $request->query('keyword');
-        // 報酬（万）の検索レンジ（GETクエリ）
+        // 単価/時給の種類
+        $priceType = $request->query('price-type', 'monthly');
+        if (!in_array($priceType, ['monthly', 'hourly'], true)) {
+            $priceType = 'monthly';
+        }
+
+        // 報酬（下限/上限）の検索レンジ（GETクエリ）
         $rewardMinRaw = $request->query('reward_min');
         $rewardMaxRaw = $request->query('reward_max');
 
-        // フォームからは「万」単位で受け取る -> サーバ側では円に変換して比較する
-        $rewardMinWan = (is_numeric($rewardMinRaw) ? (int)$rewardMinRaw : null);
-        $rewardMaxWan = (is_numeric($rewardMaxRaw) ? (int)$rewardMaxRaw : null);
+        // 数値化（入力が空なら null）
+        $rewardMinNum = (is_numeric($rewardMinRaw) ? (int)$rewardMinRaw : null);
+        $rewardMaxNum = (is_numeric($rewardMaxRaw) ? (int)$rewardMaxRaw : null);
 
         // 両方入っている時だけレンジとして扱う（サーバ側でも安全に）
-        if ($rewardMinWan !== null && $rewardMaxWan !== null && $rewardMinWan > $rewardMaxWan) {
+        if ($rewardMinNum !== null && $rewardMaxNum !== null && $rewardMinNum > $rewardMaxNum) {
             // 下限/上限が逆なら入れ替える（ユーザー入力ミス耐性）
-            [$rewardMinWan, $rewardMaxWan] = [$rewardMaxWan, $rewardMinWan];
+            [$rewardMinNum, $rewardMaxNum] = [$rewardMaxNum, $rewardMinNum];
         }
 
-        // 万 -> 円 に変換（DBの単位が円のため）
-        $rewardMin = ($rewardMinWan !== null ? $rewardMinWan * 10000 : null);
-        $rewardMax = ($rewardMaxWan !== null ? $rewardMaxWan * 10000 : null);
+        // DB比較用に単位を揃える
+        if ($priceType === 'monthly') {
+            // フォームは「万」単位 => DBは円 => 万 -> 円
+            $rewardMin = ($rewardMinNum !== null ? $rewardMinNum * 10000 : null);
+            $rewardMax = ($rewardMaxNum !== null ? $rewardMaxNum * 10000 : null);
+        } else { // hourly
+            // フォームは「円/時」単位 => DBの単位そのまま
+            $rewardMin = $rewardMinNum;
+            $rewardMax = $rewardMaxNum;
+        }
 
         // 自社案件のみ対象にする
         $query = Job::query()->where('company_id', $company->id);
@@ -94,6 +107,9 @@ class CompanyJobController extends Controller
         //   - 上限のみ: job_min <= rewardMax
         $hasRewardFilter = ($rewardMin !== null || $rewardMax !== null);
         if ($hasRewardFilter) {
+            // 絞り込み対象の報酬タイプ（単価/時給）を一致させる
+            $query->where('reward_type', $priceType);
+
             if ($rewardMin !== null && $rewardMax !== null) {
                 $query->where('max_rate', '>=', $rewardMin)
                     ->where('min_rate', '<=', $rewardMax);
@@ -140,6 +156,7 @@ class CompanyJobController extends Controller
             // 報酬レンジを保持する
             'rewardMin' => $rewardMinRaw,
             'rewardMax' => $rewardMaxRaw,
+            'priceType' => $priceType,
             // 企業情報
             'company' => $company,
             // ヘッダー用未読数
