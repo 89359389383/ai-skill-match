@@ -359,6 +359,121 @@
             flex: 0 0 auto;
         }
 
+        /* Search form (match freelancer jobs UI) */
+        .search-section {
+            background-color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            border: 1px solid #e1e4e8;
+            margin-bottom: 2rem;
+        }
+        .search-section h3 {
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            color: #24292e;
+            letter-spacing: -0.01em;
+        }
+        .search-group { margin-bottom: 1.5rem; }
+        .search-group label {
+            display: block;
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+            color: #586069;
+            font-size: 0.9rem;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+            background-color: #fafbfc;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+            background-color: white;
+        }
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .radio-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .price-range {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .price-row-label {
+            font-weight: 800;
+            color: #586069;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+        .price-input {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+            background-color: #fafbfc;
+            max-width: 140px;
+        }
+        .price-input:focus {
+            outline: none;
+            border-color: #0366d6;
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+            background-color: white;
+        }
+        .price-row-unit {
+            font-weight: 800;
+            color: #586069;
+            font-size: 0.9rem;
+            min-width: 60px;
+        }
+        .price-help {
+            color: #6a737d;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        .search-btn {
+            width: 100%;
+            background-color: #0366d6;
+            color: white;
+            border: none;
+            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.95rem;
+        }
+        .search-btn:hover { background-color: #0256cc; box-shadow: 0 2px 8px rgba(3, 102, 214, 0.3); }
+        .priceUnit {
+            white-space: nowrap;
+            padding-left: 0.25rem;
+        }
+
         .page-title {
             font-size: 2rem;
             font-weight: 900;
@@ -651,49 +766,96 @@
 
     <main class="main-content max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pb-6 md:pb-10 flex flex-col lg:flex-row gap-6 lg:gap-10">
         <aside class="sidebar w-full lg:w-80 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
-            <div class="panel p-5 md:p-7">
-                <h3>検索</h3>
-                <form method="GET" action="{{ route('company.jobs.index') }}">
-                    <div class="field">
+            <div class="search-section">
+                <h3>検索条件</h3>
+                <form method="GET" action="{{ route('company.jobs.index') }}" id="searchForm" novalidate>
+                    {{-- slot はセッションCookie分離に使われるため、検索送信でも維持 --}}
+                    <input type="hidden" name="slot" value="{{ request('slot') }}">
+
+                    <div class="search-group">
                         <label for="keyword">キーワード</label>
-                        <input id="keyword" name="keyword" class="input" type="text" placeholder="タイトル / 概要 / スキル など" value="{{ old('keyword', $keyword ?? '') }}">
+                        <input
+                            type="text"
+                            id="keyword"
+                            name="keyword"
+                            class="search-input"
+                            placeholder="案件名 / 会社名 / スキル など"
+                            value="{{ old('keyword', $keyword ?? '') }}"
+                        >
                     </div>
-                    <div class="field">
-                        <label for="reward_min">報酬</label>
-                        <div class="input-group" aria-label="報酬（下限〜上限）">
-                            <div class="input-group" style="flex: 1 1 0;">
+
+                    <div class="search-group">
+                        <label>報酬</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
                                 <input
-                                    id="reward_min"
-                                    name="reward_min"
-                                    class="input"
+                                    type="radio"
+                                    id="priceTypeMonthly"
+                                    name="price-type"
+                                    class="radio-input"
+                                    value="monthly"
+                                    {{ old('price-type', $priceType ?? 'monthly') === 'monthly' ? 'checked' : '' }}
+                                >
+                                <span>単価</span>
+                            </label>
+                            <label class="radio-option">
+                                <input
+                                    type="radio"
+                                    id="priceTypeHourly"
+                                    name="price-type"
+                                    class="radio-input"
+                                    value="hourly"
+                                    {{ old('price-type', $priceType ?? 'monthly') === 'hourly' ? 'checked' : '' }}
+                                >
+                                <span>時給</span>
+                            </label>
+                        </div>
+
+                        <div class="price-range">
+                            <div class="price-row">
+                                <span class="price-row-label">下限</span>
+                                <input
                                     type="number"
-                                    inputmode="numeric"
+                                    id="priceMin"
+                                    name="reward_min"
+                                    class="price-input"
+                                    placeholder="例: 50"
                                     min="0"
                                     step="1"
-                                    placeholder="下限"
+                                    inputmode="numeric"
                                     value="{{ old('reward_min', $rewardMin ?? '') }}"
                                 >
-                                <span class="unit">万</span>
+                                <span class="price-row-unit priceUnit">万円</span>
                             </div>
-                            <span class="range-sep">〜</span>
-                            <div class="input-group" style="flex: 1 1 0;">
+                            <div class="price-row">
+                                <span class="price-row-label">上限</span>
                                 <input
-                                    id="reward_max"
-                                    name="reward_max"
-                                    class="input"
                                     type="number"
-                                    inputmode="numeric"
+                                    id="priceMax"
+                                    name="reward_max"
+                                    class="price-input"
+                                    placeholder="例: 70"
                                     min="0"
                                     step="1"
-                                    placeholder="上限"
+                                    inputmode="numeric"
                                     value="{{ old('reward_max', $rewardMax ?? '') }}"
                                 >
-                                <span class="unit">万</span>
+                                <span class="price-row-unit priceUnit">万円</span>
                             </div>
                         </div>
+
+                        <div class="price-help" id="priceHelp">例: 50 〜 70（万円）</div>
                     </div>
-                    <button class="btn btn-primary w-full" type="submit">検索</button>
-                    <button class="btn btn-secondary w-full mt-2" type="button" onclick="window.location='{{ route('company.jobs.index') }}'">クリア</button>
+
+                    <button type="submit" class="search-btn">検索</button>
+                    <button
+                        type="button"
+                        class="search-btn"
+                        style="margin-top: 0.5rem;"
+                        onclick="window.location='{{ route('company.jobs.index', ['slot' => request('slot')]) }}'"
+                    >
+                        クリア
+                    </button>
                 </form>
             </div>
         </aside>
@@ -839,6 +1001,41 @@
     </div>
 
     <script>
+        (function () {
+            const monthly = document.getElementById('priceTypeMonthly');
+            const hourly = document.getElementById('priceTypeHourly');
+            const minInput = document.getElementById('priceMin');
+            const maxInput = document.getElementById('priceMax');
+            const unitEls = document.querySelectorAll('.priceUnit');
+            const help = document.getElementById('priceHelp');
+            if (!monthly || !hourly || !minInput || !maxInput || unitEls.length === 0 || !help) return;
+
+            const applyType = (type) => {
+                const isMonthly = type === 'monthly';
+
+                unitEls.forEach((el) => {
+                    el.textContent = isMonthly ? '万円' : '円/時';
+                });
+
+                minInput.placeholder = isMonthly ? '例: 50' : '例: 2500';
+                maxInput.placeholder = isMonthly ? '例: 70' : '例: 4000';
+
+                minInput.step = isMonthly ? '1' : '10';
+                maxInput.step = isMonthly ? '1' : '10';
+
+                help.textContent = isMonthly
+                    ? '例: 50 〜 70（万円）'
+                    : '例: 2500 〜 4000（円/時）';
+            };
+
+            const onChange = () => applyType(monthly.checked ? 'monthly' : 'hourly');
+            monthly.addEventListener('change', onChange);
+            hourly.addEventListener('change', onChange);
+
+            // 初期反映
+            onChange();
+        })();
+
         (function () {
             const dropdown = document.getElementById('userDropdown');
             const toggle = document.getElementById('userDropdownToggle');

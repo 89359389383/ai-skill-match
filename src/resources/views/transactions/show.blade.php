@@ -197,9 +197,8 @@
         default => 'pscc-status-progress',
     };
 
-    $headerStickyTop = auth('freelancer')->check()
-        ? 'calc(var(--public-header-height) + var(--freelancer-header-height))'
-        : 'var(--public-header-height)';
+    // `company/direct-messages/show` と同様に、共通ヘッダー直下に固定する
+    $headerStickyTop = 'var(--public-header-height)';
 @endphp
 
 <div class="pscc-container">
@@ -420,11 +419,6 @@
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp"
                     style="display:none;"
                 >
-                <button class="pscc-attach-button" id="attachButton" title="ファイルを添付" type="button" aria-label="ファイルを添付">
-                    <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                    </svg>
-                </button>
                 <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
                     <textarea
                         id="messageInput"
@@ -435,6 +429,27 @@
                         autocomplete="off"
                         rows="4"
                     >{{ old('content') }}</textarea>
+
+                    {{-- textarea の下に、添付ボタン案内を表示（textarea サイズは変更しない） --}}
+                    <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.2rem;">
+                        <button
+                            class="pscc-attach-button"
+                            id="attachButton"
+                            title="ファイルを添付"
+                            type="button"
+                            aria-label="ファイルを添付"
+                            style="display:inline-flex; align-items:center; gap:0.35rem; padding:0; border:none; background:none; color:#64748b; font-weight:800; cursor:pointer;"
+                        >
+                            <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:1.1rem; height:1.1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            </svg>
+                            <span>ファイルを添付</span>
+                        </button>
+                        <div style="font-size:0.875rem; color:#64748b; font-weight:800; line-height:1.15;">
+                            3ファイル 合計10MB まで
+                        </div>
+                    </div>
+
                     <div
                         id="dmAttachmentList"
                         style="font-size:0.875rem; color:#64748b; margin-top:0.5rem; word-break:break-word; line-height:1.5; display:none;"

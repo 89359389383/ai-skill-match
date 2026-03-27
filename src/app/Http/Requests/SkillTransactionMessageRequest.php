@@ -44,9 +44,9 @@ class SkillTransactionMessageRequest extends FormRequest
                         $total += $file->getSize();
                     }
 
-                    $limitBytes = 30 * 1024 * 1024; // 30MB
+                    $limitBytes = 10 * 1024 * 1024; // 10MB
                     if ($total > $limitBytes) {
-                        $fail('添付ファイルの合計サイズは30MB以内にしてください。');
+                        $fail('添付ファイルの合計サイズは10MB以内にしてください。');
                     }
                 },
             ],

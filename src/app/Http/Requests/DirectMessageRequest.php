@@ -33,7 +33,7 @@ class DirectMessageRequest extends FormRequest
                 'max:3',
                 'required_without:content',
 
-                // 合計30MBチェック
+                // 合計10MBチェック
                 function ($attribute, $value, $fail) {
                     if (!is_array($value)) {
                         return;
@@ -50,10 +50,10 @@ class DirectMessageRequest extends FormRequest
                         $total += $file->getSize();
                     }
 
-                    $limitBytes = 30 * 1024 * 1024; // 30MB
+                    $limitBytes = 10 * 1024 * 1024; // 10MB
 
                     if ($total > $limitBytes) {
-                        $fail('添付ファイルの合計サイズは30MB以内にしてください。');
+                        $fail('添付ファイルの合計サイズは10MB以内にしてください。');
                     }
                 },
             ],
