@@ -309,9 +309,7 @@
                                             <span class="pscc-sender-name">{{ $senderName }}</span>
                                             <div class="pscc-message-time-row">
                                                 <span class="pscc-message-time">{{ $msg->sent_at?->format('Y-m-d H:i:s') }}</span>
-                                                @if ($isOwn)
-                                                    <span class="pscc-read-status">既読</span>
-                                                @endif
+                                                {{-- 既読表示は不要のため非表示 --}}
                                             </div>
                                         </div>
                                     </div>
@@ -324,6 +322,49 @@
                                     @endif
                                 </div>
                                 <p class="pscc-message-body">{{ $msg->body }}</p>
+                                @php
+                                    $fileNamesDecoded = null;
+                                    $filePathsDecoded = null;
+
+                                    if (!empty($msg->file_name)) {
+                                        $fileNamesDecoded = json_decode($msg->file_name, true);
+                                    }
+                                    if (!empty($msg->file_path)) {
+                                        $filePathsDecoded = json_decode($msg->file_path, true);
+                                    }
+
+                                    // 後方互換：JSONでない場合は単一扱い
+                                    $fileNames = is_array($fileNamesDecoded) ? $fileNamesDecoded : (!empty($msg->file_name) ? [$msg->file_name] : []);
+                                    $filePaths = is_array($filePathsDecoded) ? $filePathsDecoded : (!empty($msg->file_path) ? [$msg->file_path] : []);
+                                @endphp
+
+                                @if(!empty($filePaths) && count($filePaths) > 0)
+                                    <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem; word-break:break-word;">
+                                        @foreach($filePaths as $idx => $path)
+                                            @php
+                                                $name = $fileNames[$idx] ?? basename((string) $path);
+                                                $url = null;
+                                                $pathStr = (string) $path;
+                                                if (str_starts_with($pathStr, 'http://') || str_starts_with($pathStr, 'https://')) {
+                                                    $url = $pathStr;
+                                                } else {
+                                                    $url = \Illuminate\Support\Facades\Storage::disk('public')->url($pathStr);
+                                                }
+                                            @endphp
+                                            @if(!empty($url))
+                                                <a
+                                                    href="{{ $url }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style="display:inline-flex; align-items:center; gap:0.35rem; color:#2563eb; text-decoration:underline; font-weight:700;"
+                                                >
+                                                    <span>添付:</span>
+                                                    <span>{{ $name }}</span>
+                                                </a>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <!-- reactions removed -->
                             </div>
                         </div>
@@ -369,41 +410,36 @@
 
     <!-- メッセージ入力エリア（取引完了まで） -->
     @if ($status !== 'completed')
-        @php
-            $meName = $me?->company?->contact_name
-                ?? $me?->company?->name
-                ?? $me?->freelancer?->display_name
-                ?? $me?->email
-                ?? 'ユーザー';
-            $meInitial = mb_substr($meName, 0, 1);
-            $meIcon = $me?->company?->icon_path ?? $me?->freelancer?->icon_path;
-            $meAvatarSrc = null;
-            if (!empty($meIcon)) {
-                if (str_starts_with($meIcon, 'http://') || str_starts_with($meIcon, 'https://')) {
-                    $meAvatarSrc = $meIcon;
-                } else {
-                    $iconRel = ltrim($meIcon, '/');
-                    if (str_starts_with($iconRel, 'storage/')) {
-                        $iconRel = substr($iconRel, strlen('storage/'));
-                    }
-                    $meAvatarSrc = asset('storage/' . $iconRel);
-                }
-            }
-        @endphp
         <div class="pscc-input-area">
-            <form class="pscc-input-content" method="POST" action="{{ route('transactions.messages.store', ['skill_order' => $tx->id]) }}">
+            <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ route('transactions.messages.store', ['skill_order' => $tx->id]) }}">
                 @csrf
-                @if ($meAvatarSrc)
-                    <img src="{{ $meAvatarSrc }}" alt="{{ $meName }}" class="pscc-input-avatar">
-                @else
-                    <div class="pscc-input-avatar-initial" aria-hidden="true">{{ $meInitial }}</div>
-                @endif
-                <button class="pscc-attach-button" title="ファイル添付（未実装）" type="button" disabled aria-disabled="true">
+                <input type="file"
+                    id="dmAttachment"
+                    name="attachments[]"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp"
+                    style="display:none;"
+                >
+                <button class="pscc-attach-button" id="attachButton" title="ファイルを添付" type="button" aria-label="ファイルを添付">
                     <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                     </svg>
                 </button>
-                <input type="text" class="pscc-input-field @error('content') pscc-input-error @enderror" placeholder="メッセージを入力..." id="messageInput" name="content" value="{{ old('content') }}">
+                <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+                    <textarea
+                        id="messageInput"
+                        name="content"
+                        class="pscc-input-field @error('content') pscc-input-error @enderror resize-none"
+                        placeholder="メッセージを入力..."
+                        style="min-height:150px;"
+                        autocomplete="off"
+                        rows="4"
+                    >{{ old('content') }}</textarea>
+                    <div
+                        id="dmAttachmentList"
+                        style="font-size:0.875rem; color:#64748b; margin-top:0.5rem; word-break:break-word; line-height:1.5; display:none;"
+                    ></div>
+                </div>
                 <button class="pscc-send-button" type="submit" id="sendButton" disabled>
                     <svg class="pscc-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -412,6 +448,12 @@
                 </button>
             </form>
             @error('content')
+                <div class="pscc-field-error"><span>{{ $message }}</span></div>
+            @enderror
+            @error('attachments')
+                <div class="pscc-field-error"><span>{{ $message }}</span></div>
+            @enderror
+            @error('attachments.*')
                 <div class="pscc-field-error"><span>{{ $message }}</span></div>
             @enderror
         </div>
@@ -476,11 +518,109 @@
     (function () {
         const input = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendButton');
+        const attachBtn = document.getElementById('attachButton');
+        const fileInput = document.getElementById('dmAttachment');
+        const attachmentList = document.getElementById('dmAttachmentList');
+        let selectedFiles = [];
+
         if (!input || !sendBtn) return;
+
         const toggle = () => {
-            sendBtn.disabled = !input.value || !input.value.trim();
+            const hasText = !!(input.value && input.value.trim());
+            const hasFile = !!(fileInput && fileInput.files && fileInput.files.length > 0);
+            sendBtn.disabled = !(hasText || hasFile);
         };
+
         input.addEventListener('input', toggle);
+
+        const safeName = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[c] || c));
+
+        const renderAttachmentList = () => {
+            if (!attachmentList) return;
+            if (selectedFiles.length <= 0) {
+                attachmentList.style.display = 'none';
+                attachmentList.innerHTML = '';
+                return;
+            }
+
+            attachmentList.style.display = 'block';
+            attachmentList.innerHTML = selectedFiles
+                .map((f, idx) => {
+                    const displayName = safeName(f.name);
+                    return `
+                        <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.25rem;">
+                            <div style="word-break:break-all; color:#334155; font-weight:800;">・${displayName}</div>
+                            <button
+                                type="button"
+                                class="dm-attachment-remove"
+                                data-idx="${idx}"
+                                aria-label="この添付を削除"
+                                title="削除"
+                                style="border:none; background:none; color:#f43f5e; font-weight:900; cursor:pointer; font-size:1.25rem; line-height:1; padding:0; margin:0;"
+                            >×</button>
+                        </div>
+                    `;
+                })
+                .join('');
+        };
+
+        attachmentList?.addEventListener('click', (evt) => {
+            const btn = evt.target && evt.target.closest ? evt.target.closest('.dm-attachment-remove') : null;
+            if (!btn) return;
+
+            const idx = Number(btn.getAttribute('data-idx'));
+            if (Number.isNaN(idx)) return;
+            if (idx < 0 || idx >= selectedFiles.length) return;
+
+            selectedFiles.splice(idx, 1);
+            const dt = new DataTransfer();
+            selectedFiles.forEach((f) => dt.items.add(f));
+            fileInput.files = dt.files;
+
+            renderAttachmentList();
+            toggle();
+        }, { passive: true });
+
+        if (attachBtn && fileInput) {
+            attachBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', () => {
+                const pickedFiles = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+                if (pickedFiles.length <= 0) {
+                    selectedFiles = [];
+                    renderAttachmentList();
+                    toggle();
+                    return;
+                }
+
+                const nextFiles = [...selectedFiles];
+                pickedFiles.forEach((picked) => {
+                    if (nextFiles.length >= 3) return;
+                    const dup = nextFiles.some((current) =>
+                        current.name === picked.name &&
+                        current.size === picked.size &&
+                        current.lastModified === picked.lastModified
+                    );
+                    if (!dup) nextFiles.push(picked);
+                });
+
+                selectedFiles = nextFiles.slice(0, 3);
+
+                const dt = new DataTransfer();
+                selectedFiles.forEach((f) => dt.items.add(f));
+                fileInput.files = dt.files;
+
+                renderAttachmentList();
+                toggle();
+            });
+        }
+
         toggle();
     })();
 

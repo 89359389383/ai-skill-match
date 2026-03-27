@@ -175,11 +175,30 @@ class SkillTransactionController extends Controller
 
         $validated = $request->validated();
 
+        $attachments = $request->file('attachments', []);
+        $attachmentList = is_array($attachments) ? $attachments : [];
+
+        $attachmentNames = [];
+        $attachmentPaths = [];
+        if (!empty($attachmentList)) {
+            foreach ($attachmentList as $file) {
+                if (!$file || !$file->isValid()) continue;
+                $path = $file->store('transaction-attachments', 'public');
+                if (!$path) continue;
+                $attachmentPaths[] = $path;
+                $attachmentNames[] = $file->getClientOriginalName();
+            }
+        }
+
+        $hasAttachments = !empty($attachmentPaths) && count($attachmentPaths) > 0;
+
         SkillOrderMessage::create([
             'skill_order_id' => $skill_order->id,
             'sender_user_id' => $user->id,
-            'message_type' => 'text',
-            'body' => $validated['content'],
+            'message_type' => $hasAttachments ? 'file' : 'text',
+            'body' => $validated['content'] ?? '',
+            'file_name' => $hasAttachments ? json_encode($attachmentNames, JSON_UNESCAPED_UNICODE) : null,
+            'file_path' => $hasAttachments ? json_encode($attachmentPaths, JSON_UNESCAPED_UNICODE) : null,
             'sent_at' => Carbon::now(),
         ]);
 

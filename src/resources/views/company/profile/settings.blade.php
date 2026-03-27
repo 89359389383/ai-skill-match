@@ -418,7 +418,7 @@
                     @endif
                 </div>
                 <div class="btn-row flex flex-col md:flex-row gap-3 md:gap-4">
-                    <a class="btn btn-secondary w-full md:flex-1" href="{{ route('company.freelancers.index') }}">キャンセル</a>
+                    <a class="btn btn-secondary w-full md:flex-1" href="{{ route('profiles.index') }}">キャンセル</a>
                     <button class="btn btn-primary w-full md:flex-1" type="submit">更新</button>
                 </div>
             </form>

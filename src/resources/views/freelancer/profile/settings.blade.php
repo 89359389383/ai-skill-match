@@ -668,7 +668,7 @@
 
                     <div class="row">
                         <div class="label">担当業務・得意業務（自由入力テキスト）</div>
-                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text" placeholder="例) 担当：要件整理〜設計・実装まで\n得意：Web/DB設計など">{{ old('work_style_text', $freelancer->work_style_text ?? '') }}</textarea>
+                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text">{{ old('work_style_text', $freelancer->work_style_text ?? '') }}</textarea>
                         @error('work_style_text')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -719,7 +719,7 @@
                                             name="services_offered_items[]"
                                             type="text"
                                             value="{{ $servicesOfferedValues[$idx] ?? '' }}"
-                                            placeholder="例: Webアプリ開発"
+                                            placeholder="{{ $idx === 0 ? '例: Webアプリ開発' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -748,7 +748,7 @@
                                             name="industry_specialties_items[]"
                                             type="text"
                                             value="{{ $industrySpecialtiesValues[$idx] ?? '' }}"
-                                            placeholder="例: IT・Web"
+                                            placeholder="{{ $idx === 0 ? '例: IT・Web' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -785,7 +785,7 @@
                                             name="certifications_items[]"
                                             type="text"
                                             value="{{ $certificationsValues[$idx] ?? '' }}"
-                                            placeholder="例: 基本情報技術者"
+                                            placeholder="{{ $idx === 0 ? '例: 基本情報技術者' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -822,8 +822,8 @@
                         <div class="skills-container" id="skills-container">
                             @for($i = 0; $i < count($customSkillValues); $i += 2)
                                 <div class="skill-input-row">
-                                    <input class="input skill-input {{ $skillsInvalid ? 'is-invalid' : '' }}" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i] ?? '' }}" placeholder="例: Laravel">
-                                    <input class="input skill-input" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i + 1] ?? '' }}" placeholder="例: Vue.js">
+                                    <input class="input skill-input {{ $skillsInvalid ? 'is-invalid' : '' }}" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i] ?? '' }}" placeholder="{{ $i === 0 ? '例: n8n' : '' }}">
+                                    <input class="input skill-input" name="custom_skills[]" type="text" value="{{ $customSkillValues[$i + 1] ?? '' }}" placeholder="">
                                 </div>
                             @endfor
                         </div>
@@ -875,20 +875,22 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="label">1日の稼働時間</div>
-                        <input class="input @error('hours_per_day') is-invalid @enderror" id="hours_per_day" name="hours_per_day" type="number" value="{{ old('hours_per_day', $freelancer->hours_per_day ?? '') }}" min="0" max="24" placeholder="例: 8">
-                        @error('hours_per_day')
-                        <span class="error-message">{{ $message }}</span>
-                        @enderror
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="row">
+                            <div class="label">1日の稼働時間</div>
+                            <input class="input @error('hours_per_day') is-invalid @enderror" id="hours_per_day" name="hours_per_day" type="number" value="{{ old('hours_per_day', $freelancer->hours_per_day ?? '') }}" min="0" max="24" placeholder="例: 8">
+                            @error('hours_per_day')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
 
-                    <div class="row">
-                        <div class="label">週の稼働日数</div>
-                        <input class="input @error('days_per_week') is-invalid @enderror" id="days_per_week" name="days_per_week" type="number" value="{{ old('days_per_week', $freelancer->days_per_week ?? '') }}" min="0" max="7" placeholder="例: 5">
-                        @error('days_per_week')
-                        <span class="error-message">{{ $message }}</span>
-                        @enderror
+                        <div class="row">
+                            <div class="label">週の稼働日数</div>
+                            <input class="input @error('days_per_week') is-invalid @enderror" id="days_per_week" name="days_per_week" type="number" value="{{ old('days_per_week', $freelancer->days_per_week ?? '') }}" min="0" max="7" placeholder="例: 5">
+                            @error('days_per_week')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="row">
