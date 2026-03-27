@@ -190,7 +190,8 @@ class AuthController extends Controller
             'fallback_route' => route('company.jobs.index'),
         ]);
 
-        return redirect()->route('company.jobs.index');
+        // 企業ログイン後は、誰でも見られるフリーランス一覧へ遷移
+        return redirect()->route('profiles.index');
     }
 
     /**

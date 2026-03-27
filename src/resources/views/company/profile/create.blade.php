@@ -28,10 +28,10 @@
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(ellipse at top left, rgba(219, 234, 254, 0.75) 0%, transparent 55%),
-                radial-gradient(ellipse at bottom right, rgba(186, 230, 253, 0.55) 0%, transparent 55%),
-                radial-gradient(ellipse at center, rgba(224, 242, 254, 0.45) 0%, transparent 70%),
-                linear-gradient(135deg, #eff6ff 0%, #dbeafe 20%, #bae6fd 45%, #e0f2fe 70%, #f0f9ff 100%);
+                radial-gradient(ellipse at top left, rgba(255, 237, 213, 0.85) 0%, transparent 55%),
+                radial-gradient(ellipse at bottom right, rgba(253, 186, 116, 0.55) 0%, transparent 55%),
+                radial-gradient(ellipse at center, rgba(255, 246, 230, 0.55) 0%, transparent 70%),
+                linear-gradient(135deg, #fff7ed 0%, #ffedd5 20%, #fed7aa 45%, #ffedd5 70%, #fff7ed 100%);
             overflow: hidden;
             z-index: 0;
         }

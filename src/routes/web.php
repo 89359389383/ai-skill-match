@@ -213,10 +213,14 @@ Route::middleware(['auth:company', 'company'])->group(function () {
     Route::post('/company/profile/settings', [CompanyProfileController::class, 'update'])->name('company.profile.settings.update');
 
     // フリーランス一覧
-    Route::get('/company/freelancers', [CompanyFreelancerController::class, 'index'])->name('company.freelancers.index');
+    // NOTE:
+    // 企業ログイン時だけ見せる予定だったが、未ログインでも表示できてしまう挙動があるため無効化します。
+    // 公開フリーランス一覧へは /profiles（profiles.index）へ遷移する想定です。
+    //
+    // Route::get('/company/freelancers', [CompanyFreelancerController::class, 'index'])->name('company.freelancers.index');
 
     // フリーランス詳細
-    Route::get('/company/freelancers/{freelancer}', [CompanyFreelancerController::class, 'show'])->name('company.freelancers.show');
+    // Route::get('/company/freelancers/{freelancer}', [CompanyFreelancerController::class, 'show'])->name('company.freelancers.show');
 
     // 案件一覧
     Route::get('/company/jobs', [CompanyJobController::class, 'index'])->name('company.jobs.index');

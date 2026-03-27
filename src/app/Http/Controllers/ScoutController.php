@@ -41,7 +41,7 @@ class ScoutController extends Controller
 
         // freelancer_id が無い場合は一覧へ戻す
         if ($freelancerId === null) {
-            return redirect('/company/freelancers')->with('error', 'スカウト対象のフリーランスが指定されていません');
+            return redirect()->route('profiles.index')->with('error', 'スカウト対象のフリーランスが指定されていません');
         }
 
         // 対象フリーランスを取得する（表示用）

@@ -621,7 +621,7 @@
         <aside class="sidebar">
             <div class="panel">
                 <h3>検索条件</h3>
-                <form method="GET" action="{{ route('company.freelancers.index') }}">
+                <form method="GET" action="{{ route('profiles.index') }}">
                     <div class="field">
                         <label for="keyword">フリーワード</label>
                         <input id="keyword" name="keyword" class="input" type="text" placeholder="名前 / 職種 / スキル" value="{{ old('keyword', $keyword ?? '') }}">
@@ -661,7 +661,7 @@
                         </div>
                     </div>
                     <button class="search-btn" type="submit">検索</button>
-                    <button class="search-btn clear-btn" type="button" onclick="window.location='{{ route('company.freelancers.index') }}'">クリア</button>
+                    <button class="search-btn clear-btn" type="button" onclick="window.location='{{ route('profiles.index') }}'">クリア</button>
                 </form>
             </div>
         </aside>

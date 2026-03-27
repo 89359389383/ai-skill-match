@@ -30,7 +30,7 @@ class CompanyProfileController extends Controller
         // すでに企業プロフィールがある場合は再登録を防ぐ
         if ($user->company()->exists()) {
             // 企業向けのトップ（フリーランス一覧）へ戻す
-            return redirect('/company/freelancers');
+            return redirect()->route('profiles.index');
         }
 
         // 登録フォームを返すだけ
@@ -73,7 +73,7 @@ class CompanyProfileController extends Controller
                 'company_id' => $user->company?->id,
             ]);
             // 企業向け一覧へ戻す
-            return redirect('/company/freelancers');
+            return redirect()->route('profiles.index');
         }
 
         // バリデーションを行う（CompanyRegisterRequest に委譲）
@@ -99,7 +99,7 @@ class CompanyProfileController extends Controller
         ]);
 
         // 企業向けフリーランス一覧へ遷移する
-        return redirect('/company/freelancers')->with('success', '企業プロフィールの登録が完了しました');
+        return redirect()->route('profiles.index')->with('success', '企業プロフィールの登録が完了しました');
     }
 
     /**

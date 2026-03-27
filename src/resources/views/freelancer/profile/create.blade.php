@@ -349,7 +349,7 @@
                         </div>
                         <div class="row">
                             <label class="label" for="job_title">職種（自由入力） <span class="required">必須</span></label>
-                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" maxlength="255" value="{{ old('job_title') }}" placeholder="例: Laravelエンジニア">
+                            <input class="input @error('job_title') is-invalid @enderror" id="job_title" name="job_title" type="text" maxlength="255" value="{{ old('job_title') }}" placeholder="例: AI自動化エンジニア">
                             @error('job_title')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
@@ -358,11 +358,19 @@
 
                     <div class="row">
                         <label class="label" for="bio">自己紹介文 <span class="required">必須</span></label>
-                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" maxlength="5000" placeholder="例) Laravelを中心にWeb開発を5年経験。EC/在庫管理などの業務ドメインに強みがあります。">{{ old('bio') }}</textarea>
+                        <textarea class="textarea @error('bio') is-invalid @enderror" id="bio" name="bio" maxlength="5000">{{ old('bio') }}</textarea>
                         @error('bio')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                         <div class="help">成果（数値/期間/担当範囲）を入れると伝わりやすいです。</div>
+                    </div>
+
+                    <div class="row" style="margin-top:1.25rem;">
+                        <label class="label" for="work_style_text">担当業務・得意業務（自由入力テキスト）</label>
+                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text" placeholder="例) 担当：要件整理〜設計・実装まで\n得意：Web/DB設計など">{{ old('work_style_text') }}</textarea>
+                        @error('work_style_text')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     @php
@@ -411,7 +419,7 @@
                                             name="services_offered_items[]"
                                             type="text"
                                             value="{{ $servicesOfferedValues[$idx] ?? '' }}"
-                                            placeholder="例: Webアプリ開発"
+                                            placeholder="{{ $idx === 0 ? '例: Webアプリ開発' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -440,7 +448,7 @@
                                             name="industry_specialties_items[]"
                                             type="text"
                                             value="{{ $industrySpecialtiesValues[$idx] ?? '' }}"
-                                            placeholder="例: IT・Web"
+                                            placeholder="{{ $idx === 0 ? '例: IT・Web' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -479,7 +487,7 @@
                                             name="certifications_items[]"
                                             type="text"
                                             value="{{ $certificationsValues[$idx] ?? '' }}"
-                                            placeholder="例: 基本情報技術者"
+                                            placeholder="{{ $idx === 0 ? '例: 基本情報技術者' : '' }}"
                                         >
                                     @endfor
                                 </div>
@@ -633,14 +641,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row" style="margin-top:1.25rem;">
-                        <label class="label" for="work_style_text">担当業務・得意業務（自由入力テキスト）</label>
-                        <textarea class="textarea @error('work_style_text') is-invalid @enderror" id="work_style_text" name="work_style_text" placeholder="例) 担当：要件整理〜設計・実装まで\n得意：Web/DB設計など">{{ old('work_style_text') }}</textarea>
-                        @error('work_style_text')
-                        <span class="error-message">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <div class="row" style="margin-top:1.25rem;">

@@ -7,12 +7,29 @@
     <title>パスワード再設定 - AITECH</title>
     <link rel="icon" href="{{ asset('aifavicon.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* auth/login と同じ背景グラデーション */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at top left, rgba(255, 237, 213, 0.85) 0%, transparent 55%),
+                radial-gradient(ellipse at bottom right, rgba(253, 186, 116, 0.55) 0%, transparent 55%),
+                radial-gradient(ellipse at center, rgba(255, 246, 230, 0.55) 0%, transparent 70%),
+                linear-gradient(135deg, #fff7ed 0%, #ffedd5 20%, #fed7aa 45%, #ffedd5 70%, #fff7ed 100%);
+            overflow: hidden;
+            z-index: 0;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="fixed inset-0 -z-10 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100"></div>
+    <div class="background"></div>
 
-    <div class="min-h-screen flex items-center justify-center px-4 md:px-6 lg:px-8 py-10">
+    <div class="min-h-screen flex items-center justify-center px-4 md:px-6 lg:px-8 py-10 relative z-10">
         <div class="w-full max-w-md md:max-w-lg bg-white/90 backdrop-blur-xl border border-white/70 rounded-xl shadow-xl p-6 md:p-10">
             <h1 class="text-center text-xl md:text-2xl font-black tracking-tight text-slate-900">パスワード再設定</h1>
             <p class="mt-3 text-center text-sm md:text-base text-slate-600 leading-relaxed">

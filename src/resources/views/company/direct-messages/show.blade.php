@@ -248,30 +248,27 @@
     <div class="pscc-input-area">
         <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ route('direct-messages.reply', ['direct_conversation' => $conversation->id]) }}">
             @csrf
-            @if ($meAvatarSrc)
-                <img src="{{ $meAvatarSrc }}" alt="{{ $viewerName }}" class="pscc-input-avatar">
-            @else
-                <div class="pscc-input-avatar-initial" aria-hidden="true">{{ $viewerInitial }}</div>
-            @endif
             <input type="file" id="dmAttachment" name="attachments[]" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp" style="display:none;">
             <button class="pscc-attach-button" id="attachButton" title="ファイルを添付" type="button" aria-label="ファイルを添付">
                 <svg class="pscc-attach-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                 </svg>
             </button>
-            <textarea
-                id="messageInput"
-                name="content"
-                class="pscc-input-field @error('content') pscc-input-error @enderror resize-none"
-                placeholder="メッセージを入力..."
-                style="min-height:150px;"
-                autocomplete="off"
-                rows="4"
-            >{{ old('content') }}</textarea>
-            <div
-                id="dmAttachmentList"
-                style="font-size:0.875rem; color:#64748b; max-width:460px; word-break:break-word; line-height:1.5; display:none;"
-            ></div>
+            <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+                <textarea
+                    id="messageInput"
+                    name="content"
+                    class="pscc-input-field @error('content') pscc-input-error @enderror resize-none"
+                    placeholder="メッセージを入力..."
+                    style="min-height:150px;"
+                    autocomplete="off"
+                    rows="4"
+                >{{ old('content') }}</textarea>
+                <div
+                    id="dmAttachmentList"
+                    style="font-size:0.875rem; color:#64748b; margin-top:0.5rem; word-break:break-word; line-height:1.5; display:none;"
+                ></div>
+            </div>
             <button class="pscc-send-button" type="submit" id="sendButton" disabled>
                 <svg class="pscc-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -351,13 +348,52 @@
 
                 if (!attachmentList) return;
 
-                if (selectedFiles.length <= 0) {
-                    attachmentList.style.display = 'none';
-                    attachmentList.innerHTML = '';
-                } else {
+                const renderAttachmentList = () => {
+                    if (selectedFiles.length <= 0) {
+                        attachmentList.style.display = 'none';
+                        attachmentList.innerHTML = '';
+                        return;
+                    }
+
                     attachmentList.style.display = 'block';
-                    attachmentList.innerHTML = selectedFiles.map((f) => `<div>・${safeName(f.name)}</div>`).join('');
-                }
+                    attachmentList.innerHTML = selectedFiles
+                        .map((f, idx) => {
+                            const displayName = safeName(f.name);
+                            return `
+                                <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.25rem;">
+                                    <div style="word-break:break-all; color:#334155; font-weight:800;">・${displayName}</div>
+                                    <button
+                                        type="button"
+                                        class="dm-attachment-remove"
+                                        data-idx="${idx}"
+                                        aria-label="この添付を削除"
+                                        title="削除"
+                                        style="border:none; background:none; color:#f43f5e; font-weight:900; cursor:pointer; font-size:1.25rem; line-height:1; padding:0; margin:0;"
+                                    >×</button>
+                                </div>
+                            `;
+                        })
+                        .join('');
+                };
+
+                // 添付ごとの削除（×）ボタン
+                attachmentList.addEventListener('click', (evt) => {
+                    const btn = evt.target && evt.target.closest ? evt.target.closest('.dm-attachment-remove') : null;
+                    if (!btn) return;
+                    const idx = Number(btn.getAttribute('data-idx'));
+                    if (Number.isNaN(idx)) return;
+                    if (idx < 0 || idx >= selectedFiles.length) return;
+
+                    selectedFiles.splice(idx, 1);
+                    const dt = new DataTransfer();
+                    selectedFiles.forEach((f) => dt.items.add(f));
+                    fileInput.files = dt.files;
+
+                    renderAttachmentList();
+                    toggle();
+                }, { passive: true });
+
+                renderAttachmentList();
                 toggle();
             });
         }
