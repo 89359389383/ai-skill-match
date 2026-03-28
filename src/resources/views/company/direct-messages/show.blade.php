@@ -11,6 +11,20 @@
 @push('styles')
     @include('partials.pscc-chat-core-styles')
 @endpush
+@push('styles')
+    <style>
+        /* 自分（企業側）のメッセージだけ右寄せ + バブル幅を抑える */
+        .pscc-message .pscc-message-card {
+            max-width: 80%;
+        }
+        .pscc-message.is-me {
+            justify-content: flex-end;
+        }
+        .pscc-message.is-me .pscc-message-card {
+            max-width: 80%;
+        }
+    </style>
+@endpush
 
 @section('content')
 @php
@@ -167,7 +181,7 @@
                         $senderInitial = mb_substr($senderName, 0, 1);
                     @endphp
 
-                    <div class="pscc-message">
+                    <div class="pscc-message {{ $isMe ? 'is-me' : '' }}">
                         @if ($msgAvatarSrc)
                             <img src="{{ $msgAvatarSrc }}" alt="{{ $senderName }}" class="pscc-avatar">
                         @else
