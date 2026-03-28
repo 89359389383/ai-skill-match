@@ -74,21 +74,22 @@
     </div>
 
     @if($answer->comments && $answer->comments->count() > 0)
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+        <div class="bg-white px-6 py-4 border-t border-gray-100">
             <h4 class="text-sm font-semibold text-gray-700 mb-3">この回答へのコメント</h4>
             <div class="space-y-3">
                 @foreach($answer->comments as $comment)
                     @php
                         $isCommentByQuestioner = (int) $comment->user_id === (int) $question->user_id;
                         $commentLabel = $isCommentByQuestioner ? '質問者' : '回答者';
-                        $commentBgClass = $isCommentByQuestioner ? 'bg-indigo-50 border-indigo-200' : 'bg-green-50 border-green-200';
+                        // 返信（コメント）の背景が薄青/薄緑になるのを避け、常に白に統一
+                        $commentBgClass = $isCommentByQuestioner ? 'bg-white border-gray-200' : 'bg-white border-gray-200';
                     @endphp
                     <div class="flex gap-3 {{ $commentBgClass }} rounded-lg p-3 border">
                         <img src="{{ $comment->author_icon_url ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="font-medium text-sm text-gray-900">{{ $comment->author_name }}</span>
-                                <span class="text-xs px-2 py-0.5 rounded-full {{ $isCommentByQuestioner ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700' }}">{{ $commentLabel }}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-white text-gray-700 border border-gray-200">{{ $commentLabel }}</span>
                                 <span class="text-xs text-gray-500">{{ $comment->created_at?->format('Y/m/d H:i') }}</span>
                             </div>
                             <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $comment->content }}</p>
@@ -100,7 +101,7 @@
     @endif
 
     @if($canComment)
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+        <div class="bg-white px-6 py-4 border-t border-gray-100">
             <form action="{{ route('questions.answers.comments.store', ['question' => $question->id, 'answer' => $answer->id]) }}" method="POST" class="space-y-3">
                 @csrf
                 <div>

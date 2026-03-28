@@ -31,8 +31,8 @@ class StoreSkillListingRequest extends FormRequest
             // 価格タイプ（任意：固定 or 時間単位）
             'pricing_type' => ['nullable', 'in:fixed,hourly'],
 
-            // サムネイルアップロード（任意）
-            'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif', 'max:5120'],
+            // サムネイルアップロード（必須）
+            'thumbnail' => ['required', 'image', 'mimes:jpg,jpeg,png,gif', 'max:5120'],
 
             // サムネイル削除フラグ（編集時のみ想定）
             'remove_thumbnail' => ['nullable', 'boolean'],
@@ -73,6 +73,7 @@ class StoreSkillListingRequest extends FormRequest
             'price.min' => '価格は0以上で入力してください。',
             'price.max' => '価格は100,000,000以下で入力してください。',
             'pricing_type.in' => '価格タイプの指定が不正です。',
+            'thumbnail.required' => 'メイン画像は必須です。',
             'thumbnail.image' => 'サムネイルは画像ファイルを指定してください。',
             'thumbnail.mimes' => 'サムネイルは jpg/jpeg/png/gif のいずれかを指定してください。',
             'thumbnail.max' => 'サムネイルサイズは5120KB以下にしてください。',

@@ -388,8 +388,7 @@ section {
 }
 
 .features-section {
-    /* 薄いオレンジ系（別パターン） */
-    background: linear-gradient(to bottom right, #fff7ed, #ffedd5);
+    background: #FC4C0C;
 }
 
 .icon {
@@ -411,8 +410,7 @@ section {
 
 /* Benefits Section */
 .benefits-section {
-    /* 薄いオレンジ系（別パターン） */
-    background: linear-gradient(to bottom right, #fffbeb, #fde68a);
+    background: #FC4C0C;
 }
 
 .benefits-grid {
@@ -835,20 +833,56 @@ section {
 
 /* Section Backgrounds */
 .freelancers-section {
-    /* もっとオレンジ寄り（赤っぽさを抑える） */
-    background: linear-gradient(to bottom right, #fff7ed, #ffedd5);
+    background: #FC4C0C;
 }
 
 .questions-section {
-    background: linear-gradient(to bottom right, #fffbeb, #ffedd5);
+    background: #FC4C0C;
 }
 
 .skills-section {
-    background: linear-gradient(to bottom right, #fff7ed, #ffd6a5);
+    background: #FC4C0C;
 }
 
 .articles-section {
-    background: linear-gradient(to bottom right, #ffedd5, #ffe4b5);
+    background: #FC4C0C;
+}
+
+/* Section Header Text Colors */
+.features-section .section-title,
+.benefits-section .section-title,
+.freelancers-section .section-title,
+.questions-section .section-title,
+.skills-section .section-title,
+.articles-section .section-title {
+    color: #ffffff;
+}
+
+.features-section .section-subtitle,
+.benefits-section .section-subtitle,
+.freelancers-section .section-subtitle,
+.questions-section .section-subtitle,
+.skills-section .section-subtitle,
+.articles-section .section-subtitle {
+    color: #ffffff;
+}
+
+.features-section .link-with-arrow,
+.benefits-section .link-with-arrow,
+.freelancers-section .link-with-arrow,
+.questions-section .link-with-arrow,
+.skills-section .link-with-arrow,
+.articles-section .link-with-arrow {
+    color: #ffffff;
+}
+
+.features-section .link-with-arrow:hover,
+.benefits-section .link-with-arrow:hover,
+.freelancers-section .link-with-arrow:hover,
+.questions-section .link-with-arrow:hover,
+.skills-section .link-with-arrow:hover,
+.articles-section .link-with-arrow:hover {
+    color: #ffffff;
 }
 
 /* CTA Section */

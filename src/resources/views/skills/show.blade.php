@@ -168,7 +168,7 @@
             <div class="lg:col-span-1">
                 <div class="sticky top-24">
                     <div class="bg-white rounded-2xl shadow-xl p-6">
-                        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-6 mb-6">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl p-6 mb-6">
                             <div class="text-3xl font-bold mb-2">¥{{ number_format($listing->price) }}</div>
                             @if($listing->delivery_days)
                                 <div class="text-left align-bottom font-bold text-[22px]">納期: {{ $listing->delivery_days }}日</div>
@@ -212,7 +212,7 @@
                         @if (!$isOwnListing)
                             <form action="{{ route('skills.purchase', ['skill_listing' => $listing->id]) }}" method="POST" class="mb-4">
                                 @csrf
-                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                                <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                                     購入する
                                 </button>
                             </form>
@@ -296,11 +296,11 @@
                         @enderror
                     </div>
 
-                    <div class="flex items-center justify-end gap-3">
-                        <button type="button" onclick="closeDirectMessageModal()" class="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
+                    <div class="flex items-center gap-3 w-full">
+                        <button type="button" onclick="closeDirectMessageModal()" class="flex-1 rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
                             キャンセル
                         </button>
-                        <button type="submit" class="rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
+                        <button type="submit" class="flex-1 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
                             送信してチャットを開始
                         </button>
                     </div>

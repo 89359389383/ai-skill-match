@@ -207,7 +207,7 @@
                     <div class="bg-white rounded-lg shadow-sm p-6" id="image">
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">サービス画像</h2>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">メイン画像</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">メイン画像 <span class="text-red-500">*</span></label>
                             <div id="imagePreview" style="display: none;" class="relative mb-4">
                                 <img id="previewImg" src="" alt="Preview" class="w-full aspect-video object-cover rounded-lg">
                                 <button type="button" onclick="removeImage()" class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all">

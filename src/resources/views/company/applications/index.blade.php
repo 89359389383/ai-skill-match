@@ -328,9 +328,9 @@
             border: none;
         }
         .view-tab.active {
-            background: #0366d6;
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             color: #fff;
-            box-shadow: 0 2px 10px rgba(3, 102, 214, 0.25);
+            box-shadow: 0 2px 10px rgba(249, 115, 22, 0.25);
         }
         .filter-btn {
             font-size: 1.1rem;
@@ -397,13 +397,13 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #FC4C0C;
         }
         .job-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08); }
         .job-title {
             font-size: 1.56rem;
             font-weight: 900;
-            color: #0060ff;
+            color: #FC4C0C;
             line-height: 1.35;
             margin-bottom: 0.25rem;
         }
@@ -505,7 +505,7 @@
             margin-top: 0.5rem;
         }
         .chat-btn {
-            background: #0366d6;
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             color: #fff;
             padding: 0.28rem 0.65rem;
             border-radius: 10px;
@@ -594,7 +594,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #FC4C0C;
         }
         .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08); }
         .top {
@@ -604,7 +604,7 @@
             align-items: flex-start;
             margin-bottom: 1rem;
         }
-        .title { font-size: 24px; font-weight: 700; color: #0060ff; margin-bottom: 0.5rem; line-height: 1.3; }
+        .title { font-size: 24px; font-weight: 700; color: #FC4C0C; margin-bottom: 0.5rem; line-height: 1.3; }
         .sub { color: #586069; font-weight: 500; font-size: 18px; }
         .row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
         .avatar {
@@ -692,8 +692,17 @@
             letter-spacing: -0.01em;
             white-space: nowrap;
         }
-        .btn-primary { background-color: #0366d6; color: #fff; font-size: 20px; padding: 15px 60px; }
-        .btn-primary:hover { background-color: #0256cc; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3); }
+        .btn-primary {
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+            color: #fff;
+            font-size: 20px;
+            padding: 15px 60px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(249,115,22,0.3);
+        }
         .btn-secondary { background-color: #586069; color: #fff; font-size: 20px; padding: 15px 60px; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
 
@@ -729,8 +738,8 @@
     }
     .tab-link:hover { color: #24292e; background-color: #f6f8fa; }
     .tab-link.active {
-        color: #0366d6;
-        border-bottom-color: #0366d6;
+        color: #FC4C0C;
+        border-bottom-color: #FC4C0C;
         background-color: transparent;
     }
     </style>

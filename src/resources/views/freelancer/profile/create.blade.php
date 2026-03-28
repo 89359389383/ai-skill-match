@@ -168,10 +168,14 @@
         .actions {
             display: flex;
             gap: 1rem;
-            justify-content: flex-end;
+            justify-content: space-between;
             padding-top: 1rem;
             border-top: 1px solid #e1e4e8;
             flex-wrap: wrap;
+        }
+        .actions .btn {
+            flex: 1 1 0;
+            min-width: 0;
         }
         .btn {
             padding: 15px 60px;
@@ -188,8 +192,15 @@
             letter-spacing: -0.01em;
             white-space: nowrap;
         }
-        .btn-primary { background-color: #0366d6; color: white; }
-        .btn-primary:hover { background-color: #0256cc; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3); }
+        .btn-primary {
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+        }
         .btn-secondary { background-color: #586069; color: white; }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
         .btn-outline {
@@ -234,7 +245,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #FC4C0C;
         }
         .profile-head {
             display: flex;

@@ -387,11 +387,11 @@
                                     @enderror
                                 </div>
 
-                                <div class="flex items-center justify-end gap-3">
-                                    <button type="button" onclick="closeDirectMessageModal()" class="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
+                                <div class="flex items-center gap-3 w-full">
+                                    <button type="button" onclick="closeDirectMessageModal()" class="flex-1 rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-50">
                                         キャンセル
                                     </button>
-                                    <button type="submit" class="rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
+                                    <button type="submit" class="flex-1 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600">
                                         送信してチャットを開始
                                     </button>
                                 </div>

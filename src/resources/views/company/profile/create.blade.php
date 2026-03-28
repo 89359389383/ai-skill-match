@@ -267,15 +267,15 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #1e88e5 0%, #1976d2 100%);
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             color: #fff;
             font-size: 16px;
-            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.25);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-            box-shadow: 0 6px 16px rgba(30, 136, 229, 0.32);
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.32);
             transform: translateY(-1px);
         }
 

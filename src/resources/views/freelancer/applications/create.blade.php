@@ -438,12 +438,12 @@
         }
         .btn-secondary:hover { background-color: #4c5561; transform: translateY(-1px); }
         .btn-primary {
-            background-color: #0366d6;
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             color: white;
             font-size: 20px;
             padding: 15px 60px;
         }
-        .btn-primary:hover { background-color: #0256cc; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3); }
+        .btn-primary:hover { background: linear-gradient(90deg, #f97316 0%, #ef4444 100%); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3); }
 
         /* Dropdown Menu */
         .dropdown { position: relative; }
