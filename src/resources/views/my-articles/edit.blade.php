@@ -114,15 +114,16 @@
                     @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">概要 <span class="text-red-500">*</span></label>
-                    <textarea name="excerpt" id="excerpt" rows="3" maxlength="200"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('excerpt') border-red-500 @enderror"
-                        placeholder="記事の概要を入力してください">{{ old('excerpt', $article->excerpt) }}</textarea>
-                    @error('excerpt')
-                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
-                    @enderror
-                </div>
+                {{-- 概要（excerpt）は任意なので、編集UIから非表示にしています --}}
+                {{-- <div class="mb-6"> --}}
+                {{--     <label class="block text-sm font-semibold text-gray-700 mb-2">概要 <span class="text-red-500">*</span></label> --}}
+                {{--     <textarea name="excerpt" id="excerpt" rows="3" maxlength="200" --}}
+                {{--         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent @error('excerpt') border-red-500 @enderror" --}}
+                {{--         placeholder="記事の概要を入力してください">{{ old('excerpt', $article->excerpt) }}</textarea> --}}
+                {{--     @error('excerpt') --}}
+                {{--         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p> --}}
+                {{--     @enderror --}}
+                {{-- </div> --}}
 
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -1013,7 +1014,8 @@
 
     function buildPreviewHtml(imageUrl) {
         var title = document.getElementById('title').value;
-        var excerpt = document.getElementById('excerpt').value;
+        var excerptEl = document.getElementById('excerpt');
+        var excerpt = excerptEl ? excerptEl.value : '';
         var category = document.getElementById('category').value;
         var bodyHtml = document.getElementById('body_html').value;
 

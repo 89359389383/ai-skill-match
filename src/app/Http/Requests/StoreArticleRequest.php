@@ -30,6 +30,11 @@ class StoreArticleRequest extends FormRequest
             }));
             $this->merge(['tags' => $normalized]);
         }
+
+        // DB が NOT NULL（stringカラム）なので、UI から未送信でも空文字で埋める
+        $this->merge([
+            'excerpt' => (string) $this->input('excerpt', ''),
+        ]);
     }
 
     public function rules(): array
@@ -38,8 +43,8 @@ class StoreArticleRequest extends FormRequest
             // タイトル（必須）
             'title' => ['required', 'string', 'max:255'],
 
-            // 概要（必須・最大200）
-            'excerpt' => ['required', 'string', 'max:200'],
+            // 概要（任意・最大200）
+            'excerpt' => ['nullable', 'string', 'max:200'],
 
             // カテゴリー（必須）
             'category' => ['required', 'string', 'max:50'],
@@ -81,7 +86,6 @@ class StoreArticleRequest extends FormRequest
     {
         return [
             'title.required' => 'タイトルは必須です。',
-            'excerpt.required' => '概要は必須です。',
             'excerpt.max' => '概要は200文字以内で入力してください。',
             'category.required' => 'カテゴリーは必須です。',
             'eyecatch_image_url.url' => 'アイキャッチ画像URLは正しいURL形式で入力してください。',
