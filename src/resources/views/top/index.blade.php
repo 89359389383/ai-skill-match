@@ -47,7 +47,7 @@ body {
 .hero-section {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg,rgb(253, 192, 127) 0%, #ffbf66 50%, #ff9900 100%);
+    background: linear-gradient(90deg, #fb3b03, #f44a03, #fce277);
     min-height: 500px;
 }
 

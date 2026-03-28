@@ -47,7 +47,7 @@ class FreelancerMessageController extends Controller
             // 案件（応募スレッドなら存在する）
             'job',
             // 会話履歴
-            'messages',
+            'messages.attachments',
         ]);
 
         // スレッド種別（スカウト/応募）を導出する
@@ -137,8 +137,8 @@ class FreelancerMessageController extends Controller
             ]);
         }
 
-        // 応募チャットは応募専用ビュー
-        return view('freelancer.messages.show', [
+        // 応募チャットは応募専用ビュー（PSCC版）
+        return view('freelancer.messages.show_pscc', [
             'thread' => $thread,
             // 応募メッセージなど
             'application' => $application,
@@ -187,8 +187,17 @@ class FreelancerMessageController extends Controller
         // 入力をバリデーションする（content required / FormRequest に委譲）
         $validated = $request->validated();
 
+        // 添付がある場合は同時に保存できるように渡す
+        $attachments = $request->file('attachments', []);
+
         // 送信処理を Service に委譲する（MessageService::send）
-        $messageService->send($thread, 'freelancer', $freelancer->id, $validated['content']);
+        $messageService->send(
+            $thread,
+            'freelancer',
+            $freelancer->id,
+            $validated['content'] ?? null,
+            is_array($attachments) ? $attachments : []
+        );
 
         // thread.show へ戻す
         return redirect()

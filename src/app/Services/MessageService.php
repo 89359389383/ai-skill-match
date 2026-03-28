@@ -54,15 +54,27 @@ class MessageService
      * - messages + threads を同時更新する（複数更新）
      * - 相手側を未読に切り替える（未読フラグ更新）
      */
-    public function send(Thread $thread, string $senderType, int $senderId, string $body): Message
+    /**
+     * メッセージを送信（本文＋添付（任意））
+     *
+     * @param array $attachments UploadedFile[]（任意）
+     */
+    public function send(Thread $thread, string $senderType, int $senderId, ?string $body, array $attachments = []): Message
     {
         // 入力の空白を取り除き、「空メッセージ」を弾きやすくする
-        $body = trim($body);
+        $body = trim((string) ($body ?? ''));
 
-        // メッセージ本文が空なら、設計どおりバリデーションエラーにする
-        if ($body === '') {
+        // 本文も添付も無い場合はエラー
+        $hasValidAttachments = false;
+        foreach ($attachments as $file) {
+            if ($file && is_object($file) && method_exists($file, 'isValid') && $file->isValid()) {
+                $hasValidAttachments = true;
+                break;
+            }
+        }
+        if ($body === '' && !$hasValidAttachments) {
             throw ValidationException::withMessages([
-                'content' => 'メッセージを入力してください',
+                'content' => 'メッセージまたは添付ファイルを入力してください。',
             ]);
         }
 
@@ -91,7 +103,7 @@ class MessageService
         }
 
         // 複数更新が絡むのでトランザクションで安全にまとめる
-        return DB::transaction(function () use ($thread, $senderType, $senderId, $body): Message {
+        return DB::transaction(function () use ($thread, $senderType, $senderId, $body, $attachments): Message {
             // 時刻を1回だけ作って、thread/messageの整合を取りやすくする
             $now = Carbon::now();
 
@@ -108,6 +120,25 @@ class MessageService
                 // 送信時刻
                 'sent_at' => $now,
             ]);
+
+            // 添付保存（任意）
+            if (!empty($attachments)) {
+                foreach ($attachments as $file) {
+                    if (!$file || !is_object($file) || !method_exists($file, 'isValid') || !$file->isValid()) continue;
+
+                    $clientName = $file->getClientOriginalName();
+                    $mime = $file->getClientMimeType();
+                    $sizeBytes = (int) ($file->getSize() ?? 0);
+                    $storedPath = $file->store('thread-message-attachments', 'public');
+
+                    $message->attachments()->create([
+                        'attachment_name' => $clientName,
+                        'attachment_path' => $storedPath,
+                        'attachment_mime' => $mime,
+                        'attachment_size' => $sizeBytes,
+                    ]);
+                }
+            }
 
             // 未読フラグを「送信者に基づいて」更新する（設計：最後の送信者が自分以外なら未読）
             $isUnreadForCompany = $senderType !== 'company';

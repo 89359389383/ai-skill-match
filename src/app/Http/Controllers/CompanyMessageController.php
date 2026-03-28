@@ -49,7 +49,7 @@ class CompanyMessageController extends Controller
             // 企業情報
             'company',
             // 会話履歴
-            'messages',
+            'messages.attachments',
         ]);
 
         // スレッド種別（スカウト/応募）を導出する
@@ -172,8 +172,17 @@ class CompanyMessageController extends Controller
         // 入力をバリデーションする（content required / FormRequest に委譲）
         $validated = $request->validated();
 
+        // 添付がある場合は同時に保存できるように渡す
+        $attachments = $request->file('attachments', []);
+
         // 送信処理を Service に委譲する（MessageService::send）
-        $messageService->send($thread, 'company', $company->id, $validated['content']);
+        $messageService->send(
+            $thread,
+            'company',
+            $company->id,
+            $validated['content'] ?? null,
+            is_array($attachments) ? $attachments : []
+        );
 
         // thread.show へ戻す
         return redirect()

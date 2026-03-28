@@ -5,6 +5,19 @@
 @push('styles')
     @include('partials.pscc-chat-core-styles')
     <style>
+        /* 全体：メッセージカードの横幅を抑える */
+        .pscc-message .pscc-message-card {
+            max-width: 80%;
+        }
+
+        /* 自分：右寄せ（アイコン＋メッセージ欄セット） */
+        .pscc-message.is-me {
+            justify-content: flex-end;
+        }
+        .pscc-message.is-me .pscc-message-card {
+            max-width: 80%;
+        }
+
         /* 評価モーダル */
         .pscc-modal-overlay {
             position: fixed;
@@ -295,7 +308,7 @@
                             }
                         @endphp
 
-                        <div class="pscc-message">
+                        <div class="pscc-message {{ $isOwn ? 'is-me' : '' }}">
                             @if ($avatarSrc)
                                 <img src="{{ $avatarSrc }}" alt="{{ $senderName }}" class="pscc-avatar">
                             @else
