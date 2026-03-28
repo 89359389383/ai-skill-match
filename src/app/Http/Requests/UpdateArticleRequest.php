@@ -30,13 +30,25 @@ class UpdateArticleRequest extends FormRequest
             }));
             $this->merge(['tags' => $normalized]);
         }
+
+        // DB が NOT NULL（stringカラム）なので、UI から未送信の場合は既存値を維持
+        if (! $this->has('excerpt')) {
+            $routeArticle = $this->route('article');
+            $existing = null;
+            if (is_object($routeArticle) && property_exists($routeArticle, 'excerpt')) {
+                $existing = $routeArticle->excerpt;
+            }
+            $this->merge([
+                'excerpt' => (string) ($existing ?? ''),
+            ]);
+        }
     }
 
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'excerpt' => ['required', 'string', 'max:200'],
+            'excerpt' => ['nullable', 'string', 'max:200'],
             'category' => ['required', 'string', 'max:50'],
             'eyecatch_image_url' => ['nullable', 'url'],
             'eyecatch_image' => ['nullable', 'file', 'image', 'max:5120'],
@@ -65,7 +77,6 @@ class UpdateArticleRequest extends FormRequest
     {
         return [
             'title.required' => 'タイトルは必須です。',
-            'excerpt.required' => '概要は必須です。',
             'excerpt.max' => '概要は200文字以内で入力してください。',
             'category.required' => 'カテゴリーは必須です。',
             'eyecatch_image_url.url' => 'アイキャッチ画像URLは正しいURL形式で入力してください。',

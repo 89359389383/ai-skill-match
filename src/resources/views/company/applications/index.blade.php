@@ -712,7 +712,7 @@
         border-bottom: 1px solid #e1e4e8;
         padding: 0 var(--header-padding-x);
         position: sticky;
-        top: var(--header-height-current);
+        top: calc(var(--header-height-current, 91px) - 8px);
         z-index: 99;
     }
     .tabs-container {

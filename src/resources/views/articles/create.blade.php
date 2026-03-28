@@ -16,6 +16,67 @@
         color: #9ca3af;
     }
 
+    /* 見出しの見た目（大見出し/小見出しを視覚的に分かりやすく） */
+    #bodyEditor h2 {
+        font-size: 1.875rem; /* 見出し（大） */
+        font-weight: 800;
+        margin: 1.25rem 0 0.75rem;
+        line-height: 1.2;
+    }
+    #bodyEditor h3 {
+        font-size: 1.2rem; /* 見出し（小）：本文より少しだけ大きく */
+        font-weight: 800;
+        margin: 1.15rem 0 0.65rem;
+        line-height: 1.25;
+    }
+
+    /* 箇条書き/番号付きリストを視覚的に分かりやすく */
+    #bodyEditor ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    #bodyEditor ol {
+        list-style: decimal;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    #bodyEditor li {
+        margin: 0.35rem 0;
+        line-height: 1.6;
+    }
+
+    /* 引用の見た目（クリックしてブロックが現れたときに分かりやすく） */
+    #bodyEditor blockquote {
+        border-left: 4px solid #4f46e5;
+        background: #f5f3ff;
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+        line-height: 1.6;
+    }
+    #bodyEditor blockquote p {
+        margin: 0;
+    }
+
+    /* 目次（ToC）削除ボタン（本文クリック時にだけ表示） */
+    #tocDeleteBtn {
+        position: fixed;
+        z-index: 100000;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    #tocDeleteBtn.show { display: flex; }
+
     /* 目次（ToC） */
     .article-toc {
         border: 1px solid #e5e7eb;
@@ -74,6 +135,21 @@
         flex: 0 0 auto;
     }
     #insertMenu .menu-sep { height: 1px; background: #f3f4f6; }
+
+    /* 全画面エディタ（新規投稿のみ） */
+    #fullscreenArticleEditorOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(255, 255, 255, 0.98);
+        display: none;
+    }
+    #fullscreenArticleEditorOverlay.hidden { display: none; }
+    #fullscreenArticleEditorOverlay:not(.hidden) { display: block; }
+
+    #fullscreenArticleEditorOverlay #bodyEditor {
+        min-height: calc(100vh - 160px) !important;
+    }
 </style>
 @endpush
 
@@ -118,16 +194,17 @@
                     @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        概要 <span class="text-red-500">*</span>
-                    </label>
-                    <textarea name="excerpt" id="excerpt" placeholder="記事の概要を入力してください（2-3文程度）" rows="3" maxlength="200"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none @error('excerpt') border-red-500 @enderror">{{ old('excerpt') }}</textarea>
-                    @error('excerpt')
-                        <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
-                    @enderror
-                </div>
+                {{-- 概要（excerpt）は必須ではないため、投稿/編集UIから非表示にしています --}}
+                {{-- <div class="mb-6"> --}}
+                {{--     <label class="block text-sm font-semibold text-gray-700 mb-2"> --}}
+                {{--         概要 <span class="text-red-500">*</span> --}}
+                {{--     </label> --}}
+                {{--     <textarea name="excerpt" id="excerpt" placeholder="記事の概要を入力してください（2-3文程度）" rows="3" maxlength="200" --}}
+                {{--         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none @error('excerpt') border-red-500 @enderror">{{ old('excerpt') }}</textarea> --}}
+                {{--     @error('excerpt') --}}
+                {{--         <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p> --}}
+                {{--     @enderror --}}
+                {{-- </div> --}}
 
                 <div class="mb-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -204,7 +281,7 @@
                     @enderror
 
                     <div class="relative">
-                        <div class="flex items-center gap-3 mb-3">
+                        <div id="editorInsertControlsWrapper" class="flex items-center gap-3 mb-3 justify-end">
                             <button
                                 type="button"
                                 id="insertMenuToggle"
@@ -213,6 +290,14 @@
                                 aria-expanded="false"
                             >
                                 ＋ 挿入
+                            </button>
+
+                            <button
+                                type="button"
+                                id="fullscreenEditorToggle"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors border border-gray-200"
+                            >
+                                全画面表示
                             </button>
 
                             <div id="insertMenu" role="dialog" aria-label="挿入メニュー">
@@ -338,6 +423,25 @@
                             class="hidden"
                         >{{ old('body_html') }}</textarea>
                     </div>
+
+                    {{-- 全画面エディタ（新規投稿のみ） --}}
+                    <div id="fullscreenArticleEditorOverlay" class="hidden">
+                        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                            <div class="text-sm font-semibold text-gray-700">記事本文（全画面）</div>
+                            <button
+                                type="button"
+                                id="fullscreenArticleEditorCloseBtn"
+                                class="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                            >
+                                閉じる
+                            </button>
+                        </div>
+
+                        <div class="p-4 h-[calc(100vh-64px)] overflow-y-auto">
+                            <div id="fullscreenArticleEditorInsertControlsSlot" class="mb-3"></div>
+                            <div id="fullscreenArticleEditorBodySlot"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -416,6 +520,77 @@
         const bodyEditor = document.getElementById('bodyEditor');
         const bodyInput = document.getElementById('body_html');
 
+        // -----------------------------
+        // 目次（ToC）削除UI（目次がある間は常に表示）
+        // -----------------------------
+        let tocElToDelete = null;
+        let tocDeleteBtn = document.getElementById('tocDeleteBtn');
+        if (!tocDeleteBtn) {
+            tocDeleteBtn = document.createElement('button');
+            tocDeleteBtn.id = 'tocDeleteBtn';
+            tocDeleteBtn.type = 'button';
+            tocDeleteBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg>
+            `;
+            document.body.appendChild(tocDeleteBtn);
+        }
+
+        function hideTocDeleteBtn() {
+            tocElToDelete = null;
+            if (tocDeleteBtn) tocDeleteBtn.classList.remove('show');
+        }
+
+        function positionTocDeleteBtn(tocEl) {
+            if (!tocDeleteBtn || !tocEl) return;
+            const rect = tocEl.getBoundingClientRect();
+            const btnSize = 42;
+            const padding = 10;
+            const left = Math.min(Math.max(rect.right - btnSize, padding), window.innerWidth - btnSize - padding);
+            const top = Math.min(Math.max(rect.top - btnSize - 6, padding), window.innerHeight - btnSize - padding);
+            tocDeleteBtn.style.left = left + 'px';
+            tocDeleteBtn.style.top = top + 'px';
+            tocDeleteBtn.classList.add('show');
+        }
+
+        function syncTocDeleteBtn() {
+            if (!bodyEditor) return;
+            const tocEl = bodyEditor.querySelector('.article-toc');
+            if (!tocEl) {
+                hideTocDeleteBtn();
+                return;
+            }
+            tocElToDelete = tocEl;
+            positionTocDeleteBtn(tocEl);
+        }
+
+        if (tocDeleteBtn) tocDeleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!tocElToDelete) return;
+            tocElToDelete.remove();
+            tocElToDelete = null;
+            hideTocDeleteBtn();
+            syncBodyEditor();
+        });
+
+        // 初期状態（old() / 既存内容に目次があれば表示）
+        syncTocDeleteBtn();
+
+        // 目次が挿入/削除されるタイミングに追従
+        if (bodyEditor) {
+            bodyEditor.addEventListener('input', function() {
+                syncTocDeleteBtn();
+            });
+            bodyEditor.addEventListener('blur', function() {
+                syncTocDeleteBtn();
+            });
+        }
+
         function syncBodyEditor() {
             if (!bodyEditor || !bodyInput) return;
             bodyInput.value = bodyEditor.innerHTML;
@@ -455,6 +630,69 @@
             insertMenu.style.left = left + 'px';
             // ボタンの下に出すのではなく、上方向に配置して全項目が見切れないようにする
             insertMenu.style.top = Math.max(8, rect.top - h - 8) + 'px';
+        }
+
+        // -----------------------------
+        // 全画面エディタ（新規投稿のみ）
+        // -----------------------------
+        const fullscreenEditorToggle = document.getElementById('fullscreenEditorToggle');
+        const fullscreenArticleEditorOverlay = document.getElementById('fullscreenArticleEditorOverlay');
+        const fullscreenArticleEditorCloseBtn = document.getElementById('fullscreenArticleEditorCloseBtn');
+        const fullscreenArticleEditorInsertControlsSlot = document.getElementById('fullscreenArticleEditorInsertControlsSlot');
+        const fullscreenArticleEditorBodySlot = document.getElementById('fullscreenArticleEditorBodySlot');
+        const editorInsertControlsWrapper = document.getElementById('editorInsertControlsWrapper');
+
+        // textarea はフォームのままなので、そこを基準に戻す
+        const editorAreaParent = bodyInput ? bodyInput.parentNode : null;
+        const editorAreaInsertAnchor = bodyInput || null; // bodyEditor を textarea の直前へ戻す
+        // wrapper は bodyEditor の直前に戻す
+
+        let isFullscreenArticleEditor = false;
+
+        function enterFullscreenArticleEditor() {
+            if (!fullscreenArticleEditorOverlay || !fullscreenArticleEditorInsertControlsSlot || !fullscreenArticleEditorBodySlot) return;
+            if (!editorInsertControlsWrapper || !bodyEditor) return;
+
+            closeInsertMenuOuter();
+            syncBodyEditor();
+
+            fullscreenArticleEditorInsertControlsSlot.appendChild(editorInsertControlsWrapper);
+            fullscreenArticleEditorBodySlot.appendChild(bodyEditor);
+
+            fullscreenArticleEditorOverlay.classList.remove('hidden');
+            isFullscreenArticleEditor = true;
+
+            window.setTimeout(function() {
+                if (bodyEditor) bodyEditor.focus();
+            }, 0);
+        }
+
+        function exitFullscreenArticleEditor() {
+            if (!fullscreenArticleEditorOverlay || !editorAreaParent) return;
+            if (!editorInsertControlsWrapper || !bodyEditor) return;
+
+            closeInsertMenuOuter();
+            syncBodyEditor();
+
+            // textarea の直前に戻す（順序崩れ防止）
+            editorAreaParent.insertBefore(bodyEditor, editorAreaInsertAnchor);
+            // wrapper は bodyEditor の直前に戻す
+            editorAreaParent.insertBefore(editorInsertControlsWrapper, bodyEditor);
+
+            fullscreenArticleEditorOverlay.classList.add('hidden');
+            isFullscreenArticleEditor = false;
+        }
+
+        if (fullscreenEditorToggle && fullscreenArticleEditorOverlay && fullscreenArticleEditorCloseBtn) {
+            fullscreenEditorToggle.addEventListener('click', function() {
+                if (isFullscreenArticleEditor) return;
+                enterFullscreenArticleEditor();
+            });
+
+            fullscreenArticleEditorCloseBtn.addEventListener('click', function() {
+                if (!isFullscreenArticleEditor) return;
+                exitFullscreenArticleEditor();
+            });
         }
 
         if (insertMenuToggle && insertMenu) {
@@ -542,6 +780,38 @@
             syncBodyEditor();
         }
 
+        // 「引用」をクリックしたときに、カーソルが引用ブロック内に入るように挿入する
+        function insertBlockquote() {
+            if (!bodyEditor) return;
+            bodyEditor.focus();
+
+            let range = getEditorSelection() || null;
+            if (!range) {
+                range = document.createRange();
+                range.selectNodeContents(bodyEditor);
+                range.collapse(false);
+            }
+
+            // 現在位置の選択範囲を消してからブロックを挿入
+            range.deleteContents();
+
+            const blockquote = document.createElement('blockquote');
+            blockquote.innerHTML = '<p><br></p>';
+
+            range.insertNode(blockquote);
+
+            const p = blockquote.querySelector('p') || blockquote;
+            const newRange = document.createRange();
+            newRange.selectNodeContents(p);
+            newRange.collapse(true);
+
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+
+            syncBodyEditor();
+        }
+
         function insertHorizontalRule() {
             insertHtmlIntoEditor('<hr>');
         }
@@ -581,7 +851,8 @@
                 insertHtmlIntoEditor('<div class="my-4"><iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>');
                 return;
             }
-            insertHtmlIntoEditor('<div class="my-4"><iframe src="' + trimmed + '" style="width:100%; min-height:320px;" frameborder="0" allowfullscreen></iframe></div>');
+            // 一般URL埋め込みは高くなりすぎることがあるので、高さを固定して「入口部分」だけ見えるようにする
+            insertHtmlIntoEditor('<div class="my-4"><iframe src="' + trimmed + '" style="width:100%; height:360px; border:0;" frameborder="0" scrolling="yes" loading="lazy" allowfullscreen></iframe></div>');
         }
 
         function buildTocHtml() {
@@ -672,7 +943,11 @@
 
                 if (action === 'toc') {
                     const tocHtml = buildTocHtml();
-                    if (tocHtml) insertHtmlIntoEditor(tocHtml);
+                    if (tocHtml) {
+                        insertHtmlIntoEditor(tocHtml);
+                        // 目次を挿入したので削除ボタンも同期
+                        syncTocDeleteBtn();
+                    }
                     return;
                 }
 
@@ -680,7 +955,7 @@
                 if (action === 'heading-small') return formatBlock('H3');
                 if (action === 'list-bullet') return toggleList('bullet');
                 if (action === 'list-ordered') return toggleList('ordered');
-                if (action === 'blockquote') return toggleQuote();
+                if (action === 'blockquote') return insertBlockquote();
                 if (action === 'hr') return insertHorizontalRule();
             });
         }

@@ -399,7 +399,7 @@
             border-bottom: 1px solid #e1e4e8;
             padding: 0 var(--header-padding-x, 1rem);
             position: sticky;
-            top: var(--header-height-current, 91px);
+            top: calc(var(--header-height-current, 91px) - 8px);
             z-index: 99;
         }
 
