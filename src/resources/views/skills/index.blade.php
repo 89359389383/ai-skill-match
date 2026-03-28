@@ -91,18 +91,21 @@
                     </h1>
                     <p class="text-gray-600">AIスキルを持つプロフェッショナルに直接依頼できます</p>
                 </div>
-                @if(auth('freelancer')->check() && auth('freelancer')->user()?->freelancer)
-                    <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [])) }}"
-                       class="flex items-center gap-2 px-6 py-4 border-2 border-indigo-200 text-indigo-700 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all duration-300 text-lg">
-                        自分のスキル一覧
-                    </a>
-                @endif
-                @if(auth('freelancer')->check())
-                    <a href="{{ route('skills.create', request()->filled('slot') ? ['slot' => request('slot')] : []) }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                        スキルを出品
-                    </a>
-                @endif
+                <div class="flex items-center gap-3">
+                    @if(auth('freelancer')->check() && auth('freelancer')->user()?->freelancer)
+                        <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [])) }}"
+                           class="flex items-center gap-2 px-6 py-4 border-2 border-indigo-200 text-indigo-700 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all duration-300 text-lg">
+                            自分のスキル一覧
+                        </a>
+                    @endif
+                    @if(auth('freelancer')->check())
+                        <a href="{{ route('skills.create', request()->filled('slot') ? ['slot' => request('slot')] : []) }}"
+                           class="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                            スキルを出品
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 

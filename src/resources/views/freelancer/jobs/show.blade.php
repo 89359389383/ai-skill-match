@@ -307,13 +307,13 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #FC4C0C;
         }
         .hero-title {
             font-size: 20px;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            color: #0060ff;
+            color: #FC4C0C;
             line-height: 1.3;
         }
         .hero-company {
@@ -462,15 +462,15 @@
             letter-spacing: -0.01em;
         }
         .btn-primary {
-            background-color: #0366d6;
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             color: white;
             font-size: 20px;
             padding: 15px 60px;
         }
         .btn-primary:hover {
-            background-color: #0256cc;
+            background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(3, 102, 214, 0.3);
+            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
         }
         .btn-secondary {
             background-color: #586069;

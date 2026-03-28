@@ -96,7 +96,7 @@
                             自分の記事一覧
                         </a>
                     @endif
-                    <a href="{{ route('articles.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                    <a href="{{ route('articles.create') }}" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                         記事を投稿
                     </a>
@@ -116,7 +116,7 @@
                 <h3 class="text-xl font-bold text-gray-900 mb-2">まだ記事がありません</h3>
                 <p class="text-gray-600 mb-6">最初の記事を投稿してみましょう</p>
                 @if($viewer)
-                    <a href="{{ route('articles.create') }}" class="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                    <a href="{{ route('articles.create') }}" class="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
                         記事を投稿する
                     </a>
                 @endif

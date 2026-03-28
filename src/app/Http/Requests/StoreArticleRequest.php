@@ -46,8 +46,8 @@ class StoreArticleRequest extends FormRequest
 
             // 画像URL（任意）
             'eyecatch_image_url' => ['nullable', 'url'],
-            // アイキャッチ画像ファイル（任意、最大5MB）
-            'eyecatch_image' => ['nullable', 'file', 'image', 'max:5120'],
+            // アイキャッチ画像ファイル（必須、最大5MB）
+            'eyecatch_image' => ['required', 'file', 'image', 'max:5120'],
 
             // 本文（Quill の HTML）
             'body_html' => [
@@ -85,6 +85,7 @@ class StoreArticleRequest extends FormRequest
             'excerpt.max' => '概要は200文字以内で入力してください。',
             'category.required' => 'カテゴリーは必須です。',
             'eyecatch_image_url.url' => 'アイキャッチ画像URLは正しいURL形式で入力してください。',
+            'eyecatch_image.required' => 'アイキャッチ画像は必須です。',
             'body_html.required' => '本文を入力してください。',
             'body_html.max' => '本文が長すぎます。',
             'structure.array' => '記事構造の形式が不正です。',

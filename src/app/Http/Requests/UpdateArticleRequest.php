@@ -40,6 +40,8 @@ class UpdateArticleRequest extends FormRequest
             'category' => ['required', 'string', 'max:50'],
             'eyecatch_image_url' => ['nullable', 'url'],
             'eyecatch_image' => ['nullable', 'file', 'image', 'max:5120'],
+            // 既存アイキャッチ画像を「×」で削除したい場合のフラグ（更新時のみ使用）
+            'eyecatch_image_remove' => ['nullable', 'in:0,1'],
             'body_html' => [
                 'required',
                 'string',

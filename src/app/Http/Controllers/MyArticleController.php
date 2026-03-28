@@ -82,6 +82,12 @@ class MyArticleController extends Controller
             $validated['structure'] = $article->structure;
         }
 
+        // 既存アイキャッチ画像を「×」で削除した場合
+        // - 新しいファイルが選ばれていないときのみ DB の URL を null にする
+        if ((string) $request->input('eyecatch_image_remove') === '1' && ! $request->hasFile('eyecatch_image')) {
+            $validated['eyecatch_image_url'] = null;
+        }
+
         if ($request->hasFile('eyecatch_image')) {
             try {
                 $path = $request->file('eyecatch_image')->store('eyecatches', 'public');

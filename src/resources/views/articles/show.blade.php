@@ -33,6 +33,24 @@
 .article-body img { max-width: 100%; height: auto; }
 .article-body blockquote { border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 1rem 0; color: #4b5563; }
 
+.article-toc {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+}
+.article-toc ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5rem 0 0 0;
+}
+.article-toc li { margin: 0.25rem 0; }
+.article-toc a {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+
 .article-body .ql-editor,
 .article-body .ql-snow,
 .article-body .ql-container {
@@ -44,6 +62,16 @@
     min-height: 0 !important;
 }
 .article-body [class*="ql-indent"] { padding-left: 0 !important; margin-left: 0 !important; }
+
+.article-body iframe {
+    max-width: 100%;
+}
+
+.article-body hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 1.5rem 0;
+}
 </style>
 @endpush
 
