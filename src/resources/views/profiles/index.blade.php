@@ -130,7 +130,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($freelancers as $f)
                     <a href="{{ route('profiles.show', ['user' => $f->user_id]) }}" class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
-                        <div class="h-24 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"></div>
+                        <div class="h-24 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 max-h-[65px]"></div>
                         <div class="relative px-6">
                             <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
                                 @php
@@ -209,7 +209,7 @@
                                         @endif
                                     </span>
                                 </p>
-                            <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
+                            <p class="text-sm text-gray-600 mb-0 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
                         </div>
                     </a>
                 @endforeach

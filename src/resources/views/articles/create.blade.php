@@ -46,6 +46,37 @@
         line-height: 1.6;
     }
 
+    /* プレビュー表示（本文HTMLをそのまま流すので、list-style を明示） */
+    .article-body-preview ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    .article-body-preview ol {
+        list-style: decimal;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    .article-body-preview li {
+        margin: 0.35rem 0;
+        line-height: 1.6;
+        white-space: normal;
+    }
+
+    /* 見出しもプレビューで投稿後と同じ見た目にする */
+    .article-body-preview h2 {
+        font-size: 1.875rem;
+        font-weight: 800;
+        margin: 1.25rem 0 0.75rem;
+        line-height: 1.2;
+    }
+    .article-body-preview h3 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin: 1.15rem 0 0.65rem;
+        line-height: 1.25;
+    }
+
     /* 引用の見た目（クリックしてブロックが現れたときに分かりやすく） */
     #bodyEditor blockquote {
         border-left: 4px solid #4f46e5;
@@ -77,6 +108,67 @@
 
     #tocDeleteBtn.show { display: flex; }
 
+    /* OGPリンクカード（embed URLから生成） */
+    #bodyEditor .link-card {
+        border: 2px solid #4f46e5;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        display: block;
+    }
+    #bodyEditor .link-card .link-card-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+    }
+    #bodyEditor .link-card .thumb {
+        height: 140px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    #bodyEditor .link-card .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    #bodyEditor .link-card .content {
+        padding: 12px 14px;
+    }
+    #bodyEditor .link-card .title {
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.25;
+        margin-bottom: 6px;
+        font-size: 1rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    #bodyEditor .link-card .desc {
+        color: #6b7280;
+        line-height: 1.4;
+        font-size: 0.95rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: 6px;
+    }
+    #bodyEditor .link-card .domain {
+        color: #4f46e5;
+        font-weight: 700;
+        font-size: 0.9rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     /* 目次（ToC） */
     .article-toc {
         border: 1px solid #e5e7eb;
@@ -86,8 +178,9 @@
         margin: 1rem 0;
     }
     .article-toc ul {
-        list-style: none;
-        padding-left: 0;
+        list-style: none !important;
+        list-style-type: none !important;
+        padding-left: 0 !important;
         margin: 0.5rem 0 0 0;
     }
     .article-toc li { margin: 0.25rem 0; }
@@ -166,6 +259,13 @@
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <h1 class="text-4xl font-bold text-gray-900">記事を投稿</h1>
                 <div class="flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        onclick="handlePreview()"
+                        class="flex items-center gap-2 px-4 py-2 border-2 border-green-600 text-green-600 rounded-xl font-semibold hover:bg-green-50 transition-all"
+                    >
+                        プレビュー
+                    </button>
                     <button type="submit" form="articleForm" class="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
@@ -302,6 +402,16 @@
 
                             <div id="insertMenu" role="dialog" aria-label="挿入メニュー">
                                 <div class="menu-section-title">インライン/ブロック</div>
+                                <div class="menu-item" data-action="paragraph">
+                                    <span class="menu-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 6h16"></path>
+                                            <path d="M4 12h10"></path>
+                                            <path d="M4 18h16"></path>
+                                        </svg>
+                                    </span>
+                                    通常の文字
+                                </div>
                                 <div class="menu-item" data-action="image">
                                     <span class="menu-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -425,7 +535,7 @@
                     </div>
 
                     {{-- 全画面エディタ（新規投稿のみ） --}}
-                    <div id="fullscreenArticleEditorOverlay" class="hidden">
+                    <div id="fullscreenArticleEditorOverlay" class="hidden overflow-y-auto">
                         <div class="flex items-center justify-between p-4 border-b border-gray-200">
                             <div class="text-sm font-semibold text-gray-700">記事本文（全画面）</div>
                             <button
@@ -437,7 +547,7 @@
                             </button>
                         </div>
 
-                        <div class="p-4 h-[calc(100vh-64px)] overflow-y-auto">
+                        <div class="p-4 max-w-[900px] mx-auto">
                             <div id="fullscreenArticleEditorInsertControlsSlot" class="mb-3"></div>
                             <div id="fullscreenArticleEditorBodySlot"></div>
                         </div>
@@ -506,7 +616,20 @@
     </div>
 </div>
 
-{{-- プレビュー機能（Quill依存）のため、いったん非表示にします --}}
+<div id="previewModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50" onclick="closePreview()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">プレビュー</h3>
+                <button type="button" onclick="closePreview()" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -614,6 +737,59 @@
             });
         }
 
+        // -----------------------------
+        // ＋ ボタンを「クリック位置の左」に常に表示
+        // -----------------------------
+        function getCaretClientRect() {
+            if (!bodyEditor) return null;
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return null;
+            const range = selection.getRangeAt(0);
+            if (!bodyEditor.contains(range.commonAncestorContainer)) return null;
+
+            const rect = range.getBoundingClientRect();
+            if (rect && (rect.width > 0 || rect.height > 0)) return rect;
+
+            // 幅/高さが 0 の場合は clientRects で拾う
+            const rects = range.getClientRects ? range.getClientRects() : [];
+            if (rects && rects.length > 0) return rects[0];
+            return null;
+        }
+
+        function positionInsertMenuToggleAtCaret() {
+            if (!insertMenuToggle || !bodyEditor) return;
+            const rect = getCaretClientRect();
+            if (!rect) return;
+
+            const btnRect = insertMenuToggle.getBoundingClientRect();
+            const bodyRect = bodyEditor.getBoundingClientRect();
+            insertMenuToggle.style.position = 'fixed';
+            insertMenuToggle.style.zIndex = '100002';
+
+            // 「ボタンが本文入力エリアに被らない」ように、ボタン右端が bodyEditor 左端より左に来る位置へ補正する
+            const desiredLeft = rect.left - btnRect.width - 12;
+            const maxRightEdge = bodyRect.left - 8; // bodyEditor の内側に入らない目安
+            const correctedLeft = (desiredLeft + btnRect.width > maxRightEdge)
+                ? (maxRightEdge - btnRect.width)
+                : desiredLeft;
+
+            const clampedLeft = Math.max(8, Math.min(correctedLeft, window.innerWidth - btnRect.width - 8));
+            const clampedTop = Math.max(8, Math.min(rect.top, window.innerHeight - btnRect.height - 8));
+
+            insertMenuToggle.style.left = clampedLeft + 'px';
+            insertMenuToggle.style.top = clampedTop + 'px';
+        }
+
+        if (bodyEditor) {
+            bodyEditor.addEventListener('click', function() {
+                positionInsertMenuToggleAtCaret();
+            });
+        }
+
+        document.addEventListener('selectionchange', function() {
+            positionInsertMenuToggleAtCaret();
+        });
+
         function closeInsertMenuOuter() {
             if (insertMenu) insertMenu.style.display = 'none';
             if (insertMenuToggle) insertMenuToggle.setAttribute('aria-expanded', 'false');
@@ -626,10 +802,18 @@
             const rect = insertMenuToggle.getBoundingClientRect();
             const w = insertMenu.offsetWidth;
             const h = insertMenu.offsetHeight;
-            const left = Math.min(rect.left, window.innerWidth - w - 12);
+            // ボタンの右側にメニューが出るように配置
+            const desiredLeft = rect.right + 8;
+            const maxLeft = window.innerWidth - w - 8;
+            const left = Math.max(8, Math.min(desiredLeft, maxLeft));
+
+            // 縦位置はボタンの上端に合わせる（画面外ならクランプ）
+            const desiredTop = rect.top;
+            const maxTop = window.innerHeight - h - 8;
+            const top = Math.max(8, Math.min(desiredTop, maxTop));
+
             insertMenu.style.left = left + 'px';
-            // ボタンの下に出すのではなく、上方向に配置して全項目が見切れないようにする
-            insertMenu.style.top = Math.max(8, rect.top - h - 8) + 'px';
+            insertMenu.style.top = top + 'px';
         }
 
         // -----------------------------
@@ -851,8 +1035,122 @@
                 insertHtmlIntoEditor('<div class="my-4"><iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>');
                 return;
             }
-            // 一般URL埋め込みは高くなりすぎることがあるので、高さを固定して「入口部分」だけ見えるようにする
-            insertHtmlIntoEditor('<div class="my-4"><iframe src="' + trimmed + '" style="width:100%; height:360px; border:0;" frameborder="0" scrolling="yes" loading="lazy" allowfullscreen></iframe></div>');
+
+            // YouTube以外は OGPリンクカード表示にする
+            const cardId = 'linkCard_' + String(Date.now()) + '_' + Math.random().toString(16).slice(2);
+            let domain = '';
+            try {
+                domain = new URL(trimmed).hostname;
+            } catch (e) {
+                domain = trimmed;
+            }
+
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            // 先にローディングカードを挿入（カードが挿入されると編集体験が落ちない）
+            insertHtmlIntoEditor(
+                '<div class="my-4">' +
+                    '<div id="' + cardId + '" class="link-card" contenteditable="false">' +
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Loading...</div></div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
+                                '<div class="title">リンクカードを読み込み中</div>' +
+                                '<div class="desc">OGPを取得しています</div>' +
+                            '</div>' +
+                        '</a>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            // r.jina.ai 経由で HTML を取得して OG 情報を抽出（CORS対策）
+            const jinaUrl = 'https://r.jina.ai/' + trimmed;
+            fetch(jinaUrl)
+                .then(function(res) { return res.text(); })
+                .then(function(htmlText) {
+                    function extractMeta(propertyOrName) {
+                        // property="og:title" / name="twitter:title" 等に対応（より単純に堅く）
+                        const re1 = new RegExp(
+                            propertyOrName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') +
+                            '[^>]*content=["\\\']([^"\\\']*)["\\\']',
+                            'i'
+                        );
+                        const re2 = new RegExp(
+                            '(?:property|name)=["\\\']' +
+                            propertyOrName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') +
+                            '["\\\'][^>]*content=["\\\']([^"\\\']*)["\\\']',
+                            'i'
+                        );
+                        const m1 = htmlText.match(re1);
+                        if (m1 && m1[1]) return m1[1];
+                        const m2 = htmlText.match(re2);
+                        if (m2 && m2[1]) return m2[1];
+                        return '';
+                    }
+
+                    const title =
+                        extractMeta('og:title') ||
+                        extractMeta('twitter:title');
+                    const desc =
+                        extractMeta('og:description') ||
+                        extractMeta('twitter:description') ||
+                        extractMeta('description');
+                    const image =
+                        extractMeta('og:image') ||
+                        extractMeta('twitter:image');
+
+                    const finalTitle = title || domain;
+                    const finalDesc = desc || 'リンクの内容を表示します。';
+
+                    const el = document.getElementById(cardId);
+                    if (!el) return;
+
+                    const safeTitle = escapeHtml(finalTitle);
+                    const safeDesc = escapeHtml(finalDesc);
+                    const safeDomain = escapeHtml(domain);
+
+                    // 画像が無い場合でも崩れないように
+                    let resolvedImage = image;
+                    if (resolvedImage) {
+                        try {
+                            resolvedImage = new URL(resolvedImage, trimmed).toString();
+                        } catch (e) {}
+                    }
+
+                    const thumbHtml = resolvedImage
+                        ? '<img src="' + escapeHtml(resolvedImage) + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
+                        : '<div style="color:#9ca3af;font-weight:700;">No image</div>';
+
+                    el.innerHTML =
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb">' + thumbHtml + '</div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + safeDomain + '</div>' +
+                                '<div class="title">' + safeTitle + '</div>' +
+                                '<div class="desc">' + safeDesc + '</div>' +
+                            '</div>' +
+                        '</a>';
+                })
+                .catch(function() {
+                    const el = document.getElementById(cardId);
+                    if (!el) return;
+                    el.innerHTML =
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Preview</div></div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
+                                '<div class="title">' + escapeHtml(domain) + '</div>' +
+                                '<div class="desc">OGP取得に失敗しました</div>' +
+                            '</div>' +
+                        '</a>';
+                });
         }
 
         function buildTocHtml() {
@@ -948,6 +1246,15 @@
                         // 目次を挿入したので削除ボタンも同期
                         syncTocDeleteBtn();
                     }
+                    return;
+                }
+
+                if (action === 'paragraph') {
+                    // 見出し/リストなどの装飾をリセットして、通常の段落に戻す
+                    bodyEditor.focus();
+                    document.execCommand('formatBlock', false, 'P');
+                    document.execCommand('removeFormat', false, null);
+                    syncBodyEditor();
                     return;
                 }
 
@@ -1258,6 +1565,7 @@
 
     // スキル出品画面と同等のUIで、アイキャッチ画像をクライアントプレビュー表示
     let imageData = null;
+    let currentEyecatchUrl = null;
 
     function handleImageUpload(event) {
         const file = event.target.files && event.target.files[0];
@@ -1266,6 +1574,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             imageData = e.target.result;
+            currentEyecatchUrl = imageData;
 
             const previewImg = document.getElementById('previewImg');
             const imagePreview = document.getElementById('imagePreview');
@@ -1280,6 +1589,7 @@
 
     function removeImage() {
         imageData = null;
+        currentEyecatchUrl = null;
 
         const imagePreview = document.getElementById('imagePreview');
         const uploadLabel = document.getElementById('uploadLabel');
@@ -1288,6 +1598,61 @@
 
         const input = document.getElementById('imageInput');
         if (input) input.value = '';
+    }
+
+    function escapeAttr(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function buildPreviewHtml(imageUrl) {
+        var title = document.getElementById('title').value;
+        var category = document.getElementById('category').value;
+        var bodyHtml = document.getElementById('body_html').value;
+
+        var html = '';
+        if (imageUrl) html += '<div class="mb-6"><img src="' + escapeAttr(imageUrl) + '" alt="" class="w-full h-48 object-cover rounded-xl"></div>';
+
+        html += '<h1 class="text-2xl font-bold text-gray-900 mb-4">' + escapeHtml(title || '（タイトル未入力）') + '</h1>';
+        html += '<span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm mb-4">' + escapeHtml(category || '（カテゴリー未選択）') + '</span>';
+
+        var currentTags = Array.from(document.querySelectorAll('input[name="tags[]"]'))
+            .map(function(el) { return (el.value || '').trim(); })
+            .filter(function(v) { return v.length > 0; });
+        html += '<div class="flex flex-wrap gap-2 mb-6">' + currentTags.map(function(t) {
+            return '<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">#' + escapeHtml(t) + '</span>';
+        }).join('') + '</div>';
+
+        html += '<div class="article-body-preview text-gray-800 text-base leading-relaxed">' + bodyHtml + '</div>';
+        return html;
+    }
+
+    function handlePreview() {
+        var fileInput = document.getElementById('imageInput');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                currentEyecatchUrl = ev.target.result;
+                document.getElementById('previewContent').innerHTML = buildPreviewHtml(ev.target.result);
+                document.getElementById('previewModal').classList.remove('hidden');
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+            return;
+        }
+
+        document.getElementById('previewContent').innerHTML = buildPreviewHtml(currentEyecatchUrl || '');
+        document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function closePreview() {
+        document.getElementById('previewModal').classList.add('hidden');
     }
 </script>
 @endpush
