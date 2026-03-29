@@ -26,6 +26,9 @@
 .article-body h3 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0; }
 .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin: 0 0 1rem 0; }
 .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0 0 1rem 0; }
+.article-body ul,
+.article-body ol,
+.article-body li { white-space: normal; }
 .article-body li { margin-bottom: 0.5rem; }
 .article-body a { color: #4f46e5; text-decoration: underline; }
 .article-body img { max-width: 100%; height: auto; }
@@ -39,8 +42,9 @@
     margin: 1rem 0;
 }
 .article-toc ul {
-    list-style: none;
-    padding-left: 0;
+    list-style: none !important;
+    list-style-type: none !important;
+    padding-left: 0 !important;
     margin: 0.5rem 0 0 0;
 }
 .article-toc li { margin: 0.25rem 0; }

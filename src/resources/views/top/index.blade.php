@@ -1088,9 +1088,9 @@ section {
                 </a>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($freelancers ?? collect() as $f)
+                @forelse(collect($freelancers ?? [])->take(6) as $f)
                     <a href="{{ route('profiles.show', ['user' => $f->user_id]) }}" class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
-                        <div class="h-24 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"></div>
+                        <div class="h-24 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 max-h-[65px]"></div>
                         <div class="relative px-6">
                             <div class="absolute -top-12 left-1/2 transform -translate-x-1/2">
                                 @php
@@ -1167,8 +1167,7 @@ section {
                                     @endif
                                 </span>
                             </p>
-
-                            <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
+                            <p class="text-sm text-gray-600 mb-0 line-clamp-3">{{ Str::limit($f->bio ?? '', 100) }}</p>
                         </div>
                     </a>
                 @empty
@@ -1198,7 +1197,7 @@ section {
                 </a>
             </div>
             <div class="cards-grid">
-                @forelse($questions ?? collect() as $q)
+                @forelse(collect($questions ?? [])->take(6) as $q)
                     <a href="{{ route('questions.show', ['question' => $q->id]) }}" class="question-card">
                         <div class="question-meta">
                             <span class="category-badge">{{ $q->category ?? 'その他' }}</span>
@@ -1262,7 +1261,7 @@ section {
                 </a>
             </div>
             <div class="cards-grid">
-                @forelse($listings ?? collect() as $l)
+                @forelse(collect($listings ?? [])->take(6) as $l)
                     <a href="{{ route('skills.show', ['skill_listing' => $l->id]) }}" class="skill-card">
                         <img src="{{ $l->thumbnail_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $l->title }}" class="skill-image">
                         <div class="skill-content">
@@ -1309,7 +1308,7 @@ section {
                 </a>
             </div>
             <div class="cards-grid">
-                @forelse($articles ?? collect() as $a)
+                @forelse(collect($articles ?? [])->take(6) as $a)
                     <a href="{{ route('articles.show', ['article' => $a->id]) }}" class="article-card">
                         <img src="{{ $a->eyecatch_image_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=630&fit=crop' }}" alt="{{ $a->title }}" class="article-image">
                         <div class="article-content">

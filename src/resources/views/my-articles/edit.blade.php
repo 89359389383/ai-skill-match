@@ -16,6 +16,158 @@
         color: #9ca3af;
     }
 
+    /* 見出しの見た目（大見出し/小見出しを視覚的に分かりやすく） */
+    #bodyEditor h2 {
+        font-size: 1.875rem; /* 見出し（大） */
+        font-weight: 800;
+        margin: 1.25rem 0 0.75rem;
+        line-height: 1.2;
+    }
+    #bodyEditor h3 {
+        font-size: 1.2rem; /* 見出し（小）：本文より少しだけ大きく */
+        font-weight: 800;
+        margin: 1.15rem 0 0.65rem;
+        line-height: 1.25;
+    }
+
+    /* 箇条書き/番号付きリストを視覚的に分かりやすく */
+    #bodyEditor ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    #bodyEditor ol {
+        list-style: decimal;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    #bodyEditor li {
+        margin: 0.35rem 0;
+        line-height: 1.6;
+    }
+
+    /* プレビュー表示（本文HTMLをそのまま流すので、list-style を明示） */
+    .article-body-preview ul {
+        list-style: disc;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    .article-body-preview ol {
+        list-style: decimal;
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+    .article-body-preview li {
+        margin: 0.35rem 0;
+        line-height: 1.6;
+        white-space: normal;
+    }
+
+    /* 見出しもプレビューで投稿後と同じ見た目にする */
+    .article-body-preview h2 {
+        font-size: 1.875rem;
+        font-weight: 800;
+        margin: 1.25rem 0 0.75rem;
+        line-height: 1.2;
+    }
+    .article-body-preview h3 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin: 1.15rem 0 0.65rem;
+        line-height: 1.25;
+    }
+
+    /* 引用の見た目 */
+    #bodyEditor blockquote {
+        border-left: 4px solid #4f46e5;
+        background: #f5f3ff;
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+        line-height: 1.6;
+    }
+    #bodyEditor blockquote p {
+        margin: 0;
+    }
+
+    /* ToC削除ボタン */
+    #tocDeleteBtn {
+        position: fixed;
+        z-index: 100000;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    #tocDeleteBtn.show { display: flex; }
+
+    /* OGPリンクカード（embed URLから生成） */
+    #bodyEditor .link-card {
+        border: 2px solid #4f46e5;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        display: block;
+    }
+    #bodyEditor .link-card .link-card-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+    }
+    #bodyEditor .link-card .thumb {
+        height: 140px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    #bodyEditor .link-card .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    #bodyEditor .link-card .content {
+        padding: 12px 14px;
+    }
+    #bodyEditor .link-card .title {
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.25;
+        margin-bottom: 6px;
+        font-size: 1rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    #bodyEditor .link-card .desc {
+        color: #6b7280;
+        line-height: 1.4;
+        font-size: 0.95rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: 6px;
+    }
+    #bodyEditor .link-card .domain {
+        color: #4f46e5;
+        font-weight: 700;
+        font-size: 0.9rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     /* 目次（ToC） */
     .article-toc {
         border: 1px solid #e5e7eb;
@@ -74,6 +226,21 @@
         flex: 0 0 auto;
     }
     #insertMenu .menu-sep { height: 1px; background: #f3f4f6; }
+
+    /* 全画面エディタ（編集画面） */
+    #fullscreenArticleEditorOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(255, 255, 255, 0.98);
+        display: none;
+        overflow-y: auto;
+    }
+    #fullscreenArticleEditorOverlay.hidden { display: none; }
+    #fullscreenArticleEditorOverlay:not(.hidden) { display: block; }
+    #fullscreenArticleEditorOverlay #bodyEditor {
+        min-height: calc(100vh - 160px) !important;
+    }
 </style>
 @endpush
 
@@ -200,7 +367,7 @@
                     @enderror
 
                     <div class="relative">
-                        <div class="flex items-center gap-3 mb-3">
+                        <div id="editorInsertControlsWrapper" class="flex items-center gap-3 mb-3">
                             <button
                                 type="button"
                                 id="insertMenuToggle"
@@ -211,8 +378,26 @@
                                 ＋ 挿入
                             </button>
 
+                            <button
+                                type="button"
+                                id="fullscreenEditorToggle"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors border border-gray-200"
+                            >
+                                全画面表示
+                            </button>
+
                             <div id="insertMenu" role="dialog" aria-label="挿入メニュー">
                                 <div class="menu-section-title">インライン/ブロック</div>
+                                <div class="menu-item" data-action="paragraph">
+                                    <span class="menu-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 6h16"></path>
+                                            <path d="M4 12h10"></path>
+                                            <path d="M4 18h16"></path>
+                                        </svg>
+                                    </span>
+                                    通常の文字
+                                </div>
                                 <div class="menu-item" data-action="image">
                                     <span class="menu-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -333,6 +518,25 @@
                             maxlength="50000"
                             class="hidden"
                         >{{ old('body_html', filled($article->body_html) ? $article->body_html : $article->editorInitialHtml()) }}</textarea>
+
+                        {{-- 全画面エディタ（編集画面のみ） --}}
+                        <div id="fullscreenArticleEditorOverlay" class="hidden">
+                            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                                <div class="text-sm font-semibold text-gray-700">記事本文（全画面）</div>
+                                <button
+                                    type="button"
+                                    id="fullscreenArticleEditorCloseBtn"
+                                    class="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                                >
+                                    閉じる
+                                </button>
+                            </div>
+
+                            <div class="p-4 max-w-[900px] mx-auto">
+                                <div id="fullscreenArticleEditorInsertControlsSlot" class="mb-3"></div>
+                                <div id="fullscreenArticleEditorBodySlot"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -454,6 +658,129 @@
             });
         }
 
+        // -----------------------------
+        // 目次（ToC）削除UI（目次がある間は常に表示）
+        // -----------------------------
+        let tocElToDelete = null;
+        let tocDeleteBtn = document.getElementById('tocDeleteBtn');
+        if (!tocDeleteBtn) {
+            tocDeleteBtn = document.createElement('button');
+            tocDeleteBtn.id = 'tocDeleteBtn';
+            tocDeleteBtn.type = 'button';
+            tocDeleteBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg>
+            `;
+            document.body.appendChild(tocDeleteBtn);
+        }
+
+        function hideTocDeleteBtn() {
+            tocElToDelete = null;
+            if (tocDeleteBtn) tocDeleteBtn.classList.remove('show');
+        }
+
+        function positionTocDeleteBtn(tocEl) {
+            if (!tocDeleteBtn || !tocEl) return;
+            const rect = tocEl.getBoundingClientRect();
+            const btnSize = 42;
+            const padding = 10;
+            const left = Math.min(Math.max(rect.right - btnSize, padding), window.innerWidth - btnSize - padding);
+            const top = Math.min(Math.max(rect.top - btnSize - 6, padding), window.innerHeight - btnSize - padding);
+            tocDeleteBtn.style.left = left + 'px';
+            tocDeleteBtn.style.top = top + 'px';
+            tocDeleteBtn.classList.add('show');
+        }
+
+        function syncTocDeleteBtn() {
+            if (!bodyEditor) return;
+            const tocEl = bodyEditor.querySelector('.article-toc');
+            if (!tocEl) {
+                hideTocDeleteBtn();
+                return;
+            }
+            tocElToDelete = tocEl;
+            positionTocDeleteBtn(tocEl);
+        }
+
+        if (tocDeleteBtn) tocDeleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!tocElToDelete) return;
+            tocElToDelete.remove();
+            tocElToDelete = null;
+            hideTocDeleteBtn();
+            syncBodyEditor();
+        });
+
+        // 初期状態
+        syncTocDeleteBtn();
+
+        if (bodyEditor) {
+            bodyEditor.addEventListener('input', function() {
+                syncTocDeleteBtn();
+            });
+            bodyEditor.addEventListener('blur', function() {
+                syncTocDeleteBtn();
+            });
+        }
+
+        // -----------------------------
+        // ＋ ボタンを「クリック位置の左」に常に表示
+        // -----------------------------
+        function getCaretClientRect() {
+            if (!bodyEditor) return null;
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return null;
+            const range = selection.getRangeAt(0);
+            if (!bodyEditor.contains(range.commonAncestorContainer)) return null;
+
+            const rect = range.getBoundingClientRect();
+            if (rect && (rect.width > 0 || rect.height > 0)) return rect;
+
+            // 幅/高さが 0 の場合は clientRects で拾う
+            const rects = range.getClientRects ? range.getClientRects() : [];
+            if (rects && rects.length > 0) return rects[0];
+            return null;
+        }
+
+        function positionInsertMenuToggleAtCaret() {
+            if (!insertMenuToggle || !bodyEditor) return;
+            const rect = getCaretClientRect();
+            if (!rect) return;
+
+            const btnRect = insertMenuToggle.getBoundingClientRect();
+            const bodyRect = bodyEditor.getBoundingClientRect();
+            insertMenuToggle.style.position = 'fixed';
+            insertMenuToggle.style.zIndex = '100002';
+
+            // 「ボタンが本文入力エリアに被らない」ように、ボタン右端が本文左端より左に来る位置へ補正
+            const desiredLeft = rect.left - btnRect.width - 12;
+            const maxRightEdge = bodyRect.left - 8; // bodyEditor の内側に入らない目安
+            const correctedLeft = (desiredLeft + btnRect.width > maxRightEdge)
+                ? (maxRightEdge - btnRect.width)
+                : desiredLeft;
+
+            const clampedLeft = Math.max(8, Math.min(correctedLeft, window.innerWidth - btnRect.width - 8));
+            const clampedTop = Math.max(8, Math.min(rect.top, window.innerHeight - btnRect.height - 8));
+
+            insertMenuToggle.style.left = clampedLeft + 'px';
+            insertMenuToggle.style.top = clampedTop + 'px';
+        }
+
+        if (bodyEditor) {
+            bodyEditor.addEventListener('click', function() {
+                positionInsertMenuToggleAtCaret();
+            });
+        }
+
+        document.addEventListener('selectionchange', function() {
+            positionInsertMenuToggleAtCaret();
+        });
+
         function closeInsertMenuOuter() {
             if (insertMenu) insertMenu.style.display = 'none';
             if (insertMenuToggle) insertMenuToggle.setAttribute('aria-expanded', 'false');
@@ -466,10 +793,78 @@
             const rect = insertMenuToggle.getBoundingClientRect();
             const w = insertMenu.offsetWidth;
             const h = insertMenu.offsetHeight;
-            const left = Math.min(rect.left, window.innerWidth - w - 12);
+            // ボタンの右側にメニューが出るように配置
+            const desiredLeft = rect.right + 8;
+            const maxLeft = window.innerWidth - w - 8;
+            const left = Math.max(8, Math.min(desiredLeft, maxLeft));
+
+            const desiredTop = rect.top;
+            const maxTop = window.innerHeight - h - 8;
+            const top = Math.max(8, Math.min(desiredTop, maxTop));
+
             insertMenu.style.left = left + 'px';
-            // ボタンの下に出すのではなく、上方向に配置して全項目が見切れないようにする
-            insertMenu.style.top = Math.max(8, rect.top - h - 8) + 'px';
+            insertMenu.style.top = top + 'px';
+        }
+
+        // -----------------------------
+        // 全画面エディタ（編集画面）
+        // -----------------------------
+        const fullscreenEditorToggle = document.getElementById('fullscreenEditorToggle');
+        const fullscreenArticleEditorOverlay = document.getElementById('fullscreenArticleEditorOverlay');
+        const fullscreenArticleEditorCloseBtn = document.getElementById('fullscreenArticleEditorCloseBtn');
+        const fullscreenArticleEditorInsertControlsSlot = document.getElementById('fullscreenArticleEditorInsertControlsSlot');
+        const fullscreenArticleEditorBodySlot = document.getElementById('fullscreenArticleEditorBodySlot');
+        const editorInsertControlsWrapper = document.getElementById('editorInsertControlsWrapper');
+
+        // textarea はフォーム内にあるので、そこを基準に戻す
+        const editorAreaParent = bodyInput ? bodyInput.parentNode : null;
+        const editorAreaInsertAnchor = bodyInput || null;
+
+        let isFullscreenArticleEditor = false;
+
+        function enterFullscreenArticleEditor() {
+            if (!fullscreenArticleEditorOverlay || !fullscreenArticleEditorInsertControlsSlot || !fullscreenArticleEditorBodySlot) return;
+            if (!editorInsertControlsWrapper || !bodyEditor) return;
+
+            closeInsertMenuOuter();
+            syncBodyEditor();
+
+            fullscreenArticleEditorInsertControlsSlot.appendChild(editorInsertControlsWrapper);
+            fullscreenArticleEditorBodySlot.appendChild(bodyEditor);
+
+            fullscreenArticleEditorOverlay.classList.remove('hidden');
+            isFullscreenArticleEditor = true;
+
+            window.setTimeout(function() {
+                if (bodyEditor) bodyEditor.focus();
+                positionInsertMenuToggleAtCaret();
+            }, 0);
+        }
+
+        function exitFullscreenArticleEditor() {
+            if (!fullscreenArticleEditorOverlay || !editorAreaParent) return;
+            if (!editorInsertControlsWrapper || !bodyEditor) return;
+
+            closeInsertMenuOuter();
+            syncBodyEditor();
+
+            editorAreaParent.insertBefore(bodyEditor, editorAreaInsertAnchor);
+            editorAreaParent.insertBefore(editorInsertControlsWrapper, bodyEditor);
+
+            fullscreenArticleEditorOverlay.classList.add('hidden');
+            isFullscreenArticleEditor = false;
+        }
+
+        if (fullscreenEditorToggle && fullscreenArticleEditorOverlay && fullscreenArticleEditorCloseBtn) {
+            fullscreenEditorToggle.addEventListener('click', function() {
+                if (isFullscreenArticleEditor) return;
+                enterFullscreenArticleEditor();
+            });
+
+            fullscreenArticleEditorCloseBtn.addEventListener('click', function() {
+                if (!isFullscreenArticleEditor) return;
+                exitFullscreenArticleEditor();
+            });
         }
 
         if (insertMenuToggle && insertMenu) {
@@ -546,6 +941,37 @@
             syncBodyEditor();
         }
 
+        // 引用を挿入（カーソルが引用ブロック内に入るようにする）
+        function insertBlockquote() {
+            if (!bodyEditor) return;
+            bodyEditor.focus();
+
+            let range = getEditorSelection() || null;
+            if (!range) {
+                range = document.createRange();
+                range.selectNodeContents(bodyEditor);
+                range.collapse(false);
+            }
+
+            range.deleteContents();
+
+            const blockquote = document.createElement('blockquote');
+            blockquote.innerHTML = '<p><br></p>';
+
+            range.insertNode(blockquote);
+
+            const p = blockquote.querySelector('p') || blockquote;
+            const newRange = document.createRange();
+            newRange.selectNodeContents(p);
+            newRange.collapse(true);
+
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+
+            syncBodyEditor();
+        }
+
         function insertHorizontalRule() {
             insertHtmlIntoEditor('<hr>');
         }
@@ -585,7 +1011,111 @@
                 insertHtmlIntoEditor('<div class="my-4"><iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>');
                 return;
             }
-            insertHtmlIntoEditor('<div class="my-4"><iframe src="' + trimmed + '" style="width:100%; min-height:320px;" frameborder="0" allowfullscreen></iframe></div>');
+
+            // YouTube以外は OGPリンクカード表示にする
+            const cardId = 'linkCard_' + String(Date.now()) + '_' + Math.random().toString(16).slice(2);
+            let domain = '';
+            try {
+                domain = new URL(trimmed).hostname;
+            } catch (e) {
+                domain = trimmed;
+            }
+
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            // ローディングカードを先に挿入
+            insertHtmlIntoEditor(
+                '<div class="my-4">' +
+                    '<div id="' + cardId + '" class="link-card" contenteditable="false">' +
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Loading...</div></div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
+                                '<div class="title">リンクカードを読み込み中</div>' +
+                                '<div class="desc">OGPを取得しています</div>' +
+                            '</div>' +
+                        '</a>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            const jinaUrl = 'https://r.jina.ai/' + trimmed;
+            fetch(jinaUrl)
+                .then(function(res) { return res.text(); })
+                .then(function(htmlText) {
+                    function extractMeta(propertyOrName) {
+                        const esc = propertyOrName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        const re1 = new RegExp('(?:property|name)=["\\\']' + esc + '["\\\'][^>]*content=["\\\']([^"\\\']*)["\\\']', 'i');
+                        const re2 = new RegExp('content=["\\\']([^"\\\']*)["\\\'][^>]*(?:property|name)=["\\\']' + esc + '["\\\']', 'i');
+                        const m1 = htmlText.match(re1);
+                        if (m1 && m1[1]) return m1[1];
+                        const m2 = htmlText.match(re2);
+                        if (m2 && m2[1]) return m2[1];
+                        return '';
+                    }
+
+                    const title =
+                        extractMeta('og:title') ||
+                        extractMeta('twitter:title');
+                    const desc =
+                        extractMeta('og:description') ||
+                        extractMeta('twitter:description') ||
+                        extractMeta('description');
+                    const image =
+                        extractMeta('og:image') ||
+                        extractMeta('twitter:image');
+
+                    const finalTitle = title || domain;
+                    const finalDesc = desc || 'リンクの内容を表示します。';
+
+                    const el = document.getElementById(cardId);
+                    if (!el) return;
+
+                    const safeTitle = escapeHtml(finalTitle);
+                    const safeDesc = escapeHtml(finalDesc);
+                    const safeDomain = escapeHtml(domain);
+
+                    let resolvedImage = image;
+                    if (resolvedImage) {
+                        try {
+                            resolvedImage = new URL(resolvedImage, trimmed).toString();
+                        } catch (e) {}
+                    }
+
+                    const thumbHtml = resolvedImage
+                        ? '<img src="' + escapeHtml(resolvedImage) + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
+                        : '<div style="color:#9ca3af;font-weight:700;">No image</div>';
+
+                    el.innerHTML =
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb">' + thumbHtml + '</div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + safeDomain + '</div>' +
+                                '<div class="title">' + safeTitle + '</div>' +
+                                '<div class="desc">' + safeDesc + '</div>' +
+                            '</div>' +
+                        '</a>';
+                })
+                .catch(function() {
+                    const el = document.getElementById(cardId);
+                    if (!el) return;
+                    el.innerHTML =
+                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
+                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Preview</div></div>' +
+                            '<div class="content">' +
+                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
+                                '<div class="title">' + escapeHtml(domain) + '</div>' +
+                                '<div class="desc">OGP取得に失敗しました</div>' +
+                            '</div>' +
+                        '</a>';
+                });
         }
 
         function buildTocHtml() {
@@ -677,6 +1207,16 @@
                 if (action === 'toc') {
                     const tocHtml = buildTocHtml();
                     if (tocHtml) insertHtmlIntoEditor(tocHtml);
+                    syncTocDeleteBtn();
+                    return;
+                }
+
+                if (action === 'paragraph') {
+                    // 見出し/リストなどを通常の段落に戻す
+                    bodyEditor.focus();
+                    document.execCommand('formatBlock', false, 'P');
+                    document.execCommand('removeFormat', false, null);
+                    syncBodyEditor();
                     return;
                 }
 
@@ -684,7 +1224,9 @@
                 if (action === 'heading-small') return formatBlock('H3');
                 if (action === 'list-bullet') return toggleList('bullet');
                 if (action === 'list-ordered') return toggleList('ordered');
-                if (action === 'blockquote') return toggleQuote();
+                if (action === 'blockquote') {
+                    return insertBlockquote();
+                }
                 if (action === 'hr') return insertHorizontalRule();
             });
         }
@@ -1022,7 +1564,10 @@
         var html = '';
         if (imageUrl) html += '<div class="mb-6"><img src="' + escapeAttr(imageUrl) + '" alt="" class="w-full h-48 object-cover rounded-xl"></div>';
         html += '<h1 class="text-2xl font-bold text-gray-900 mb-4">' + escapeHtml(title || '（タイトル未入力）') + '</h1>';
-        html += '<p class="text-gray-600 mb-4">' + escapeHtml(excerpt || '（概要未入力）') + '</p>';
+        // 概要（excerpt）は編集UIでは入力しないため、未入力時は表示しない
+        if (excerpt && String(excerpt).trim().length > 0) {
+            html += '<p class="text-gray-600 mb-4">' + escapeHtml(excerpt) + '</p>';
+        }
         html += '<span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm mb-4">' + escapeHtml(category || '（カテゴリー未選択）') + '</span>';
         var currentTags = Array.from(document.querySelectorAll('input[name="tags[]"]'))
             .map(function(el) { return (el.value || '').trim(); })
