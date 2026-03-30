@@ -16,6 +16,10 @@ class StoreSkillListingRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // 公開/非公開（UIでは必ず選択させる）
+            // status: 1=公開中, 0=下書き（非公開）
+            'status' => ['required', 'integer', 'in:0,1'],
+
             // タイトル（必須・最大100）
             'title' => ['required', 'string', 'max:100'],
 
@@ -62,6 +66,9 @@ class StoreSkillListingRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'status.required' => '公開/非公開の指定は必須です。',
+            'status.in' => '公開/非公開の指定が不正です。',
+
             'title.required' => 'タイトルは必須です。',
             'title.max' => 'タイトルは100文字以内で入力してください。',
             'description.required' => '説明文は必須です。',
