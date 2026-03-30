@@ -64,14 +64,36 @@
                     $skillCount = $allSkills->count();
                     $initialSkills = $allSkills->take(3);
                     $additionalSkills = $allSkills->slice(3);
+
+                    // 稼働ステータス（◎/〇/△/×）
+                    $workAvailabilityStatus = $freelancer->work_availability_status ?? 'available_full';
+                    $workAvailabilityText = '◎現在対応可能';
+                    $workAvailabilityColor = '#FC4C0C';
+                    $workAvailabilityBg = 'transparent';
+                    if ($workAvailabilityStatus === 'side_job') {
+                        $workAvailabilityText = '〇副業で対応可能';
+                        $workAvailabilityColor = '#ef4444';
+                        $workAvailabilityBg = 'transparent';
+                    } elseif ($workAvailabilityStatus === 'conditional_job') {
+                        $workAvailabilityText = '△仕事内容による';
+                        $workAvailabilityColor = '#6b7280';
+                        $workAvailabilityBg = 'transparent';
+                    } elseif ($workAvailabilityStatus === 'busy') {
+                        $workAvailabilityText = '×現在忙しい';
+                        $workAvailabilityColor = '#111111';
+                        $workAvailabilityBg = 'transparent';
+                    }
                 @endphp
 
                 <!-- Header with Name and Photo -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6" id="profile">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
-                            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                                {{ $freelancer->display_name ?? '名前未設定' }}
+                            <h1 class="flex items-center gap-3 text-3xl font-bold text-gray-900 mb-2">
+                                <span>{{ $freelancer->display_name ?? '名前未設定' }}</span>
+                                <span style="display:inline-flex; align-items:center; justify-content:center; padding:0.2rem 0.55rem; border-radius:9999px; border:2px solid {{ $workAvailabilityColor }}; color:{{ $workAvailabilityColor }}; font-weight:900; font-size:0.85rem; line-height:1; background:{{ $workAvailabilityBg }};">
+                                    {{ $workAvailabilityText }}
+                                </span>
                             </h1>
                             <p class="text-lg text-gray-700 mb-6">
                                 {{ $freelancer->bio ? Str::limit(strip_tags($freelancer->bio), 80) : 'プロフィールを登録しています' }}

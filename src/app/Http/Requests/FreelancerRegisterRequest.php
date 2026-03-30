@@ -26,6 +26,9 @@ class FreelancerRegisterRequest extends FormRequest
             'hours_per_day' => ['required', 'integer', 'min:0', 'max:24'],
             'days_per_week' => ['required', 'integer', 'min:0', 'max:7'],
 
+            // 稼働ステータス（◎/〇/△/×）
+            'work_availability_status' => ['required', 'string', 'in:available_full,side_job,conditional_job,busy'],
+
             // 働き方・単価（任意）
             'work_style_text' => ['nullable', 'string', 'max:5000'],
             'min_rate' => ['nullable', 'integer', 'min:0', 'max:100000000'],
@@ -133,6 +136,9 @@ class FreelancerRegisterRequest extends FormRequest
             'days_per_week.integer' => '週の稼働日数は整数で入力してください。',
             'days_per_week.min' => '週の稼働日数は0以上で入力してください。',
             'days_per_week.max' => '週の稼働日数は7以下で入力してください。',
+
+            'work_availability_status.required' => '稼働ステータスを選択してください。',
+            'work_availability_status.in' => '稼働ステータスの選択が不正です。',
 
             'work_style_text.string' => '担当業務は文字列で入力してください。',
             'work_style_text.max' => '担当業務は5000文字以内で入力してください。',

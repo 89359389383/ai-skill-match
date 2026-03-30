@@ -126,6 +126,7 @@ class FreelancerProfileService
                     'hours_per_day' => $payload['hours_per_day'],
                     'days_per_week' => $payload['days_per_week'],
                     'work_style_text' => $payload['work_style_text'] ?? null,
+                    'work_availability_status' => $payload['work_availability_status'] ?? 'available_full',
                     'services_offered' => $payload['services_offered'] ?? null,
                     'industry_specialties' => $payload['industry_specialties'] ?? null,
                     'prefecture' => $payload['prefecture'] ?? null,

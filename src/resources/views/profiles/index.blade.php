@@ -154,6 +154,25 @@
                                     $maxRate = (int) ($f->max_rate ?? 0);
                                     $minRateManStr = number_format($minRate, 0);
                                     $maxRateManStr = number_format($maxRate, 0);
+
+                                    // 稼働ステータス（◎/〇/△/×）
+                                    $workAvailabilityStatus = $f->work_availability_status ?? 'available_full';
+                                    $workAvailabilityText = '◎現在対応可能';
+                                    $workAvailabilityColor = '#FC4C0C';
+                                    $workAvailabilityBg = 'transparent';
+                                    if ($workAvailabilityStatus === 'side_job') {
+                                        $workAvailabilityText = '〇副業で対応可能';
+                                        $workAvailabilityColor = '#ef4444';
+                                        $workAvailabilityBg = 'transparent';
+                                    } elseif ($workAvailabilityStatus === 'conditional_job') {
+                                        $workAvailabilityText = '△仕事内容による';
+                                        $workAvailabilityColor = '#6b7280';
+                                        $workAvailabilityBg = 'transparent';
+                                    } elseif ($workAvailabilityStatus === 'busy') {
+                                        $workAvailabilityText = '×現在忙しい';
+                                        $workAvailabilityColor = '#111111';
+                                        $workAvailabilityBg = 'transparent';
+                                    }
                                 @endphp
 
                                 <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}"
@@ -162,7 +181,12 @@
                             </div>
                         </div>
                         <div class="pt-16 px-6 pb-6 text-center">
-                            <h3 class="text-xl font-bold text-gray-900 mb-1">{{ $f->display_name ?? '名前未設定' }}</h3>
+                            <h3 class="flex items-center justify-center gap-2 text-xl font-bold text-gray-900 mb-1">
+                                <span>{{ $f->display_name ?? '名前未設定' }}</span>
+                                <span style="display:inline-flex; align-items:center; justify-content:center; padding:0.2rem 0.55rem; border-radius:9999px; border:2px solid {{ $workAvailabilityColor }}; color:{{ $workAvailabilityColor }}; font-weight:900; font-size:0.75rem; line-height:1; background:{{ $workAvailabilityBg }};">
+                                    {{ $workAvailabilityText }}
+                                </span>
+                            </h3>
                             <p class="text-sm text-gray-600 mb-2">職種: {{ $f->job_title ?? '未設定' }}</p>
                             @php
                                 $skillListings = $f->skillListings ?? collect();
