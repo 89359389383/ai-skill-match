@@ -31,7 +31,25 @@ class SkillListingController extends Controller
             ->where('status', 1)
             ->orderByDesc('id');
 
-        // 将来: query, price_min/max, category(skill) などをここに追加
+        // タイトル/サービス内容の検索
+        $keyword = trim((string) $request->query('keyword', ''));
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('purchase_instructions', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        // 価格（予算）レンジ：下限〜上限
+        $priceMin = $request->query('price_min');
+        if ($priceMin !== null && $priceMin !== '') {
+            $query->where('price', '>=', (int) $priceMin);
+        }
+        $priceMax = $request->query('price_max');
+        if ($priceMax !== null && $priceMax !== '') {
+            $query->where('price', '<=', (int) $priceMax);
+        }
 
         $listings = $query->paginate(30)->withQueryString();
 
@@ -74,6 +92,15 @@ class SkillListingController extends Controller
     {
         // 画面で必要になる関係を一緒にロードしておく
         $skill_listing->load(['freelancer.user', 'skills', 'assets', 'reviews.user']);
+
+        // 非公開の詳細は本人以外閲覧不可
+        if ((int) $skill_listing->status !== 1) {
+            $viewer = Auth::guard('freelancer')->user();
+            $viewerFreelancerId = $viewer?->freelancer?->id;
+            if (!$viewerFreelancerId || (int) $skill_listing->freelancer_id !== (int) $viewerFreelancerId) {
+                abort(404);
+            }
+        }
 
         if (view()->exists('skills.show')) {
             return view('skills.show', ['listing' => $skill_listing]);
@@ -218,23 +245,58 @@ class SkillListingController extends Controller
     /**
      * 指定フリーランスのスキル販売一覧（status=1のみ）。
      */
-    public function skillsByFreelancer(User $user)
+    public function skillsByFreelancer(User $user, Request $request)
     {
         $freelancer = $user->freelancer()->first();
         if (!$freelancer) {
             abort(404, 'プロフィールが見つかりません。');
         }
 
-        $listings = SkillListing::query()
+        // 自分のスキル一覧ページ用：
+        // all=全て, public=公開, private=非公開（status!=1）
+        $visibility = (string) $request->query('visibility', 'public');
+
+        // タイトル/サービス内容の検索
+        $keyword = trim((string) $request->query('keyword', ''));
+
+        // 価格（予算）レンジ：下限〜上限
+        $priceMin = $request->query('price_min');
+        $priceMax = $request->query('price_max');
+
+        $query = SkillListing::query()
             ->with(['freelancer.user', 'skills'])
             ->where('freelancer_id', $freelancer->id)
-            ->where('status', 1)
-            ->orderByDesc('id')
-            ->paginate(30)
-            ->withQueryString();
+            ->orderByDesc('id');
+
+        if ($visibility === 'public') {
+            $query->where('status', 1);
+        } elseif ($visibility === 'private') {
+            $query->where('status', '!=', 1);
+        } elseif ($visibility !== 'all') {
+            // 不正パラメータのときは公開にフォールバック
+            $query->where('status', 1);
+            $visibility = 'public';
+        }
+
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('purchase_instructions', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($priceMin !== null && $priceMin !== '') {
+            $query->where('price', '>=', (int) $priceMin);
+        }
+        if ($priceMax !== null && $priceMax !== '') {
+            $query->where('price', '<=', (int) $priceMax);
+        }
+
+        $listings = $query->paginate(30)->withQueryString();
 
         if (view()->exists('skills.index')) {
-            return view('skills.index', compact('listings', 'freelancer'));
+            return view('skills.index', compact('listings', 'freelancer', 'visibility'));
         }
 
         return view('welcome');
@@ -306,7 +368,8 @@ class SkillListingController extends Controller
             'thumbnail_url' => array_key_exists('thumbnail_url', $validated)
                 ? $validated['thumbnail_url']
                 : $skill_listing->thumbnail_url,
-            // statusは更新ではそのまま（編集画面仕様に合わせて後で拡張）
+            // 公開/非公開を更新
+            'status' => (int) ($validated['status'] ?? $skill_listing->status),
             'delivery_days' => $validated['delivery_days'] ?? $skill_listing->delivery_days,
         ])->save();
 

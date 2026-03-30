@@ -23,6 +23,14 @@ class SkillInquiryController extends Controller
             return redirect()->route('auth.login.form');
         }
 
+        // 非公開のスキルへの問い合わせは不可（本人のみ可）
+        if ((int) $skill_listing->status !== 1) {
+            $viewerFreelancerId = $user->role === 'freelancer' ? $user->freelancer?->id : null;
+            if (!$viewerFreelancerId || (int) $skill_listing->freelancer_id !== (int) $viewerFreelancerId) {
+                abort(404);
+            }
+        }
+
         // 問い合わせ本文の必須チェックは FormRequest 側へ移動
         $validated = $request->validated();
 

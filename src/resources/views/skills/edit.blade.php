@@ -96,6 +96,46 @@
                                 <p class="text-sm text-gray-500 mt-1">50文字以内で、サービスの内容が分かりやすいタイトルをつけましょう</p>
                             </div>
 
+                            @php
+                                $currentStatusRaw = (int) old('status', $listing->status);
+                                $currentStatus = $currentStatusRaw === 1 ? 1 : 0; // status=2は非公開扱い
+                            @endphp
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">公開設定 <span class="text-red-500">*</span></label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer bg-white
+                                        @error('status') border-red-500 @enderror
+                                    ">
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="1"
+                                            required
+                                            class="w-4 h-4 text-orange-500"
+                                            {{ $currentStatus === 1 ? 'checked' : '' }}
+                                        >
+                                        公開
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer bg-white
+                                        @error('status') border-red-500 @enderror
+                                    ">
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="0"
+                                            required
+                                            class="w-4 h-4 text-orange-500"
+                                            {{ $currentStatus === 0 ? 'checked' : '' }}
+                                        >
+                                        非公開
+                                    </label>
+                                </div>
+                                @error('status')
+                                    <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                                @enderror
+                                <p class="text-sm text-gray-500 mt-1">公開にするとトップやスキル販売ページに表示されます</p>
+                            </div>
+
                             <div>
                                 @php
                                     $skillNameSlots = old('skill_names', $listing->skills->pluck('name')->values()->all());

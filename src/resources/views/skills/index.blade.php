@@ -85,6 +85,10 @@
                 <div>
                     @php
                         $viewerFreelancer = auth('freelancer')->check() ? auth('freelancer')->user()->freelancer : null;
+                        $currentVisibility = $visibility ?? request()->query('visibility', 'public');
+                        $isOwnSkillList = isset($freelancer) && $freelancer
+                            && $viewerFreelancer
+                            && (int) $viewerFreelancer->id === (int) $freelancer->id;
                     @endphp
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">
                         {{ isset($freelancer) && $freelancer ? ($freelancer->display_name . 'さんのスキル一覧') : 'スキル販売' }}
@@ -92,8 +96,24 @@
                     <p class="text-gray-600">AIスキルを持つプロフェッショナルに直接依頼できます</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    @if(auth('freelancer')->check() && auth('freelancer')->user()?->freelancer)
-                        <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [])) }}"
+                    @if($isOwnSkillList)
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [], ['visibility' => 'all'])) }}"
+                               class="px-4 py-3 rounded-xl font-bold text-lg {{ $currentVisibility === 'all' ? 'bg-indigo-700 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' }}">
+                                全て
+                            </a>
+                            <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [], ['visibility' => 'public'])) }}"
+                               class="px-4 py-3 rounded-xl font-bold text-lg {{ $currentVisibility === 'public' ? 'bg-indigo-700 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' }}">
+                                公開
+                            </a>
+                            <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [], ['visibility' => 'private'])) }}"
+                               class="px-4 py-3 rounded-xl font-bold text-lg {{ $currentVisibility === 'private' ? 'bg-indigo-700 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' }}">
+                                非公開
+                            </a>
+                        </div>
+                    @endif
+                    @if($isOwnSkillList)
+                        <a href="{{ route('profiles.skills.index', array_merge(['user' => auth('freelancer')->user()], request()->filled('slot') ? ['slot' => request('slot')] : [], ['visibility' => $currentVisibility])) }}"
                            class="flex items-center gap-2 px-6 py-4 border-2 border-indigo-200 text-indigo-700 rounded-xl font-bold shadow-sm hover:bg-indigo-50 transition-all duration-300 text-lg">
                             自分のスキル一覧
                         </a>
@@ -114,6 +134,117 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        @php
+            $keywordValue = request()->query('keyword', '');
+            $priceMinValue = request()->query('price_min', '');
+            $priceMaxValue = request()->query('price_max', '');
+            // クリアボタンで除外するパラメータ
+            $clearQuery = request()->except(['keyword', 'price_min', 'price_max', 'page']);
+            $clearUrl = url()->current();
+            if (!empty($clearQuery)) {
+                $clearUrl .= '?' . http_build_query($clearQuery);
+            }
+            // スクリーンショットに近い選択肢（必要なら調整）
+            $priceOptions = [
+                '' => '指定なし',
+                500 => '500円',
+                1000 => '1,000円',
+                1500 => '1,500円',
+                2000 => '2,000円',
+                2500 => '2,500円',
+                3000 => '3,000円',
+                3500 => '3,500円',
+                4000 => '4,000円',
+                4500 => '4,500円',
+                5000 => '5,000円',
+                6000 => '6,000円',
+                7000 => '7,000円',
+                8000 => '8,000円',
+                9000 => '9,000円',
+                10000 => '10,000円',
+                15000 => '15,000円',
+                20000 => '20,000円',
+                30000 => '30,000円',
+                40000 => '40,000円',
+                50000 => '50,000円',
+                60000 => '60,000円',
+                70000 => '70,000円',
+                80000 => '80,000円',
+                90000 => '90,000円',
+                100000 => '100,000円',
+                150000 => '150,000円',
+                200000 => '200,000円',
+                300000 => '300,000円',
+                400000 => '400,000円',
+                500000 => '500,000円',
+            ];
+        @endphp
+
+        {{-- 検索フィルター --}}
+        <div class="flex justify-center mb-6">
+            <form method="GET" action="{{ url()->current() }}" class="flex flex-wrap items-end gap-3 justify-center">
+                {{-- 既存のクエリ（visibility / slot など）を保持 --}}
+                @foreach(request()->except(['keyword', 'price_min', 'price_max', 'page']) as $key => $val)
+                    <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                @endforeach
+
+                {{-- タイトル/サービス内容 --}}
+                <div class="w-full sm:w-auto">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">タイトル・サービス内容</label>
+                    <input
+                        type="text"
+                        name="keyword"
+                        value="{{ $keywordValue }}"
+                        placeholder="例：業務効率化 / 自動化"
+                        class="w-80 max-w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                </div>
+
+                {{-- 予算（価格） --}}
+                <div class="w-full sm:w-auto">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">予算（価格）</label>
+                    <div class="flex items-center gap-2">
+                        <select
+                            name="price_min"
+                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                            @foreach($priceOptions as $value => $label)
+                                <option value="{{ $value }}" {{ (string) $priceMinValue === (string) $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="text-gray-500 font-bold">〜</span>
+                        <select
+                            name="price_max"
+                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                            @foreach($priceOptions as $value => $label)
+                                <option value="{{ $value }}" {{ (string) $priceMaxValue === (string) $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        {{-- 選択後に検索ボタンを押したときだけ送信 --}}
+                        <button
+                            type="submit"
+                            class="ml-2 px-6 py-3 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
+                        >
+                            検索
+                        </button>
+                    </div>
+                </div>
+
+                {{-- クリアボタン --}}
+                <div class="flex items-end">
+                    <a href="{{ $clearUrl }}" class="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                        クリア
+                    </a>
+                </div>
+            </form>
+        </div>
 
         <div class="text-sm text-gray-600 mb-4">
             {{ $listings->total() }} 件中 {{ $listings->firstItem() ?? 0 }} - {{ $listings->lastItem() ?? 0 }} 件表示

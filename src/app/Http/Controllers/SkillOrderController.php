@@ -26,6 +26,14 @@ class SkillOrderController extends Controller
             return redirect()->route('auth.login.form');
         }
 
+        // 非公開のスキル購入は不可（本人のみ可）
+        if ((int) $skill_listing->status !== 1) {
+            $viewerFreelancerId = $user->role === 'freelancer' ? $user->freelancer?->id : null;
+            if (!$viewerFreelancerId || (int) $skill_listing->freelancer_id !== (int) $viewerFreelancerId) {
+                abort(404);
+            }
+        }
+
         // ここで「購入ボタン押下」の最低限を validate しておく
         // 将来: クーポン、数量、要望などを追加する
         $request->validate([

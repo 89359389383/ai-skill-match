@@ -42,8 +42,8 @@ class SkillListingService
                 'price' => (int) ($data['price'] ?? 0),
                 'pricing_type' => $data['pricing_type'] ?? 'fixed',
                 'thumbnail_url' => $data['thumbnail_url'] ?? null,
-                // 出品完了時は公開状態（1）で作成し、一覧・トップに表示する
-                'status' => 1,
+                // 公開/非公開（UIで選択した値をそのまま保存）
+                'status' => (int) ($data['status'] ?? 1),
                 'delivery_days' => $data['delivery_days'] ?? null,
             ]);
 

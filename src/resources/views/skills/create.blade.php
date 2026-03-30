@@ -78,6 +78,10 @@
                     <div class="bg-white rounded-lg shadow-sm p-6" id="basicInfo">
                         <h2 class="text-xl font-bold text-orange-600 mb-4 pb-2 border-b-2 border-orange-600">基本情報</h2>
                         <div class="space-y-4">
+                            @php
+                                $currentStatus = (int) old('status', 1); // 初期は公開
+                            @endphp
+
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">サービスタイトル <span class="text-red-500">*</span></label>
                                 <input type="text" id="title" name="title" value="{{ old('title') }}" placeholder="例：ChatGPTを活用した業務効率化コンサルティング" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('title') border-red-500 @enderror">
@@ -85,6 +89,42 @@
                                     <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
                                 @enderror
                                 <p class="text-sm text-gray-500 mt-1">50文字以内で、サービスの内容が分かりやすいタイトルをつけましょう</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">公開設定 <span class="text-red-500">*</span></label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer bg-white
+                                        @error('status') border-red-500 @enderror
+                                    ">
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="1"
+                                            required
+                                            class="w-4 h-4 text-orange-500"
+                                            {{ $currentStatus === 1 ? 'checked' : '' }}
+                                        >
+                                        公開
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer bg-white
+                                        @error('status') border-red-500 @enderror
+                                    ">
+                                        <input
+                                            type="radio"
+                                            name="status"
+                                            value="0"
+                                            required
+                                            class="w-4 h-4 text-orange-500"
+                                            {{ $currentStatus === 0 ? 'checked' : '' }}
+                                        >
+                                        非公開
+                                    </label>
+                                </div>
+                                @error('status')
+                                    <p class="mt-1 text-sm text-red-600 font-bold">{{ $message }}</p>
+                                @enderror
+                                <p class="text-sm text-gray-500 mt-1">公開にするとトップやスキル販売ページに表示されます</p>
                             </div>
                             @php
                                 $skillNameSlots = old('skill_names', []);
