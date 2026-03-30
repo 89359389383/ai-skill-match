@@ -22,6 +22,7 @@ class Freelancer extends Model
         'hours_per_day',
         'days_per_week',
         'work_style_text',
+        'work_availability_status',
         'services_offered',
         'industry_specialties',
         'prefecture',

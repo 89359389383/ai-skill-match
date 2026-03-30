@@ -336,6 +336,13 @@
                     <div class="v" id="preview-hours">未設定</div>
                     <div class="k">日</div>
                     <div class="v" id="preview-days">未設定</div>
+                    <div class="k">稼働ステータス</div>
+                    <div class="v">
+                        <span id="preview-work-availability-status-pill"
+                              style="display:inline-flex; align-items:center; justify-content:center; padding:0.2rem 0.55rem; border-radius:9999px; border:2px solid #d1d5db; color:#6b7280; font-weight:900; font-size:0.75rem; line-height:1; background:transparent;">
+                            未設定
+                        </span>
+                    </div>
                 </div>
                 <p class="help" style="margin-top:1rem;">プロフィールが充実しているほどスカウトが届きやすくなります。</p>
             </div>
@@ -661,6 +668,65 @@
                         <span class="error-message">{{ $message }}</span>
                         @enderror
                         <div class="help">画像を選択してください（最大5MB）。未設定でも登録できます。</div>
+                    </div>
+
+                    @php
+                        $workStatus = old('work_availability_status', 'available_full');
+                    @endphp
+                    <div class="row" style="margin-top:1.25rem;">
+                        <label class="label" for="work_availability_status">
+                            稼働ステータス <span class="required">必須</span>
+                        </label>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="work_availability_status" value="available_full" style="position:absolute; opacity:0; width:1px; height:1px; overflow:hidden;" {{ $workStatus === 'available_full' ? 'checked' : '' }}>
+                                <span class="work-availability-status-option-pill"
+                                      data-status="available_full"
+                                      data-color="#FC4C0C"
+                                      data-bg="rgba(252,76,12,0.10)"
+                                      style="display:inline-flex; align-items:center; justify-content:center; padding:0.45rem 0.75rem; border-radius:9999px; border:2px solid {{ $workStatus === 'available_full' ? '#FC4C0C' : '#d1d5db' }}; color:{{ $workStatus === 'available_full' ? '#FC4C0C' : '#9ca3af' }}; font-weight:900; font-size:0.85rem; width:100%; background:{{ $workStatus === 'available_full' ? 'rgba(252,76,12,0.10)' : 'transparent' }};">
+                                    ◎現在対応可能
+                                </span>
+                            </label>
+
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="work_availability_status" value="side_job" style="position:absolute; opacity:0; width:1px; height:1px; overflow:hidden;" {{ $workStatus === 'side_job' ? 'checked' : '' }}>
+                                <span class="work-availability-status-option-pill"
+                                      data-status="side_job"
+                                      data-color="#ef4444"
+                                      data-bg="rgba(239,68,68,0.10)"
+                                      style="display:inline-flex; align-items:center; justify-content:center; padding:0.45rem 0.75rem; border-radius:9999px; border:2px solid {{ $workStatus === 'side_job' ? '#ef4444' : '#d1d5db' }}; color:{{ $workStatus === 'side_job' ? '#ef4444' : '#9ca3af' }}; font-weight:900; font-size:0.85rem; width:100%; background:{{ $workStatus === 'side_job' ? 'rgba(239,68,68,0.10)' : 'transparent' }};">
+                                    〇副業で対応可能
+                                </span>
+                            </label>
+
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="work_availability_status" value="conditional_job" style="position:absolute; opacity:0; width:1px; height:1px; overflow:hidden;" {{ $workStatus === 'conditional_job' ? 'checked' : '' }}>
+                                <span class="work-availability-status-option-pill"
+                                      data-status="conditional_job"
+                                      data-color="#6b7280"
+                                      data-bg="rgba(107,114,128,0.10)"
+                                      style="display:inline-flex; align-items:center; justify-content:center; padding:0.45rem 0.75rem; border-radius:9999px; border:2px solid {{ $workStatus === 'conditional_job' ? '#6b7280' : '#d1d5db' }}; color:{{ $workStatus === 'conditional_job' ? '#6b7280' : '#9ca3af' }}; font-weight:900; font-size:0.85rem; width:100%; background:{{ $workStatus === 'conditional_job' ? 'rgba(107,114,128,0.10)' : 'transparent' }};">
+                                    △仕事内容による
+                                </span>
+                            </label>
+
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="work_availability_status" value="busy" style="position:absolute; opacity:0; width:1px; height:1px; overflow:hidden;" {{ $workStatus === 'busy' ? 'checked' : '' }}>
+                                <span class="work-availability-status-option-pill"
+                                      data-status="busy"
+                                      data-color="#111111"
+                                      data-bg="rgba(17,17,17,0.08)"
+                                      style="display:inline-flex; align-items:center; justify-content:center; padding:0.45rem 0.75rem; border-radius:9999px; border:2px solid {{ $workStatus === 'busy' ? '#111111' : '#d1d5db' }}; color:{{ $workStatus === 'busy' ? '#111111' : '#9ca3af' }}; font-weight:900; font-size:0.85rem; width:100%; background:{{ $workStatus === 'busy' ? 'rgba(17,17,17,0.08)' : 'transparent' }};">
+                                    ×現在忙しい
+                                </span>
+                            </label>
+                        </div>
+
+                        @error('work_availability_status')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div class="actions">
@@ -1007,6 +1073,56 @@
             }
         };
 
+        // 稼働ステータス（ラジオクリックで背景/文字/枠を明確に切り替える）
+        const workAvailabilityRadioSelector = 'input[name="work_availability_status"]';
+        const workAvailabilityPreviewPill = document.getElementById('preview-work-availability-status-pill');
+        const workAvailabilityOptionPills = document.querySelectorAll('.work-availability-status-option-pill');
+
+        function applyWorkAvailabilityStatusUI(status) {
+            const selected = status || 'available_full';
+
+            const statusToText = {
+                available_full: '◎現在対応可能',
+                side_job: '〇副業で対応可能',
+                conditional_job: '△仕事内容による',
+                busy: '×現在忙しい',
+            };
+
+            const unselectedBorder = '#d1d5db';
+            const unselectedText = '#9ca3af';
+            const unselectedBg = 'transparent';
+
+            workAvailabilityOptionPills.forEach(pill => {
+                const s = pill.dataset.status;
+                const color = pill.dataset.color;
+                const bg = pill.dataset.bg;
+                const isSelected = s === selected;
+
+                pill.style.borderColor = isSelected ? color : unselectedBorder;
+                pill.style.color = isSelected ? color : unselectedText;
+                pill.style.background = isSelected ? bg : unselectedBg;
+            });
+
+            if (workAvailabilityPreviewPill) {
+                const text = statusToText[selected] || '◎現在対応可能';
+                const color =
+                    selected === 'available_full' ? '#FC4C0C'
+                        : selected === 'side_job' ? '#ef4444'
+                        : selected === 'conditional_job' ? '#6b7280'
+                        : '#111111';
+                const bg =
+                    selected === 'available_full' ? 'rgba(252,76,12,0.10)'
+                        : selected === 'side_job' ? 'rgba(239,68,68,0.10)'
+                        : selected === 'conditional_job' ? 'rgba(107,114,128,0.10)'
+                        : 'rgba(17,17,17,0.08)';
+
+                workAvailabilityPreviewPill.textContent = text;
+                workAvailabilityPreviewPill.style.borderColor = color;
+                workAvailabilityPreviewPill.style.color = color;
+                workAvailabilityPreviewPill.style.background = bg;
+            }
+        }
+
         // 数値入力を即座に min/max の範囲へクランプ（不正値が入った瞬間に補正）
         function clampNumericInput(el) {
             if (!el) return;
@@ -1051,6 +1167,17 @@
                 });
                 input.setAttribute('data-listener-added', 'true');
             });
+
+            // 稼働ステータスのクリック反映
+            const workRadios = document.querySelectorAll(workAvailabilityRadioSelector);
+            workRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    applyWorkAvailabilityStatusUI(radio.value);
+                });
+            });
+
+            const initialWorkStatus = document.querySelector(workAvailabilityRadioSelector + ':checked')?.value || 'available_full';
+            applyWorkAvailabilityStatusUI(initialWorkStatus);
 
             // 初期プレビュー更新
             updatePreview();
