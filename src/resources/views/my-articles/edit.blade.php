@@ -198,6 +198,8 @@
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
         overflow: hidden;
         display: none;
+        max-height: calc(100vh - 16px);
+        overflow-y: auto;
     }
     #insertMenu .menu-section-title {
         padding: 0.5rem 0.75rem;
@@ -226,6 +228,114 @@
         flex: 0 0 auto;
     }
     #insertMenu .menu-sep { height: 1px; background: #f3f4f6; }
+
+    /* 本文：コードブロック表示 */
+    #bodyEditor pre.editor-code-block {
+        background: #111827;
+        color: #e5e7eb;
+        padding: 12px 14px;
+        border-radius: 0.75rem;
+        overflow: auto;
+        margin: 1rem 0;
+        white-space: pre;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    #bodyEditor pre.editor-code-block[contenteditable="true"] {
+        outline: none;
+        cursor: text;
+    }
+
+    /* 本文：画像編集ツール（クリックで表示） */
+    #imageEditorToolbar {
+        position: fixed;
+        z-index: 100003;
+        display: none;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        padding: 10px 12px;
+        width: 290px;
+    }
+
+    #imageEditorToolbar.show { display: block; }
+
+    #imageEditorToolbar .toolbar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    #imageEditorToolbar .toolbar-title {
+        font-weight: 800;
+        color: #111827;
+        font-size: 0.9rem;
+    }
+
+    #imageEditorToolbar .tool-btn {
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        color: #111827;
+        font-weight: 700;
+        padding: 8px 10px;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.05s ease;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+    #imageEditorToolbar .tool-btn:hover { background: #f3f4f6; }
+    #imageEditorToolbar .tool-btn:active { transform: translateY(1px); }
+
+    #imageEditorToolbar .tool-btn.danger {
+        border-color: #fecaca;
+        background: #fef2f2;
+        color: #991b1b;
+    }
+    #imageEditorToolbar .tool-btn.danger:hover { background: #fee2e2; }
+
+    #imageEditorToolbar .slider-wrap { display: flex; align-items: center; gap: 10px; }
+    #imageEditorToolbar input[type="range"] { width: 140px; }
+
+    #bodyEditor figure.editor-image-block {
+        margin: 0.75rem 0;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    #bodyEditor img.editor-image {
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+    }
+
+    #bodyEditor figcaption.editor-image-caption {
+        width: 100%;
+        max-width: 100%;
+        min-height: 1.6em;
+        margin-top: 0.75rem;
+        padding: 0 0.25rem;
+        outline: none;
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    #bodyEditor figcaption.editor-image-caption:empty::before {
+        content: attr(data-placeholder);
+        color: #9ca3af;
+    }
 
     /* 全画面エディタ（編集画面） */
     #fullscreenArticleEditorOverlay {
@@ -508,6 +618,16 @@
                                     </span>
                                     区切り線
                                 </div>
+
+                                <div class="menu-item" data-action="code">
+                                    <span class="menu-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 18l6-6-6-6"></path>
+                                            <path d="M8 6l-6 6 6 6"></path>
+                                        </svg>
+                                    </span>
+                                    コード
+                                </div>
                             </div>
                         </div>
 
@@ -515,7 +635,7 @@
                         <textarea
                             id="body_html"
                             name="body_html"
-                            maxlength="50000"
+                            maxlength="10000000"
                             class="hidden"
                         >{{ old('body_html', filled($article->body_html) ? $article->body_html : $article->editorInitialHtml()) }}</textarea>
 
@@ -640,6 +760,30 @@
             bodyInput.value = bodyEditor.innerHTML;
         }
 
+        // 画像（figure）直後に左寄せの通常段落（p）を挿入して、挿入先が h2/h3 の内側に入らないようにする
+        function insertLeftAlignedParagraphAfterFigure(figureEl) {
+            if (!figureEl || !bodyEditor) return null;
+
+            const p = document.createElement('p');
+            p.style.textAlign = 'left';
+            p.innerHTML = '<br>';
+
+            // もし figure が h2/h3 の中にある場合は、その h2/h3 の“直後”へ挿入する
+            const headingAncestor = figureEl.closest('h2, h3');
+            const insertAfterEl = headingAncestor ? headingAncestor : figureEl;
+
+            if (!insertAfterEl || !insertAfterEl.parentNode) return null;
+
+            if (insertAfterEl.nextSibling) {
+                insertAfterEl.parentNode.insertBefore(p, insertAfterEl.nextSibling);
+            } else {
+                insertAfterEl.parentNode.appendChild(p);
+            }
+
+            syncBodyEditor();
+            return p;
+        }
+
         function restoreEditorContent() {
             if (!bodyEditor || !bodyInput) return;
             const value = (bodyInput.value || '').trim();
@@ -655,6 +799,287 @@
             bodyEditor.addEventListener('blur', syncBodyEditor);
             bodyEditor.addEventListener('paste', function() {
                 window.setTimeout(syncBodyEditor, 0);
+            });
+        }
+
+        // -----------------------------
+        // 画像キャプション入力中の `Enter` 対応
+        // -----------------------------
+        // キャプション（figcaption）は text-align:center なので、
+        // Enter で“次の段落”へ抜けられないと、次の入力も中央寄せになりがち。
+        // そこで Shift+Enter 以外の Enter は、画像ブロック直後に段落を挿入し、
+        // そこへカーソルを移動して通常の左寄せ入力へ戻す。
+        if (bodyEditor) {
+            bodyEditor.addEventListener('keydown', function(e) {
+                const captionEl = e.target && e.target.closest ? e.target.closest('figcaption.editor-image-caption') : null;
+                if (!captionEl) return;
+                if (e.key !== 'Enter') return;
+                if (e.shiftKey) return; // キャプション内改行は Shift+Enter
+
+                const figureEl = captionEl.closest('figure.editor-image-block');
+                if (!figureEl) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const p = insertLeftAlignedParagraphAfterFigure(figureEl);
+                if (!p) return;
+
+                // 新しく挿入した段落の先頭へカーソル移動
+                window.setTimeout(function() {
+                    bodyEditor.focus();
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    const range = document.createRange();
+                    range.selectNodeContents(p);
+                    range.collapse(true);
+                    selection.addRange(range);
+
+                    // 念のため、通常段落（P）へ整形
+                    try { document.execCommand('formatBlock', false, 'P'); } catch (err) {}
+                }, 0);
+            }, true);
+        }
+
+        // -----------------------------
+        // 本文：画像クリックで編集ツール表示
+        // （削除/拡大縮小/左右ドラッグ移動）
+        // -----------------------------
+        const imageEditorToolbar = document.getElementById('imageEditorToolbar') || (function() {
+            const el = document.createElement('div');
+            el.id = 'imageEditorToolbar';
+            el.innerHTML = `
+                <div class="toolbar-row">
+                    <div class="toolbar-title">画像編集</div>
+                    <button type="button" class="tool-btn danger" data-action="delete">削除</button>
+                </div>
+                <div class="toolbar-row">
+                    <div class="slider-wrap">
+                        <button type="button" class="tool-btn" data-action="zoom-out">−</button>
+                        <input type="range" id="imageZoomRange" min="50" max="100" step="1" value="100" />
+                        <button type="button" class="tool-btn" data-action="zoom-in">＋</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(el);
+            return el;
+        })();
+
+        const imageZoomRange = imageEditorToolbar.querySelector('#imageZoomRange');
+        let activeEditorImage = null;
+        let imageDragState = null;
+        let suppressToolbarHideOnce = false;
+
+        function hideImageEditorToolbar() {
+            imageEditorToolbar.classList.remove('show');
+            imageEditorToolbar.style.left = '';
+            imageEditorToolbar.style.top = '';
+            activeEditorImage = null;
+        }
+
+        function getEditorImageFigure(imgEl) {
+            return imgEl?.closest('figure.editor-image-block') || imgEl?.parentElement || null;
+        }
+
+        function getImageHorizontalClamp(imgEl) {
+            if (!imgEl || !bodyEditor) return 0;
+
+            const editorWidth = bodyEditor.clientWidth || 0;
+            const fig = getEditorImageFigure(imgEl);
+            const displayedWidth = (fig ? fig.getBoundingClientRect().width : 0) || imgEl.getBoundingClientRect().width || imgEl.offsetWidth || 0;
+            const clamp = Math.max(0, (editorWidth - displayedWidth) / 2);
+
+            return Math.floor(clamp);
+        }
+
+        function applyImageTransform(imgEl) {
+            if (!imgEl) return;
+            const zoom = Math.max(50, Math.min(100, parseInt(imgEl.dataset.zoom || '100', 10) || 100));
+            const offsetX = parseInt(imgEl.dataset.offsetX || '0', 10) || 0;
+            const fig = getEditorImageFigure(imgEl);
+
+            if (fig) {
+                fig.style.width = zoom + '%';
+                fig.style.maxWidth = '100%';
+                fig.style.marginLeft = 'auto';
+                fig.style.marginRight = 'auto';
+                fig.style.transformOrigin = 'top center';
+                // 画像とキャプションを一緒に動かす
+                fig.style.transform = 'translateX(' + offsetX + 'px)';
+            }
+
+            imgEl.style.width = '100%';
+            imgEl.style.maxWidth = '100%';
+            imgEl.style.height = 'auto';
+            imgEl.style.transform = 'none';
+        }
+
+        function applyZoomToImage(imgEl, percent) {
+            if (!imgEl) return;
+            const p = Math.max(50, Math.min(100, parseInt(percent, 10) || 100));
+            imgEl.dataset.zoom = String(p);
+
+            const currentOffset = parseInt(imgEl.dataset.offsetX || '0', 10) || 0;
+            const clamp = getImageHorizontalClamp(imgEl);
+            imgEl.dataset.offsetX = String(Math.max(-clamp, Math.min(clamp, currentOffset)));
+
+            applyImageTransform(imgEl);
+            imgEl.style.display = 'block';
+        }
+
+        function applyHorizontalOffset(imgEl, offsetX) {
+            if (!imgEl) return;
+            const clamp = getImageHorizontalClamp(imgEl);
+            const nextOffset = Math.max(-clamp, Math.min(clamp, Math.round(offsetX || 0)));
+            imgEl.dataset.offsetX = String(nextOffset);
+            applyImageTransform(imgEl);
+        }
+
+        function positionImageEditorToolbarFor(imgEl) {
+            if (!imgEl) return;
+            const tbRect = imageEditorToolbar.getBoundingClientRect();
+            const margin = 10;
+
+            // 画像の近くではなく、ページ上部へ固定（重なり回避）
+            let left = window.innerWidth / 2 - tbRect.width / 2;
+            left = Math.max(margin, Math.min(left, window.innerWidth - tbRect.width - margin));
+            const top = margin;
+
+            imageEditorToolbar.style.left = left + 'px';
+            imageEditorToolbar.style.top = top + 'px';
+        }
+
+        function showImageEditorToolbar(imgEl) {
+            if (!imgEl) return;
+            activeEditorImage = imgEl;
+
+            // 現在ズーム値で同期
+            const currentZoom = parseInt(imgEl.dataset.zoom || '100', 10);
+            if (imageZoomRange) imageZoomRange.value = String(currentZoom);
+
+            applyImageTransform(imgEl);
+            positionImageEditorToolbarFor(imgEl);
+            imageEditorToolbar.classList.add('show');
+        }
+
+        if (bodyEditor) {
+            bodyEditor.addEventListener('click', function(e) {
+                const targetImg = e.target.closest ? e.target.closest('img.editor-image') : null;
+                if (targetImg && bodyEditor.contains(targetImg)) {
+                    e.stopPropagation();
+                    showImageEditorToolbar(targetImg);
+                    return;
+                }
+                hideImageEditorToolbar();
+            });
+        }
+
+        if (bodyEditor) {
+            bodyEditor.addEventListener('pointerdown', function(e) {
+                const targetImg = e.target.closest ? e.target.closest('img.editor-image') : null;
+                if (!targetImg || !bodyEditor.contains(targetImg)) return;
+
+                const fig = getEditorImageFigure(targetImg);
+                if (fig) fig.setAttribute('data-dragging', '1');
+
+                showImageEditorToolbar(targetImg);
+
+                imageDragState = {
+                    imgEl: targetImg,
+                    pointerId: e.pointerId,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    startOffsetX: parseInt(targetImg.dataset.offsetX || '0', 10) || 0,
+                    moved: false
+                };
+
+                try {
+                    targetImg.setPointerCapture(e.pointerId);
+                } catch (err) {}
+
+                e.preventDefault();
+            });
+
+            bodyEditor.addEventListener('pointermove', function(e) {
+                if (!imageDragState || !activeEditorImage) return;
+                if (e.pointerId !== imageDragState.pointerId) return;
+                if (imageDragState.imgEl !== activeEditorImage) return;
+
+                const deltaX = e.clientX - imageDragState.startX;
+                const deltaY = e.clientY - imageDragState.startY;
+                if (!imageDragState.moved && Math.abs(deltaX) < 3 && Math.abs(deltaY) < 3) return;
+
+                imageDragState.moved = true;
+                const nextOffsetX = imageDragState.startOffsetX + deltaX;
+                applyHorizontalOffset(activeEditorImage, nextOffsetX);
+                positionImageEditorToolbarFor(activeEditorImage);
+                syncBodyEditor();
+                e.preventDefault();
+            });
+
+            function endImageDrag(e) {
+                if (!imageDragState) return;
+                if (e.pointerId !== imageDragState.pointerId) return;
+
+                const fig = getEditorImageFigure(imageDragState.imgEl);
+                if (fig) fig.removeAttribute('data-dragging');
+
+                if (imageDragState.moved) {
+                    suppressToolbarHideOnce = true;
+                    syncBodyEditor();
+                }
+
+                imageDragState = null;
+            }
+
+            bodyEditor.addEventListener('pointerup', endImageDrag);
+            bodyEditor.addEventListener('pointercancel', endImageDrag);
+            bodyEditor.addEventListener('lostpointercapture', endImageDrag);
+        }
+
+        // ツールバー側クリックで閉じない
+        document.addEventListener('click', function(e) {
+            if (suppressToolbarHideOnce) {
+                suppressToolbarHideOnce = false;
+                return;
+            }
+
+            const clickTargetNode = (e.target instanceof Node) ? e.target : (e.target?.parentElement || null);
+            if (imageEditorToolbar.classList.contains('show') && clickTargetNode && imageEditorToolbar.contains(clickTargetNode)) return;
+            hideImageEditorToolbar();
+        });
+
+        imageEditorToolbar.addEventListener('click', function(e) {
+            const baseEl = (e.target instanceof Element) ? e.target : (e.target?.parentElement || null);
+            const actionBtn = baseEl ? baseEl.closest('.tool-btn,[role="button"]') : null;
+            if (!actionBtn) return;
+
+            const action = actionBtn.getAttribute('data-action');
+            if (!activeEditorImage) return;
+
+            if (action === 'delete') {
+                const fig = getEditorImageFigure(activeEditorImage);
+                if (fig) fig.remove();
+                hideImageEditorToolbar();
+                syncBodyEditor();
+                return;
+            }
+
+            if (action === 'zoom-in' || action === 'zoom-out') {
+                const cur = parseInt(imageZoomRange?.value || '100', 10);
+                const next = cur + (action === 'zoom-in' ? 5 : -5);
+                if (imageZoomRange) imageZoomRange.value = String(Math.max(50, Math.min(100, next)));
+                applyZoomToImage(activeEditorImage, imageZoomRange.value);
+                syncBodyEditor();
+                return;
+            }
+        });
+
+        if (imageZoomRange) {
+            imageZoomRange.addEventListener('input', function() {
+                if (!activeEditorImage) return;
+                applyZoomToImage(activeEditorImage, this.value);
+                syncBodyEditor();
             });
         }
 
@@ -873,6 +1298,34 @@
             insertMenuToggle.onclick = function(e) {
                 e.stopPropagation();
                 const isOpen = insertMenu.style.display === 'block';
+
+                // キャプション内にカーソルがある場合は、段落に抜けて通常入力状態へ戻す
+                try {
+                    const selection = window.getSelection();
+                    const node = selection && selection.rangeCount > 0 ? selection.getRangeAt(0).commonAncestorContainer : null;
+                    const el = node && node.nodeType === 1 ? node : (node && node.parentElement ? node.parentElement : null);
+                    const captionEl = el && el.closest ? el.closest('figcaption.editor-image-caption') : null;
+                    if (captionEl && bodyEditor) {
+                        const figureEl = captionEl.closest('figure.editor-image-block');
+                        if (figureEl) {
+                            const p = insertLeftAlignedParagraphAfterFigure(figureEl);
+                            if (!p) return;
+                            window.setTimeout(function() {
+                                bodyEditor.focus();
+                                const selection2 = window.getSelection();
+                                selection2.removeAllRanges();
+                                const range = document.createRange();
+                                range.selectNodeContents(p);
+                                range.collapse(true);
+                                selection2.addRange(range);
+
+                                // 念のため、通常段落（P）へ整形
+                                try { document.execCommand('formatBlock', false, 'P'); } catch (err) {}
+                            }, 0);
+                        }
+                    }
+                } catch (err) {}
+
                 if (isOpen) closeInsertMenuOuter();
                 else openInsertMenuOuter();
             };
@@ -980,7 +1433,29 @@
             if (!file || !file.type || !file.type.startsWith('image/')) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                insertHtmlIntoEditor('<p><img src="' + e.target.result + '" alt="' + (file.name || 'image') + '" style="max-width:100%;height:auto;"></p>');
+                const safeAlt = (file.name || 'image') + '';
+                insertHtmlIntoEditor(
+                    '<figure class="editor-image-block">' +
+                        '<img class="editor-image" contenteditable="false" src="' + e.target.result + '" alt="' + safeAlt + '"' +
+                            ' style="width:100%;max-width:100%;height:auto;display:block;margin-left:auto;margin-right:auto;"' +
+                        '>' +
+                        '<figcaption class="editor-image-caption" contenteditable="true" spellcheck="false" data-placeholder="キャプションを入力"></figcaption>' +
+                    '</figure>'
+                );
+
+                // 直後にキャプションへフォーカス（入力をスムーズに）
+                window.setTimeout(function() {
+                    const captions = bodyEditor ? bodyEditor.querySelectorAll('figcaption.editor-image-caption') : [];
+                    const caption = captions && captions.length > 0 ? captions[captions.length - 1] : null;
+                    if (!caption) return;
+                    caption.focus();
+                    const range = document.createRange();
+                    range.selectNodeContents(caption);
+                    range.collapse(false);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }, 0);
             };
             reader.readAsDataURL(file);
         }
@@ -1163,6 +1638,112 @@
             return '<div class="article-toc"><div class="font-bold text-gray-900">目次</div><ul>' + items + '</ul></div>';
         }
 
+        // -----------------------------
+        // コードブロック挿入（貼り付けOK）
+        // -----------------------------
+        let codeInsertSavedRange = null;
+
+        function escapeHtmlForCode(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function insertHtmlIntoSavedRange(html) {
+            if (!bodyEditor) return;
+            bodyEditor.focus();
+
+            if (!codeInsertSavedRange) {
+                insertHtmlIntoEditor(html);
+                return;
+            }
+
+            const range = codeInsertSavedRange;
+            try {
+                range.deleteContents();
+                const fragment = range.createContextualFragment(html);
+                const lastNode = fragment.lastChild;
+                range.insertNode(fragment);
+                if (lastNode) {
+                    range.setStartAfter(lastNode);
+                    range.collapse(true);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            } catch (e) {
+                insertHtmlIntoEditor(html);
+            }
+
+            syncBodyEditor();
+        }
+
+        function openCodeInsertModal() {
+            codeInsertSavedRange = (getEditorSelection() ? getEditorSelection().cloneRange() : null);
+
+            let modal = document.getElementById('codeInsertModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'codeInsertModal';
+                modal.className = 'fixed inset-0 z-[100000] bg-black/50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden">
+                        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                            <div class="text-sm font-semibold text-gray-700">コードを入力</div>
+                            <button type="button" id="codeInsertCancelBtn" class="p-2 text-gray-500 hover:text-gray-700 rounded-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <textarea id="codeInsertTextarea" class="w-full h-64 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none" placeholder="ここにコードを貼り付けてください"></textarea>
+                            <div class="flex justify-end gap-3 mt-4">
+                                <button type="button" id="codeInsertCancelBtn2" class="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                                    キャンセル
+                                </button>
+                                <button type="button" id="codeInsertConfirmBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold shadow-lg hover:shadow-xl transition-colors">
+                                    挿入
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            modal.style.display = 'flex';
+
+            const textarea = document.getElementById('codeInsertTextarea');
+            const cancelBtn = document.getElementById('codeInsertCancelBtn');
+            const cancelBtn2 = document.getElementById('codeInsertCancelBtn2');
+            const confirmBtn = document.getElementById('codeInsertConfirmBtn');
+
+            if (textarea) textarea.focus();
+
+            function close() {
+                if (modal) modal.remove();
+                codeInsertSavedRange = null;
+            }
+
+            cancelBtn?.addEventListener('click', close, { once: true });
+            cancelBtn2?.addEventListener('click', close, { once: true });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) close();
+            }, { once: true });
+
+            confirmBtn?.addEventListener('click', function() {
+                const value = textarea ? textarea.value : '';
+                const escaped = escapeHtmlForCode(value);
+                insertHtmlIntoSavedRange('<pre class="editor-code-block" contenteditable="true"><code>' + escaped + '</code></pre>');
+                close();
+            }, { once: true });
+        }
+
         if (insertMenu) {
             insertMenu.addEventListener('click', function(e) {
                 const item = e.target.closest('.menu-item');
@@ -1170,6 +1751,11 @@
                 const action = item.getAttribute('data-action');
                 if (!action) return;
                 closeInsertMenuOuter();
+
+                if (action === 'code') {
+                    openCodeInsertModal();
+                    return;
+                }
 
                 if (action === 'image') {
                     const file = document.createElement('input');
