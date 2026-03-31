@@ -5,13 +5,14 @@
 @push('styles')
 <style>
 /* 旧「構造」表示用 */
-.prose p { margin-bottom: 1rem; line-height: 1.75; }
+.prose p { margin-bottom: 1rem; line-height: 1.75; font-size: 20px; }
 .prose ul { list-style-type: disc; padding-left: 1.5rem; }
 .prose li { margin-bottom: 0.5rem; }
 
 /* 本文（Quill 非依存。保存 HTML 内の ql-* も無効化） */
 .article-body {
-    font-size: 1.05rem;
+    /* preview で適用された font-size に合わせる（li は継承） */
+    font-size: 1.25rem;
     line-height: 1.75;
     color: #1f2937;
     padding: 0;
@@ -24,8 +25,8 @@
 .article-body p { margin: 0 0 1rem 0; text-indent: 0 !important; }
 .article-body p:last-child { margin-bottom: 0; }
 .article-body h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0; }
-.article-body h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0; }
-.article-body h3 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0; }
+.article-body h2 { font-size: 1.625rem; font-weight: 700; margin: 1rem 0; }
+.article-body h3 { font-size: 1.375rem; font-weight: 700; margin: 0.75rem 0; }
 .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin: 0 0 1rem 0; }
 .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0 0 1rem 0; }
 .article-body ul,
@@ -75,6 +76,11 @@
     border: none;
     border-top: 1px solid #e5e7eb;
     margin: 1.5rem 0;
+}
+
+.article-body h2,
+.article-body h3 {
+    scroll-margin-top: 96px; /* 固定ヘッダーがある場合のオフセット */
 }
 </style>
 @endpush
@@ -243,3 +249,72 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const articleBody = document.querySelector('.article-body');
+        if (!articleBody) return;
+
+        const headings = Array.from(articleBody.querySelectorAll('h2, h3'));
+        if (headings.length === 0) return;
+
+        const tocEl = articleBody.querySelector('.article-toc');
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function slugify(s) {
+            return (String(s || '') || '')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9\-]/g, '')
+                .slice(0, 40) || 'section';
+        }
+
+        // 見出しに id を付与し、重複には suffix を付ける
+        const used = new Set();
+        headings.forEach((h) => {
+            const text = (h.textContent || '').trim();
+            let id = h.id || slugify(text);
+            if (!id) id = 'section';
+
+            const base = id;
+            let i = 2;
+            while (used.has(id)) {
+                id = base + '-' + i;
+                i++;
+            }
+            used.add(id);
+            h.id = id;
+        });
+
+        // 見出しから目次を組み直す（href="#id" を必ず有効にする）
+        const items = headings.map((h) => {
+            const level = h.tagName.toLowerCase() === 'h2' ? 2 : 3;
+            const id = h.id;
+            const text = (h.textContent || '').trim();
+            const indent = level === 3 ? ' style="padding-left: 1rem;"' : '';
+            return '<li' + indent + '><a href="#' + escapeHtml(id) + '">' + escapeHtml(text) + '</a></li>';
+        }).join('');
+
+        const newTocHtml = '<div class="font-bold text-gray-900">目次</div><ul>' + items + '</ul>';
+
+        if (tocEl) {
+            tocEl.innerHTML = newTocHtml;
+        } else {
+            const created = document.createElement('div');
+            created.className = 'article-toc';
+            created.innerHTML = '<div class="font-bold text-gray-900">目次</div>' + newTocHtml;
+            articleBody.prepend(created);
+        }
+    });
+</script>
+@endpush

@@ -58,7 +58,8 @@ class StoreArticleRequest extends FormRequest
             'body_html' => [
                 'required',
                 'string',
-                'max:50000',
+                // 画像を data URL（base64）で埋め込むと本文HTMLが急増するため、大幅に緩める
+                'max:10000000',
                 function ($attribute, $value, $fail) {
                     if (trim(strip_tags($value)) === '') {
                         $fail('本文を入力してください。');

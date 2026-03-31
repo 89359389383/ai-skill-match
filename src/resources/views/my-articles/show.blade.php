@@ -4,12 +4,13 @@
 
 @push('styles')
 <style>
-.prose p { margin-bottom: 1rem; line-height: 1.75; }
+.prose p { margin-bottom: 1rem; line-height: 1.75; font-size: 20px; }
 .prose ul { list-style-type: disc; padding-left: 1.5rem; }
 .prose li { margin-bottom: 0.5rem; }
 
 .article-body {
-    font-size: 1.05rem;
+    /* preview で適用された font-size に合わせる（li は継承） */
+    font-size: 1.25rem;
     line-height: 1.75;
     color: #1f2937;
     padding: 0;
@@ -22,8 +23,8 @@
 .article-body p { margin: 0 0 1rem 0; text-indent: 0 !important; }
 .article-body p:last-child { margin-bottom: 0; }
 .article-body h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0; }
-.article-body h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0; }
-.article-body h3 { font-size: 1.25rem; font-weight: 700; margin: 0.75rem 0; }
+.article-body h2 { font-size: 1.625rem; font-weight: 700; margin: 1rem 0; }
+.article-body h3 { font-size: 1.375rem; font-weight: 700; margin: 0.75rem 0; }
 .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin: 0 0 1rem 0; }
 .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0 0 1rem 0; }
 .article-body ul,

@@ -57,7 +57,8 @@ class UpdateArticleRequest extends FormRequest
             'body_html' => [
                 'required',
                 'string',
-                'max:50000',
+                // 編集側も同様に大幅に緩める（画像などで data URL が入り得るため）
+                'max:10000000',
                 function ($attribute, $value, $fail) {
                     if (trim(strip_tags($value)) === '') {
                         $fail('本文を入力してください。');

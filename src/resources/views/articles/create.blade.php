@@ -258,6 +258,9 @@
         z-index: 99999;
         background: rgba(255, 255, 255, 0.98);
         display: none;
+        overflow-y: auto;
+        padding-bottom: 320px; /* 入力内容が少ない時でもスクロールできるようにする */
+        box-sizing: border-box;
     }
     #fullscreenArticleEditorOverlay.hidden { display: none; }
     #fullscreenArticleEditorOverlay:not(.hidden) { display: block; }
@@ -673,7 +676,7 @@
                         <textarea
                             id="body_html"
                             name="body_html"
-                            maxlength="50000"
+                            maxlength="10000000"
                             class="hidden"
                         >{{ old('body_html') }}</textarea>
                     </div>
@@ -863,6 +866,31 @@
             bodyInput.value = bodyEditor.innerHTML;
         }
 
+        // figure の直後に、左寄せの通常段落（p）を挿入する
+        // h2/h3 の「内側」に入ってしまうと、見出しフォントが継承されてしまうため排除する
+        function insertLeftAlignedParagraphAfterFigure(figureEl) {
+            if (!figureEl || !bodyEditor) return null;
+
+            const p = document.createElement('p');
+            p.style.textAlign = 'left';
+            p.innerHTML = '<br>';
+
+            // figure が h2/h3 の内側にいる場合は、その h2/h3 の直後へ挿入する
+            const headingAncestor = figureEl.closest('h2, h3');
+            const insertAfterEl = headingAncestor ? headingAncestor : figureEl;
+
+            if (!insertAfterEl || !insertAfterEl.parentNode) return null;
+
+            if (insertAfterEl.nextSibling) {
+                insertAfterEl.parentNode.insertBefore(p, insertAfterEl.nextSibling);
+            } else {
+                insertAfterEl.parentNode.appendChild(p);
+            }
+
+            syncBodyEditor();
+            return p;
+        }
+
         function restoreEditorContent() {
             if (!bodyEditor || !bodyInput) return;
             const value = (bodyInput.value || '').trim();
@@ -879,6 +907,89 @@
             bodyEditor.addEventListener('paste', function() {
                 window.setTimeout(syncBodyEditor, 0);
             });
+        }
+
+        // Shift+Enter: どの状態でも「通常の文字入力」に強制的に戻す
+        if (bodyEditor) {
+            bodyEditor.addEventListener('keydown', function(e) {
+                if (!e.shiftKey || e.key !== 'Enter') return;
+
+                const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) return;
+
+                const anchorNode = selection.anchorNode;
+                const li = anchorNode && anchorNode.closest
+                    ? anchorNode.closest('li')
+                    : (anchorNode?.parentElement ? anchorNode.parentElement.closest('li') : null);
+
+                const figCaption = (anchorNode && anchorNode.closest)
+                    ? anchorNode.closest('figcaption.editor-image-caption')
+                    : (anchorNode?.parentElement ? anchorNode.parentElement.closest('figcaption.editor-image-caption') : null);
+
+                if (li) {
+                    e.preventDefault();
+                    exitListToParagraph();
+                    return;
+                }
+
+                // 画像キャプション中なら、図の直後に通常の段落を作って移動
+                if (figCaption) {
+                    const fig = figCaption.closest('figure.editor-image-block');
+                    if (fig) {
+                        e.preventDefault();
+                        const range = document.createRange();
+                        range.setStartAfter(fig);
+                        range.collapse(true);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+
+                        document.execCommand('formatBlock', false, 'P');
+                        document.execCommand('removeFormat', false, null);
+                        insertHtmlIntoEditor('<p><br></p>');
+                        return;
+                    }
+                }
+
+                // それ以外も通常の段落に寄せる
+                e.preventDefault();
+                exitListToParagraph();
+            });
+        }
+
+        // Enter(Shiftなし): 画像キャプション入力中でも通常段落へ戻す
+        if (bodyEditor) {
+            bodyEditor.addEventListener('keydown', function(e) {
+                const captionEl = e.target && e.target.closest ? e.target.closest('figcaption.editor-image-caption') : null;
+                if (!captionEl) return;
+                if (e.key !== 'Enter') return;
+                if (e.shiftKey) return;
+
+                const figureEl = captionEl.closest('figure.editor-image-block');
+                if (!figureEl) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const p = insertLeftAlignedParagraphAfterFigure(figureEl);
+                if (!p) return;
+
+                window.setTimeout(function() {
+                    bodyEditor.focus();
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    const range = document.createRange();
+                    range.selectNodeContents(p);
+                    range.collapse(true);
+                    selection.addRange(range);
+
+                    // 念のため P へ整形（見出し継承の回避）
+                    try {
+                        document.execCommand('formatBlock', false, 'P');
+                        document.execCommand('removeFormat', false, null);
+                    } catch (err) {}
+                }, 0);
+            }, true);
         }
 
         // -----------------------------
@@ -1289,6 +1400,32 @@
             insertMenuToggle.onclick = function(e) {
                 e.stopPropagation();
                 const isOpen = insertMenu.style.display === 'block';
+
+                // キャプション内にカーソルがある場合は、段落に抜けて通常入力状態へ戻す
+                try {
+                    const selection = window.getSelection();
+                    const node = selection && selection.rangeCount > 0 ? selection.getRangeAt(0).commonAncestorContainer : null;
+                    const el = node && node.nodeType === 1 ? node : (node && node.parentElement ? node.parentElement : null);
+                    const captionEl = el && el.closest ? el.closest('figcaption.editor-image-caption') : null;
+                    if (captionEl && bodyEditor) {
+                        const figureEl = captionEl.closest('figure.editor-image-block');
+                        if (figureEl) {
+                            const p = insertLeftAlignedParagraphAfterFigure(figureEl);
+                            if (p) {
+                                window.setTimeout(function() {
+                                    bodyEditor.focus();
+                                    const selection2 = window.getSelection();
+                                    selection2.removeAllRanges();
+                                    const range = document.createRange();
+                                    range.selectNodeContents(p);
+                                    range.collapse(true);
+                                    selection2.addRange(range);
+                                }, 0);
+                            }
+                        }
+                    }
+                } catch (err) {}
+
                 if (isOpen) closeInsertMenuOuter();
                 else openInsertMenuOuter();
             };
@@ -1733,6 +1870,35 @@
             }, { once: true });
         }
 
+        // -----------------------------
+        // リストから通常の段落へ戻す
+        // -----------------------------
+        function exitListToParagraph() {
+            if (!bodyEditor) return;
+            bodyEditor.focus();
+
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) return;
+
+            const anchorNode = selection.anchorNode;
+            const li = anchorNode && anchorNode.closest
+                ? anchorNode.closest('li')
+                : (anchorNode?.parentElement ? anchorNode.parentElement.closest('li') : null);
+
+            // リスト内なら階層を抜けて通常の段落に寄せる
+            if (li) {
+                document.execCommand('insertParagraph', false, null);
+                for (let i = 0; i < 4; i++) {
+                    try { document.execCommand('outdent', false, null); } catch (e) {}
+                }
+            }
+
+            // 常に P + removeFormat に寄せる（通常文字入力状態）
+            document.execCommand('formatBlock', false, 'P');
+            document.execCommand('removeFormat', false, null);
+            syncBodyEditor();
+        }
+
         if (insertMenu) {
             insertMenu.addEventListener('click', function(e) {
                 const item = e.target.closest('.menu-item');
@@ -1790,11 +1956,8 @@
                 }
 
                 if (action === 'paragraph') {
-                    // 見出し/リストなどの装飾をリセットして、通常の段落に戻す
-                    bodyEditor.focus();
-                    document.execCommand('formatBlock', false, 'P');
-                    document.execCommand('removeFormat', false, null);
-                    syncBodyEditor();
+                    // リスト内から「通常の文字」に戻す
+                    exitListToParagraph();
                     return;
                 }
 
