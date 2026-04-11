@@ -152,6 +152,9 @@
                     $displayName = '匿名';
                     $avatarSrc = null;
                     $isCompanyAuthor = $authorCompany !== null;
+                    $publishedAtForLabel = $article->published_at ?? $article->created_at;
+                    // `published_at` と同一日でも、最終更新日として常に表示する
+                    $showLastUpdated = !empty($article->updated_at);
                     $isOwner = $currentUserId !== null && $currentUserId === (int) $article->user_id;
 
                     if ($authorF) {
@@ -197,15 +200,53 @@
                 <div class="flex items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-200">
                     <div class="flex items-center gap-3 min-w-0">
                         @if($avatarSrc)
-                            <img src="{{ $avatarSrc }}" alt="" class="w-14 h-14 rounded-full object-cover flex-shrink-0">
+                            @if($isCompanyAuthor)
+                                <div class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+                                    <img src="{{ $avatarSrc }}" alt="" class="w-full h-full object-cover">
+                                </div>
+                            @else
+                                <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+                                    <img src="{{ $avatarSrc }}" alt="" class="w-full h-full object-cover">
+                                </a>
+                            @endif
                         @else
-                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
-                                {{ $authorInitial }}
-                            </div>
+                            @if($isCompanyAuthor)
+                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                    {{ $authorInitial }}
+                                </div>
+                            @else
+                                <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                    {{ $authorInitial }}
+                                </a>
+                            @endif
                         @endif
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-900 truncate">{{ $displayName }}</div>
-                            <div class="text-sm text-gray-500">{{ $article->published_at?->format('Y年n月j日') ?? $article->created_at?->format('Y年n月j日') }} 公開</div>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                @if($isCompanyAuthor)
+                                    <div class="font-semibold text-gray-900 truncate min-w-0">
+                                        {{ $displayName }}
+                                    </div>
+                                @else
+                                    <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}"
+                                       class="font-semibold text-gray-900 truncate hover:text-orange-600 transition-colors min-w-0">
+                                        {{ $displayName }}
+                                    </a>
+                                @endif
+                                <a href="{{ route('articles.index', ['user' => $article->user_id]) }}"
+                                   class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline whitespace-nowrap">
+                                    この著者の記事一覧
+                                </a>
+                            </div>
+                            <div class="text-sm text-gray-500 flex items-center gap-3 flex-wrap">
+                                <span class="whitespace-nowrap">
+                                    {{ $article->published_at?->format('Y年n月j日') ?? $article->created_at?->format('Y年n月j日') }} 公開
+                                </span>
+                                @if($showLastUpdated)
+                                    <span class="whitespace-nowrap">
+                                        {{ $article->updated_at?->format('Y年n月j日') }} 最終更新日
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="text-sm text-gray-500">

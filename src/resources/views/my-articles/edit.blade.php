@@ -349,7 +349,7 @@
     #fullscreenArticleEditorOverlay.hidden { display: none; }
     #fullscreenArticleEditorOverlay:not(.hidden) { display: block; }
     #fullscreenArticleEditorOverlay #bodyEditor {
-        min-height: calc(100vh - 160px) !important;
+        min-height: max(1200px, calc(100vh - 160px)) !important;
     }
 </style>
 @endpush
@@ -811,7 +811,21 @@
         // そこへカーソルを移動して通常の左寄せ入力へ戻す。
         if (bodyEditor) {
             bodyEditor.addEventListener('keydown', function(e) {
-                const captionEl = e.target && e.target.closest ? e.target.closest('figcaption.editor-image-caption') : null;
+                // `contenteditable` の中だと `e.target` が TextNode になることがあり、
+                // TextNode は `closest()` を持たないため判定が外れる。そのため selection の anchorNode から拾う
+                let captionEl = null;
+                try {
+                    const selection = window.getSelection();
+                    const anchorNode = selection ? selection.anchorNode : null;
+                    const anchorEl =
+                        anchorNode && anchorNode.nodeType === 1
+                            ? anchorNode
+                            : (anchorNode && anchorNode.parentElement ? anchorNode.parentElement : null);
+
+                    if (anchorEl && anchorEl.closest) {
+                        captionEl = anchorEl.closest('figcaption.editor-image-caption');
+                    }
+                } catch (err) {}
                 if (!captionEl) return;
                 if (e.key !== 'Enter') return;
                 if (e.shiftKey) return; // キャプション内改行は Shift+Enter
