@@ -266,7 +266,8 @@
     #fullscreenArticleEditorOverlay:not(.hidden) { display: block; }
 
     #fullscreenArticleEditorOverlay #bodyEditor {
-        min-height: calc(100vh - 160px) !important;
+        /* 全画面表示では最低でもこの高さを確保する（入力が少ない時の縦幅不足を防ぐ） */
+        min-height: max(1200px, calc(100vh - 160px)) !important;
     }
 
     /* 記事本文：画像編集ツール（クリックで表示） */
@@ -960,7 +961,21 @@
         // Enter(Shiftなし): 画像キャプション入力中でも通常段落へ戻す
         if (bodyEditor) {
             bodyEditor.addEventListener('keydown', function(e) {
-                const captionEl = e.target && e.target.closest ? e.target.closest('figcaption.editor-image-caption') : null;
+                // `contenteditable` の中だと `e.target` が TextNode になることがあり、
+                // TextNode は `closest()` を持たないため判定が外れる。そのため selection の anchorNode から拾う
+                let captionEl = null;
+                try {
+                    const selection = window.getSelection();
+                    const anchorNode = selection ? selection.anchorNode : null;
+                    const anchorEl =
+                        anchorNode && anchorNode.nodeType === 1
+                            ? anchorNode
+                            : (anchorNode && anchorNode.parentElement ? anchorNode.parentElement : null);
+
+                    if (anchorEl && anchorEl.closest) {
+                        captionEl = anchorEl.closest('figcaption.editor-image-caption');
+                    }
+                } catch (err) {}
                 if (!captionEl) return;
                 if (e.key !== 'Enter') return;
                 if (e.shiftKey) return;
@@ -1792,11 +1807,36 @@
                 const lastNode = fragment.lastChild;
                 range.insertNode(fragment);
                 if (lastNode) {
-                    range.setStartAfter(lastNode);
-                    range.collapse(true);
+                    // `pre[contenteditable]` の中にカーソルが残り続けるケースがあるため、
+                    // コードブロックの直後に通常段落を明示的に作り、そこへカーソルを移す
                     const selection = window.getSelection();
                     selection.removeAllRanges();
-                    selection.addRange(range);
+
+                    let targetNode = null;
+                    try {
+                        if (lastNode.parentNode) {
+                            const p = document.createElement('p');
+                            p.style.textAlign = 'left';
+                            p.innerHTML = '<br>';
+                            lastNode.parentNode.insertBefore(p, lastNode.nextSibling);
+                            targetNode = p;
+                        }
+                    } catch (e) {}
+
+                    const newRange = document.createRange();
+                    if (targetNode) {
+                        newRange.selectNodeContents(targetNode);
+                        newRange.collapse(true);
+                    } else {
+                        // フォールバック：コード直後へ
+                        range.setStartAfter(lastNode);
+                        range.collapse(true);
+                        selection.addRange(range);
+                        syncBodyEditor();
+                        return;
+                    }
+
+                    selection.addRange(newRange);
                 }
             } catch (e) {
                 // range が無効になっているケースはフォールバック

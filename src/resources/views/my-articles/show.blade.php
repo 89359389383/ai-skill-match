@@ -99,6 +99,53 @@
                 @php
                     $isOwner = auth()->check() && auth()->user()->id === (int) $article->user_id;
                 @endphp
+                    @php
+                        $author = $article->user ?? null;
+                        $authorF = $author?->freelancer;
+                        $authorCompany = $author?->company;
+                        $isCompanyAuthor = $authorCompany !== null;
+
+                        $displayName = '匿名';
+                        $avatarSrc = null;
+
+                        if ($authorF) {
+                            $displayName = $authorF->display_name ?? $author->email ?? '匿名';
+                            $iconPath = $authorF->icon_path ?? null;
+                            if (!empty($iconPath)) {
+                                if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                    $avatarSrc = $iconPath;
+                                } else {
+                                    $iconRel = ltrim($iconPath, '/');
+                                    if (str_starts_with($iconRel, 'storage/')) {
+                                        $iconRel = substr($iconRel, strlen('storage/'));
+                                    }
+                                    $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                }
+                            }
+                        } elseif ($authorCompany !== null) {
+                            $displayName = $authorCompany->contact_name
+                                ?: ($author->name ?? null)
+                                ?: $authorCompany->name
+                                ?: ($author->email ?? '匿名');
+
+                            $iconPath = $authorCompany->icon_path ?? null;
+                            if (!empty($iconPath)) {
+                                if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
+                                    $avatarSrc = $iconPath;
+                                } else {
+                                    $iconRel = ltrim($iconPath, '/');
+                                    if (str_starts_with($iconRel, 'storage/')) {
+                                        $iconRel = substr($iconRel, strlen('storage/'));
+                                    }
+                                    $avatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url($iconRel);
+                                }
+                            }
+                        } elseif ($author) {
+                            $displayName = $author->name ?? $author->email ?? '匿名';
+                        }
+
+                        $authorInitial = mb_substr($displayName, 0, 1);
+                    @endphp
                 <div class="flex flex-wrap items-center gap-3 mb-6">
                     <span class="px-4 py-1.5 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">{{ $article->category ?? 'その他' }}</span>
                     @foreach($article->tags as $tag)
@@ -109,11 +156,56 @@
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{{ $article->title }}</h1>
 
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-gray-200">
-                    <div class="text-sm text-gray-500">
-                        作成: {{ $article->created_at?->format('Y年n月j日') }}
-                        @if($article->updated_at && $article->updated_at->ne($article->created_at))
-                            / 更新: {{ $article->updated_at->format('Y年n月j日') }}
-                        @endif
+                    <div class="text-sm text-gray-500 w-full">
+                        <div class="flex items-start gap-3">
+                            @if($avatarSrc)
+                                @if($isCompanyAuthor)
+                                    <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                                        <img src="{{ $avatarSrc }}" alt="" class="w-full h-full object-cover">
+                                    </div>
+                                @else
+                                    <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                                        <img src="{{ $avatarSrc }}" alt="" class="w-full h-full object-cover">
+                                    </a>
+                                @endif
+                            @else
+                                @if($isCompanyAuthor)
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base font-bold flex-shrink-0">
+                                        {{ $authorInitial }}
+                                    </div>
+                                @else
+                                    <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base font-bold flex-shrink-0">
+                                        {{ $authorInitial }}
+                                    </a>
+                                @endif
+                            @endif
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    @if($isCompanyAuthor)
+                                        <div class="font-semibold text-gray-900 truncate min-w-0">
+                                            {{ $displayName }}
+                                        </div>
+                                    @else
+                                        <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}"
+                                           class="font-semibold text-gray-900 truncate hover:text-orange-600 transition-colors min-w-0">
+                                            {{ $displayName }}
+                                        </a>
+                                    @endif
+                                    <a href="{{ route('articles.index', ['user' => $article->user_id]) }}"
+                                       class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline whitespace-nowrap">
+                                        この著者の記事一覧
+                                    </a>
+                                </div>
+
+                                <div class="mt-1">
+                                    作成: {{ $article->created_at?->format('Y年n月j日') }}
+                                    @if($article->updated_at && $article->updated_at->ne($article->created_at))
+                                        / 更新: {{ $article->updated_at->format('Y年n月j日') }}
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     @if($isOwner)
                         <div class="flex flex-wrap items-center gap-3">
