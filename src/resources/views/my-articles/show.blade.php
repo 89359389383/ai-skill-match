@@ -75,6 +75,127 @@
     border-top: 1px solid #e5e7eb;
     margin: 1.5rem 0;
 }
+
+/* OGPリンクカード（note風：保存済みHTMLの ogp-card を整形） */
+.article-body .ogp-card {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.article-body .ogp-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+    transform: translateY(-1px);
+}
+.article-body .ogp-card-media {
+    width: 176px;
+    min-height: 132px;
+    background: #f3f4f6;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.article-body .ogp-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.article-body .ogp-card-media-placeholder {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+.article-body .ogp-card-content {
+    min-width: 0;
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+.article-body .ogp-card-site {
+    font-size: 12px;
+    font-weight: 700;
+    color: #4f46e5;
+    line-height: 1.2;
+}
+.article-body .ogp-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.article-body .ogp-card-description {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.article-body .ogp-card-domain {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.2;
+    margin-top: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.article-body .ogp-card-loading {
+    cursor: default;
+}
+.article-body .ogp-skeleton {
+    background: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+.article-body .ogp-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    animation: ogp-shimmer 1.3s infinite;
+}
+.article-body .ogp-skeleton-title {
+    width: 75%;
+    height: 18px;
+    margin-top: 2px;
+}
+.article-body .ogp-skeleton-line {
+    width: 100%;
+    height: 12px;
+}
+.article-body .ogp-skeleton-line.short {
+    width: 55%;
+}
+@keyframes ogp-shimmer {
+    100% { transform: translateX(100%); }
+}
+
+@media (max-width: 640px) {
+    .article-body .ogp-card {
+        flex-direction: column;
+    }
+
+    .article-body .ogp-card-media {
+        width: 100%;
+        height: 180px;
+    }
+}
 </style>
 @endpush
 
