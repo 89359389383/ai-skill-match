@@ -107,65 +107,213 @@
     }
     #tocDeleteBtn.show { display: flex; }
 
-    /* OGPリンクカード（embed URLから生成） */
-    #bodyEditor .link-card {
-        border: 2px solid #4f46e5;
-        background: #ffffff;
-        border-radius: 12px;
+    /* OGPリンクカード（note風） */
+    #bodyEditor .ogp-card {
+        display: flex;
+        flex-direction: row;
         overflow: hidden;
-        display: block;
-    }
-    #bodyEditor .link-card .link-card-link {
-        display: block;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         text-decoration: none;
         color: inherit;
-        cursor: pointer;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
-    #bodyEditor .link-card .thumb {
-        height: 140px;
+    #bodyEditor .ogp-card:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+        transform: translateY(-1px);
+    }
+    #bodyEditor .ogp-card-media {
+        width: 176px;
+        min-height: 132px;
         background: #f3f4f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        flex-shrink: 0;
         overflow: hidden;
     }
-    #bodyEditor .link-card .thumb img {
+    #bodyEditor .ogp-card-media img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
     }
-    #bodyEditor .link-card .content {
-        padding: 12px 14px;
+    #bodyEditor .ogp-card-media-placeholder {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
     }
-    #bodyEditor .link-card .title {
+    #bodyEditor .ogp-card-content {
+        min-width: 0;
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+    }
+    #bodyEditor .ogp-card-site {
+        font-size: 12px;
+        font-weight: 700;
+        color: #4f46e5;
+        line-height: 1.2;
+    }
+    #bodyEditor .ogp-card-title {
+        font-size: 15px;
         font-weight: 800;
         color: #111827;
-        line-height: 1.25;
-        margin-bottom: 6px;
-        font-size: 1rem;
+        line-height: 1.45;
         overflow: hidden;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
-    #bodyEditor .link-card .desc {
+    #bodyEditor .ogp-card-description {
+        font-size: 14px;
         color: #6b7280;
-        line-height: 1.4;
-        font-size: 0.95rem;
+        line-height: 1.45;
         overflow: hidden;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
-        margin-bottom: 6px;
     }
-    #bodyEditor .link-card .domain {
-        color: #4f46e5;
-        font-weight: 700;
-        font-size: 0.9rem;
+    #bodyEditor .ogp-card-domain {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.2;
+        margin-top: 2px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+    #bodyEditor .ogp-card-loading {
+        cursor: default;
+    }
+    #bodyEditor .ogp-skeleton {
+        background: #e5e7eb;
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+    }
+    #bodyEditor .ogp-skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+        animation: ogp-shimmer 1.3s infinite;
+    }
+    #bodyEditor .ogp-skeleton-title {
+        width: 75%;
+        height: 18px;
+        margin-top: 2px;
+    }
+    #bodyEditor .ogp-skeleton-line {
+        width: 100%;
+        height: 12px;
+    }
+    #bodyEditor .ogp-skeleton-line.short {
+        width: 55%;
+    }
+    @keyframes ogp-shimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+    @media (max-width: 640px) {
+        #bodyEditor .ogp-card {
+            flex-direction: column;
+        }
+
+        #bodyEditor .ogp-card-media {
+            width: 100%;
+            height: 180px;
+        }
+    }
+
+    /* 投稿前プレビュー（previewModal）の ogp-card も同じ見た目にする */
+    .article-body-preview .ogp-card {
+        display: flex;
+        flex-direction: row;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .article-body-preview .ogp-card:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+        transform: translateY(-1px);
+    }
+    .article-body-preview .ogp-card-media {
+        width: 176px;
+        min-height: 132px;
+        background: #f3f4f6;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .article-body-preview .ogp-card-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .article-body-preview .ogp-card-media-placeholder {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    }
+    .article-body-preview .ogp-card-content {
+        min-width: 0;
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+    }
+    .article-body-preview .ogp-card-site {
+        font-size: 12px;
+        font-weight: 700;
+        color: #4f46e5;
+        line-height: 1.2;
+    }
+    .article-body-preview .ogp-card-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.45;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .article-body-preview .ogp-card-description {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.45;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .article-body-preview .ogp-card-domain {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.2;
+        margin-top: 2px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    @media (max-width: 640px) {
+        .article-body-preview .ogp-card {
+            flex-direction: column;
+        }
+
+        .article-body-preview .ogp-card-media {
+            width: 100%;
+            height: 180px;
+        }
     }
 
     /* 目次（ToC） */
@@ -1491,9 +1639,149 @@
             reader.readAsDataURL(file);
         }
 
+        const OGP_API_ENDPOINT = '/api/ogp';
+        const ogpClientCache = new Map();
+
+        function escapeHtmlForOgp(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function normalizeUrlForCache(url) {
+            try {
+                const u = new URL(String(url).trim(), window.location.origin);
+                u.hash = '';
+                return u.toString();
+            } catch (e) {
+                return String(url || '').trim();
+            }
+        }
+
+        function getDomainLabel(url) {
+            try {
+                return new URL(url).hostname.replace(/^www\./i, '');
+            } catch (e) {
+                return String(url || '');
+            }
+        }
+
+        function buildOgpCardHtml(payload, fallbackUrl, state = 'loaded') {
+            const title = (payload && payload.title) ? payload.title : getDomainLabel(fallbackUrl);
+            const description = (payload && payload.description !== undefined && payload.description !== null && payload.description !== '')
+                ? payload.description
+                : 'リンク先の説明文を取得できませんでした。';
+            const image = payload && payload.image ? payload.image : '';
+            const canonicalUrl = (payload && payload.url) ? payload.url : fallbackUrl;
+            const siteName = (payload && payload.site_name) ? payload.site_name : getDomainLabel(canonicalUrl);
+            const domain = getDomainLabel(canonicalUrl);
+
+            const statusText = state === 'error'
+                ? 'リンクカードを取得できませんでした'
+                : (state === 'loading' ? 'リンクカードを読み込み中' : '');
+            const statusTone = state === 'error' ? 'text-red-600' : 'text-indigo-600';
+
+            const imageHtml = image
+                ? '<div class="ogp-card-media"><img src="' + escapeHtmlForOgp(image) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></div>'
+                : '';
+
+            const subtitleHtml = state === 'error'
+                ? '<div class="mt-1 text-sm text-red-600">一時的にプレビューを取得できませんでした。URL はそのまま有効です。</div>'
+                : '<div class="ogp-card-description">' + escapeHtmlForOgp(description) + '</div>';
+
+            return (
+                '<div id="' + escapeHtmlForOgp((payload && payload.card_id) ? payload.card_id : '') + '" class="my-4" contenteditable="false">' +
+                    '<a class="ogp-card" href="' + escapeHtmlForOgp(canonicalUrl) + '" target="_blank" rel="noopener noreferrer">' +
+                        imageHtml +
+                        '<div class="ogp-card-content">' +
+                            (statusText ? '<div class="ogp-card-site ' + statusTone + '">' + escapeHtmlForOgp(statusText) + '</div>' : '') +
+                            '<div class="ogp-card-site">' + escapeHtmlForOgp(siteName) + '</div>' +
+                            '<div class="ogp-card-title">' + escapeHtmlForOgp(title) + '</div>' +
+                            subtitleHtml +
+                            '<div class="ogp-card-domain">' + escapeHtmlForOgp(domain) + '</div>' +
+                        '</div>' +
+                    '</a>' +
+                '</div>'
+            );
+        }
+
+        function buildOgpLoadingHtml(url, cardId) {
+            const domain = getDomainLabel(url);
+
+            return (
+                '<div id="' + escapeHtmlForOgp(cardId) + '" class="my-4" contenteditable="false">' +
+                    '<div class="ogp-card ogp-card-loading">' +
+                        '<div class="ogp-card-media ogp-card-media-placeholder"></div>' +
+                        '<div class="ogp-card-content">' +
+                            '<div class="ogp-card-site">' + escapeHtmlForOgp(domain) + '</div>' +
+                            '<div class="ogp-skeleton ogp-skeleton-title"></div>' +
+                            '<div class="ogp-skeleton ogp-skeleton-line"></div>' +
+                            '<div class="ogp-skeleton ogp-skeleton-line short"></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            );
+        }
+
+        function buildOgpErrorHtml(url, cardId) {
+            const domain = getDomainLabel(url);
+
+            return (
+                '<div id="' + escapeHtmlForOgp(cardId) + '" class="my-4" contenteditable="false">' +
+                    '<a class="ogp-card ogp-card-error" href="' + escapeHtmlForOgp(url) + '" target="_blank" rel="noopener noreferrer">' +
+                        '<div class="ogp-card-content">' +
+                            '<div class="ogp-card-site text-red-600">OGP取得に失敗</div>' +
+                            '<div class="ogp-card-title">リンクカードを取得できませんでした</div>' +
+                            '<div class="mt-1 text-sm text-gray-600">一時的な通信エラー、タイムアウト、サイト側の制限の可能性があります。</div>' +
+                            '<div class="ogp-card-domain">' + escapeHtmlForOgp(domain) + '</div>' +
+                        '</div>' +
+                    '</a>' +
+                '</div>'
+            );
+        }
+
+        async function fetchOgpJson(url) {
+            const normalized = normalizeUrlForCache(url);
+
+            if (ogpClientCache.has(normalized)) {
+                return ogpClientCache.get(normalized);
+            }
+
+            const promise = fetch(OGP_API_ENDPOINT + '?url=' + encodeURIComponent(normalized), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            }).then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const message = (data && data.message) ? data.message : 'OGP取得に失敗しました。';
+                    throw new Error(message);
+                }
+
+                return data;
+            });
+
+            ogpClientCache.set(normalized, promise);
+
+            try {
+                const data = await promise;
+                ogpClientCache.set(normalized, Promise.resolve(data));
+                return data;
+            } catch (e) {
+                ogpClientCache.delete(normalized);
+                throw e;
+            }
+        }
+
         function insertEmbedUrl(url) {
             const trimmed = (url || '').trim();
             if (!trimmed) return;
+
             const ytMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
             if (ytMatch && ytMatch[1]) {
                 const videoId = ytMatch[1];
@@ -1501,109 +1789,32 @@
                 return;
             }
 
-            // YouTube以外は OGPリンクカード表示にする
-            const cardId = 'linkCard_' + String(Date.now()) + '_' + Math.random().toString(16).slice(2);
-            let domain = '';
+            let parsed;
             try {
-                domain = new URL(trimmed).hostname;
+                parsed = new URL(trimmed);
             } catch (e) {
-                domain = trimmed;
+                alert('正しいURLを入力してください。');
+                return;
             }
 
-            function escapeHtml(str) {
-                return String(str || '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
+            if (!['http:', 'https:'].includes(parsed.protocol)) {
+                alert('http または https のURLのみ対応しています。');
+                return;
             }
 
-            // ローディングカードを先に挿入
-            insertHtmlIntoEditor(
-                '<div class="my-4">' +
-                    '<div id="' + cardId + '" class="link-card" contenteditable="false">' +
-                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
-                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Loading...</div></div>' +
-                            '<div class="content">' +
-                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
-                                '<div class="title">リンクカードを読み込み中</div>' +
-                                '<div class="desc">OGPを取得しています</div>' +
-                            '</div>' +
-                        '</a>' +
-                    '</div>' +
-                '</div>'
-            );
+            const cardId = 'ogp_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+            insertHtmlIntoEditor(buildOgpLoadingHtml(trimmed, cardId));
 
-            const jinaUrl = 'https://r.jina.ai/' + trimmed;
-            fetch(jinaUrl)
-                .then(function(res) { return res.text(); })
-                .then(function(htmlText) {
-                    function extractMeta(propertyOrName) {
-                        const esc = propertyOrName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-                        const re1 = new RegExp('(?:property|name)=["\\\']' + esc + '["\\\'][^>]*content=["\\\']([^"\\\']*)["\\\']', 'i');
-                        const re2 = new RegExp('content=["\\\']([^"\\\']*)["\\\'][^>]*(?:property|name)=["\\\']' + esc + '["\\\']', 'i');
-                        const m1 = htmlText.match(re1);
-                        if (m1 && m1[1]) return m1[1];
-                        const m2 = htmlText.match(re2);
-                        if (m2 && m2[1]) return m2[1];
-                        return '';
-                    }
-
-                    const title =
-                        extractMeta('og:title') ||
-                        extractMeta('twitter:title');
-                    const desc =
-                        extractMeta('og:description') ||
-                        extractMeta('twitter:description') ||
-                        extractMeta('description');
-                    const image =
-                        extractMeta('og:image') ||
-                        extractMeta('twitter:image');
-
-                    const finalTitle = title || domain;
-                    const finalDesc = desc || 'リンクの内容を表示します。';
-
+            fetchOgpJson(trimmed)
+                .then(function(data) {
                     const el = document.getElementById(cardId);
                     if (!el) return;
-
-                    const safeTitle = escapeHtml(finalTitle);
-                    const safeDesc = escapeHtml(finalDesc);
-                    const safeDomain = escapeHtml(domain);
-
-                    let resolvedImage = image;
-                    if (resolvedImage) {
-                        try {
-                            resolvedImage = new URL(resolvedImage, trimmed).toString();
-                        } catch (e) {}
-                    }
-
-                    const thumbHtml = resolvedImage
-                        ? '<img src="' + escapeHtml(resolvedImage) + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
-                        : '<div style="color:#9ca3af;font-weight:700;">No image</div>';
-
-                    el.innerHTML =
-                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
-                            '<div class="thumb">' + thumbHtml + '</div>' +
-                            '<div class="content">' +
-                                '<div class="domain">' + safeDomain + '</div>' +
-                                '<div class="title">' + safeTitle + '</div>' +
-                                '<div class="desc">' + safeDesc + '</div>' +
-                            '</div>' +
-                        '</a>';
+                    el.outerHTML = buildOgpCardHtml(Object.assign({}, data, { card_id: cardId }), trimmed, 'loaded');
                 })
                 .catch(function() {
                     const el = document.getElementById(cardId);
                     if (!el) return;
-                    el.innerHTML =
-                        '<a class="link-card-link" href="' + escapeHtml(trimmed) + '" target="_blank" rel="noopener noreferrer">' +
-                            '<div class="thumb"><div style="color:#6b7280;font-weight:700;">Preview</div></div>' +
-                            '<div class="content">' +
-                                '<div class="domain">' + escapeHtml(domain) + '</div>' +
-                                '<div class="title">' + escapeHtml(domain) + '</div>' +
-                                '<div class="desc">OGP取得に失敗しました</div>' +
-                            '</div>' +
-                        '</a>';
+                    el.outerHTML = buildOgpErrorHtml(trimmed, cardId);
                 });
         }
 

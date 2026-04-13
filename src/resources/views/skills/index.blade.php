@@ -93,7 +93,15 @@
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">
                         {{ isset($freelancer) && $freelancer ? ($freelancer->display_name . 'さんのスキル一覧') : 'スキル販売' }}
                     </h1>
-                    <p class="text-gray-600">AIスキルを持つプロフェッショナルに直接依頼できます</p>
+
+                    @if(isset($freelancer) && $freelancer && !$isOwnSkillList && $currentVisibility === 'public')
+                        <p class="text-sm text-indigo-600 mt-2">
+                            特定ユーザーの公開スキルのみ表示しています。
+                            <a href="{{ route('skills.index', request()->filled('slot') ? ['slot' => request('slot')] : []) }}" class="underline font-medium">
+                                すべてのスキルを見る
+                            </a>
+                        </p>
+                    @endif
                 </div>
                 <div class="flex items-center gap-3">
                     @if($isOwnSkillList)

@@ -84,8 +84,20 @@
         <div class="mb-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">記事</h1>
-                    <p class="text-gray-600">AIに関する知識や経験を共有する記事一覧</p>
+                    @php
+                        // `?user=...` で絞り込まれている場合、一覧に含まれる最初の著者名から表示用の見出しを作る
+                        $targetDisplayName = null;
+                        if (request()->filled('user') && !$articles->isEmpty()) {
+                            $targetArticle = $articles->first();
+                            $targetDisplayName = $targetArticle?->user?->freelancer?->display_name
+                                ?? $targetArticle?->user?->email
+                                ?? null;
+                        }
+                    @endphp
+
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                        {{ $targetDisplayName ? ($targetDisplayName . 'さんの記事一覧') : '記事一覧' }}
+                    </h1>
                     @if(request()->filled('user'))
                         <p class="text-sm text-indigo-600 mt-2">特定ユーザーの公開記事のみ表示しています。<a href="{{ route('articles.index') }}" class="underline font-medium">すべての記事を見る</a></p>
                     @endif
