@@ -166,8 +166,8 @@ class QuestionController extends Controller
 
         $questions = $query->paginate(12)->appends(['tab' => $tab]);
 
-        if (view()->exists('questions.my-questions')) {
-            return view('questions.my-questions', compact('questions', 'tab'));
+        if (view()->exists('my-questions.index')) {
+            return view('my-questions.index', compact('questions', 'tab'));
         }
 
         return view('welcome');
