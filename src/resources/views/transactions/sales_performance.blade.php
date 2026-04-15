@@ -494,6 +494,7 @@
     };
     $statusClass = function (?string $status): string {
         return match ($status) {
+            'waiting_payment' => 'sp-status-progress',
             'in_progress' => 'sp-status-progress',
             'delivered' => 'sp-status-delivered',
             'completed' => 'sp-status-completed',

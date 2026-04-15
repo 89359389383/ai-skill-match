@@ -199,13 +199,16 @@
         : (($me?->role === 'buyer') ? route('buyer.purchased-skills.index') : route('purchased-skills.index'));
 
     $status = $tx->transaction_status;
+    $paymentStatus = $tx->status;
     $statusLabel = match ($status) {
+        'waiting_payment' => '支払い待ち',
         'in_progress' => '取引中',
         'delivered' => '納品済み',
         'completed' => '完了',
         default => '不明',
     };
     $statusClass = match ($status) {
+        'waiting_payment' => 'pscc-status-progress',
         'in_progress' => 'pscc-status-progress',
         'delivered' => 'pscc-status-delivered',
         'completed' => 'pscc-status-completed',
@@ -394,8 +397,16 @@
         </div>
     </div>
 
+    @if ($paymentStatus !== 'paid' || $status === 'waiting_payment')
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+            <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+                支払い確認中です。Webhook 反映まで取引操作はできません。
+            </div>
+        </div>
+    @endif
+
     <!-- アクションボタンエリア -->
-    @if ($isSeller && $status === 'in_progress')
+    @if ($isSeller && $paymentStatus === 'paid' && $status === 'in_progress')
         <div class="pscc-action-area">
             <div class="pscc-action-content">
                 <form method="POST" action="{{ route('transactions.deliver', ['skill_order' => $tx->id]) }}" onsubmit="return confirm('納品します。よろしいですか？');">
@@ -409,7 +420,7 @@
                 </form>
             </div>
         </div>
-    @elseif (!$isSeller && $status === 'delivered')
+    @elseif (!$isSeller && $paymentStatus === 'paid' && $status === 'delivered')
         <div class="pscc-action-area">
             <div class="pscc-action-content">
                 <button class="pscc-approve-button" onclick="showModal()" type="button">
@@ -423,7 +434,7 @@
     @endif
 
     <!-- メッセージ入力エリア（取引完了まで） -->
-    @if ($status !== 'completed')
+    @if ($paymentStatus === 'paid' && !in_array($status, ['waiting_payment', 'completed'], true))
         <div class="pscc-input-area">
             <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ $me?->role === 'buyer'
                 ? route('buyer.transactions.messages.store', ['skill_order' => $tx->id])
@@ -492,7 +503,7 @@
     @endif
 
     <!-- 評価モーダル（購入者×納品済み） -->
-    @if (!$isSeller && $status === 'delivered')
+    @if (!$isSeller && $paymentStatus === 'paid' && $status === 'delivered')
         <div class="pscc-modal-overlay" id="ratingModal">
             <div class="pscc-modal">
                 <button class="pscc-modal-close" onclick="hideModal()" type="button" aria-label="閉じる">

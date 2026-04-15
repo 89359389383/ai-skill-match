@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\StripeCheckoutClientInterface;
+use App\Contracts\StripeTransferClientInterface;
+use App\Services\Stripe\CashierStripeCheckoutClient;
+use App\Services\Stripe\CashierStripeTransferClient;
 use App\Models\SkillOrder;
 use App\Models\DirectConversation;
 use App\Models\Thread;
@@ -18,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(StripeCheckoutClientInterface::class, CashierStripeCheckoutClient::class);
+        $this->app->bind(StripeTransferClientInterface::class, CashierStripeTransferClient::class);
     }
 
     /**
@@ -68,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
                         ->count();
                     $salesOrderCount = SkillOrder::query()
                         ->whereHas('skillListing', fn ($q) => $q->where('freelancer_id', $freelancer->id))
-                        ->whereIn('transaction_status', ['in_progress', 'delivered'])
+                        ->whereIn('transaction_status', ['waiting_payment', 'in_progress', 'delivered'])
                         ->count();
                     if (!empty($freelancer->display_name)) {
                         $userInitial = mb_substr($freelancer->display_name, 0, 1);
