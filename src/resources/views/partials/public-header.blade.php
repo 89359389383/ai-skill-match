@@ -1,5 +1,5 @@
 @php
-    $isOnRolePage = request()->routeIs('freelancer.*') || request()->routeIs('company.*');
+    $isOnRolePage = request()->routeIs('freelancer.*') || request()->routeIs('company.*') || request()->routeIs('buyer.*');
     $navBaseClass = 'nav-link flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200';
     $navDefaultClass = 'text-gray-700 hover:bg-gray-100';
     $navActiveClass = 'bg-[#FC4C0C] text-white shadow-lg';
@@ -50,7 +50,7 @@
 
             <!-- 右側：ログインボタン（未ログイン時）／各種アイコン（ログイン時）／モバイルメニュー -->
             <div class="flex items-center justify-end gap-3">
-                @if(!auth('freelancer')->check() && !auth('company')->check())
+                @if(!auth('freelancer')->check() && !auth('company')->check() && !auth('buyer')->check())
                 <div class="hidden lg:flex items-center">
                     <a href="{{ route('auth.login.form') }}" class="flex items-center gap-2 px-6 py-2.5 bg-[#FC4C0C] text-white rounded-lg font-medium hover:bg-[#FC4C0C] hover:shadow-lg transition-all duration-300">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,6 +249,73 @@
                         </div>
                     </div>
                 </div>
+                @elseif(auth('buyer')->check())
+                @php
+                    $buyerDisplayName = $buyer?->display_name ?? 'ゲストユーザー';
+                    $buyerIconPath = $buyer?->icon_path ?? null;
+                    $buyerAvatarSrc = null;
+                    if (!empty($buyerIconPath)) {
+                        $buyerAvatarSrc = \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim((string) $buyerIconPath, '/'));
+                    }
+                    $unreadDirectMessageCount = $unreadDirectMessageCount ?? 0;
+                @endphp
+                <div class="dropdown relative" id="publicBuyerUserDropdown">
+                    <button class="user-avatar" id="publicBuyerUserDropdownToggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="publicBuyerUserDropdownMenu">
+                        @if($buyerAvatarSrc)
+                            <img src="{{ $buyerAvatarSrc }}" alt="{{ $buyerDisplayName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        @else
+                            {{ $userInitial ?? '購' }}
+                        @endif
+                    </button>
+                    <div class="dropdown-content" id="publicBuyerUserDropdownMenu" role="menu" aria-label="ユーザーメニュー">
+                        <div class="dropdown-profile">
+                            @if($buyerAvatarSrc)
+                                <img src="{{ $buyerAvatarSrc }}" alt="{{ $buyerDisplayName }}" class="dropdown-profile-avatar">
+                            @else
+                                <div class="dropdown-profile-avatar-initial">{{ $userInitial ?? '購' }}</div>
+                            @endif
+                            <div class="dropdown-profile-info">
+                                <div class="dropdown-profile-name">{{ $buyerDisplayName }}</div>
+                                <div class="dropdown-profile-role">購入者</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-nav">
+                            <a href="{{ route('questions.my.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">質問一覧</span>
+                            </a>
+                            <a href="{{ route('my-articles.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                                <span class="dropdown-item-text">記事一覧</span>
+                            </a>
+                            <a href="{{ route('buyer.purchased-skills.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <span class="dropdown-item-text">購入したスキル</span>
+                            </a>
+                            <a href="{{ route('buyer.direct-messages.index') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m5 0a2 2 0 01-2 2H6l-3 3V6a2 2 0 012-2h13a2 2 0 012 2v10z"/></svg>
+                                <span class="dropdown-item-text">メッセージ</span>
+                                @if($unreadDirectMessageCount > 0)
+                                    <span class="dropdown-item-badge dropdown-item-badge-green">新着{{ $unreadDirectMessageCount }}</span>
+                                @endif
+                            </a>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-nav">
+                            <a href="{{ route('buyer.profile.settings') }}" class="dropdown-item" role="menuitem">
+                                <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span class="dropdown-item-text">設定</span>
+                            </a>
+                            <form method="POST" action="{{ route('auth.logout') }}" class="dropdown-item-form">
+                                @csrf
+                                <button type="submit" class="dropdown-item dropdown-item-logout" role="menuitem">
+                                    <svg class="dropdown-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    <span class="dropdown-item-text">ログアウト</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 @endif
                 <button id="publicMobileMenuBtn" class="nav-toggle public-mobile-menu-btn p-2 text-gray-700 hover:bg-gray-100 rounded-lg" type="button" aria-label="メニュー">
                 <svg id="publicMenuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,7 +343,7 @@
                 <a href="{{ route('articles.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium {{ ($isOnRolePage || !request()->routeIs('articles.*') && !request()->routeIs('my-articles.*')) ? 'text-gray-700 hover:bg-gray-100' : 'bg-[#FC4C0C] text-white' }}">
                     <span>記事</span>
                 </a>
-                @if(!auth('freelancer')->check() && !auth('company')->check())
+                @if(!auth('freelancer')->check() && !auth('company')->check() && !auth('buyer')->check())
                 <div class="pt-4 border-t border-gray-200 space-y-2">
                     <a href="{{ route('auth.login.form') }}" class="flex items-center gap-3 px-4 py-3 bg-[#FC4C0C] text-white rounded-lg font-medium">
                         <span>ログイン</span>
@@ -330,7 +397,8 @@
 <style>
     /* 共通ヘッダー右端：ユーザーアイコン/ドロップダウン（roleに依存せず同じ見栄え） */
     #publicFreelancerUserDropdownToggle.user-avatar,
-    #publicCompanyUserDropdownToggle.user-avatar {
+    #publicCompanyUserDropdownToggle.user-avatar,
+    #publicBuyerUserDropdownToggle.user-avatar {
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -349,35 +417,40 @@
         overflow: hidden;
     }
     #publicFreelancerUserDropdownToggle.user-avatar:hover,
-    #publicCompanyUserDropdownToggle.user-avatar:hover {
+    #publicCompanyUserDropdownToggle.user-avatar:hover,
+    #publicBuyerUserDropdownToggle.user-avatar:hover {
         transform: scale(1.06);
         box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
 
     @media (min-width: 640px) {
         #publicFreelancerUserDropdownToggle.user-avatar,
-        #publicCompanyUserDropdownToggle.user-avatar {
+        #publicCompanyUserDropdownToggle.user-avatar,
+        #publicBuyerUserDropdownToggle.user-avatar {
             width: 34px;
             height: 34px;
         }
     }
     @media (min-width: 768px) {
         #publicFreelancerUserDropdownToggle.user-avatar,
-        #publicCompanyUserDropdownToggle.user-avatar {
+        #publicCompanyUserDropdownToggle.user-avatar,
+        #publicBuyerUserDropdownToggle.user-avatar {
             width: 36px;
             height: 36px;
         }
     }
     @media (min-width: 1024px) {
         #publicFreelancerUserDropdownToggle.user-avatar,
-        #publicCompanyUserDropdownToggle.user-avatar {
+        #publicCompanyUserDropdownToggle.user-avatar,
+        #publicBuyerUserDropdownToggle.user-avatar {
             width: 40px;
             height: 40px;
         }
     }
 
     #publicFreelancerUserDropdown .dropdown-content,
-    #publicCompanyUserDropdown .dropdown-content {
+    #publicCompanyUserDropdown .dropdown-content,
+    #publicBuyerUserDropdown .dropdown-content {
         display: none;
         position: absolute;
         right: 0;
@@ -397,17 +470,20 @@
 
     /* ドロップダウン親がヘッダー内で切れないよう */
     #publicFreelancerUserDropdown,
-    #publicCompanyUserDropdown {
+    #publicCompanyUserDropdown,
+    #publicBuyerUserDropdown {
         position: relative;
         overflow: visible;
     }
     #publicFreelancerUserDropdown.is-open .dropdown-content,
-    #publicCompanyUserDropdown.is-open .dropdown-content {
+    #publicCompanyUserDropdown.is-open .dropdown-content,
+    #publicBuyerUserDropdown.is-open .dropdown-content {
         display: block;
     }
 
     #publicFreelancerUserDropdown .dropdown-profile,
-    #publicCompanyUserDropdown .dropdown-profile {
+    #publicCompanyUserDropdown .dropdown-profile,
+    #publicBuyerUserDropdown .dropdown-profile {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -416,7 +492,8 @@
         border-bottom: 1px solid #f3f4f6;
     }
     #publicFreelancerUserDropdown .dropdown-profile-avatar,
-    #publicCompanyUserDropdown .dropdown-profile-avatar {
+    #publicCompanyUserDropdown .dropdown-profile-avatar,
+    #publicBuyerUserDropdown .dropdown-profile-avatar {
         width: 44px;
         height: 44px;
         min-width: 44px;
@@ -425,7 +502,8 @@
         flex-shrink: 0;
     }
     #publicFreelancerUserDropdown .dropdown-profile-avatar-initial,
-    #publicCompanyUserDropdown .dropdown-profile-avatar-initial {
+    #publicCompanyUserDropdown .dropdown-profile-avatar-initial,
+    #publicBuyerUserDropdown .dropdown-profile-avatar-initial {
         width: 44px;
         height: 44px;
         min-width: 44px;
@@ -440,25 +518,30 @@
         flex-shrink: 0;
     }
     #publicFreelancerUserDropdown .dropdown-profile-info,
-    #publicCompanyUserDropdown .dropdown-profile-info { min-width: 0; }
+    #publicCompanyUserDropdown .dropdown-profile-info,
+    #publicBuyerUserDropdown .dropdown-profile-info { min-width: 0; }
     #publicFreelancerUserDropdown .dropdown-profile-name,
-    #publicCompanyUserDropdown .dropdown-profile-name {
+    #publicCompanyUserDropdown .dropdown-profile-name,
+    #publicBuyerUserDropdown .dropdown-profile-name {
         font-size: 1rem;
         font-weight: 600;
         color: #1f2937;
         line-height: 1.3;
     }
     #publicFreelancerUserDropdown .dropdown-profile-role,
-    #publicCompanyUserDropdown .dropdown-profile-role {
+    #publicCompanyUserDropdown .dropdown-profile-role,
+    #publicBuyerUserDropdown .dropdown-profile-role {
         font-size: 0.8125rem;
         color: #6b7280;
         margin-top: 0.125rem;
     }
 
     #publicFreelancerUserDropdown .dropdown-nav,
-    #publicCompanyUserDropdown .dropdown-nav { padding: 0.5rem 0; }
+    #publicCompanyUserDropdown .dropdown-nav,
+    #publicBuyerUserDropdown .dropdown-nav { padding: 0.5rem 0; }
     #publicFreelancerUserDropdown .dropdown-item,
-    #publicCompanyUserDropdown .dropdown-item {
+    #publicCompanyUserDropdown .dropdown-item,
+    #publicBuyerUserDropdown .dropdown-item {
         display: flex;
         align-items: center;
         flex-wrap: nowrap;
@@ -472,12 +555,14 @@
         font-weight: 500;
     }
     #publicFreelancerUserDropdown .dropdown-item:hover,
-    #publicCompanyUserDropdown .dropdown-item:hover {
+    #publicCompanyUserDropdown .dropdown-item:hover,
+    #publicBuyerUserDropdown .dropdown-item:hover {
         background-color: #f9fafb;
         color: #111827;
     }
     #publicFreelancerUserDropdown .dropdown-item-icon,
-    #publicCompanyUserDropdown .dropdown-item-icon {
+    #publicCompanyUserDropdown .dropdown-item-icon,
+    #publicBuyerUserDropdown .dropdown-item-icon {
         width: 20px;
         height: 20px;
         min-width: 20px;
@@ -485,9 +570,11 @@
         color: #6b7280;
     }
     #publicFreelancerUserDropdown .dropdown-item:hover .dropdown-item-icon,
-    #publicCompanyUserDropdown .dropdown-item:hover .dropdown-item-icon { color: #374151; }
+    #publicCompanyUserDropdown .dropdown-item:hover .dropdown-item-icon,
+    #publicBuyerUserDropdown .dropdown-item:hover .dropdown-item-icon { color: #374151; }
     #publicFreelancerUserDropdown .dropdown-item-text,
-    #publicCompanyUserDropdown .dropdown-item-text {
+    #publicCompanyUserDropdown .dropdown-item-text,
+    #publicBuyerUserDropdown .dropdown-item-text {
         flex: 1;
         min-width: 0;
         white-space: nowrap;
@@ -495,7 +582,8 @@
         text-overflow: ellipsis;
     }
     #publicFreelancerUserDropdown .dropdown-item-badge,
-    #publicCompanyUserDropdown .dropdown-item-badge {
+    #publicCompanyUserDropdown .dropdown-item-badge,
+    #publicBuyerUserDropdown .dropdown-item-badge {
         font-size: 0.75rem;
         font-weight: 600;
         padding: 0.2rem 0.5rem;
@@ -503,22 +591,28 @@
         flex-shrink: 0;
     }
     #publicFreelancerUserDropdown .dropdown-item-badge-green,
-    #publicCompanyUserDropdown .dropdown-item-badge-green { background: #22c55e; color: white; }
+    #publicCompanyUserDropdown .dropdown-item-badge-green,
+    #publicBuyerUserDropdown .dropdown-item-badge-green { background: #22c55e; color: white; }
     #publicFreelancerUserDropdown .dropdown-item-badge-blue,
-    #publicCompanyUserDropdown .dropdown-item-badge-blue { background: #3b82f6; color: white; }
+    #publicCompanyUserDropdown .dropdown-item-badge-blue,
+    #publicBuyerUserDropdown .dropdown-item-badge-blue { background: #3b82f6; color: white; }
     #publicFreelancerUserDropdown .dropdown-item-badge-purple,
-    #publicCompanyUserDropdown .dropdown-item-badge-purple { background: #8b5cf6; color: white; }
+    #publicCompanyUserDropdown .dropdown-item-badge-purple,
+    #publicBuyerUserDropdown .dropdown-item-badge-purple { background: #8b5cf6; color: white; }
 
     #publicFreelancerUserDropdown .dropdown-divider,
-    #publicCompanyUserDropdown .dropdown-divider {
+    #publicCompanyUserDropdown .dropdown-divider,
+    #publicBuyerUserDropdown .dropdown-divider {
         height: 1px;
         background-color: #e5e7eb;
         margin: 0.5rem 1rem;
     }
     #publicFreelancerUserDropdown .dropdown-item-form,
-    #publicCompanyUserDropdown .dropdown-item-form { display: block; }
+    #publicCompanyUserDropdown .dropdown-item-form,
+    #publicBuyerUserDropdown .dropdown-item-form { display: block; }
     #publicFreelancerUserDropdown .dropdown-item-logout,
-    #publicCompanyUserDropdown .dropdown-item-logout {
+    #publicCompanyUserDropdown .dropdown-item-logout,
+    #publicBuyerUserDropdown .dropdown-item-logout {
         width: 100%;
         text-align: left;
         background: none;
@@ -535,20 +629,25 @@
         color: #dc2626 !important;
     }
     #publicFreelancerUserDropdown .dropdown-item-logout:hover,
-    #publicCompanyUserDropdown .dropdown-item-logout:hover {
+    #publicCompanyUserDropdown .dropdown-item-logout:hover,
+    #publicBuyerUserDropdown .dropdown-item-logout:hover {
         background-color: #fef2f2 !important;
         color: #b91c1c !important;
     }
     #publicFreelancerUserDropdown .dropdown-item-logout .dropdown-item-icon,
-    #publicCompanyUserDropdown .dropdown-item-logout .dropdown-item-icon { color: #dc2626; }
+    #publicCompanyUserDropdown .dropdown-item-logout .dropdown-item-icon,
+    #publicBuyerUserDropdown .dropdown-item-logout .dropdown-item-icon { color: #dc2626; }
 
-    #publicCompanyUserDropdown .dropdown-item-disabled {
+    #publicCompanyUserDropdown .dropdown-item-disabled,
+    #publicBuyerUserDropdown .dropdown-item-disabled {
         color: #9ca3af;
         cursor: not-allowed;
         opacity: 0.85;
     }
-    #publicCompanyUserDropdown .dropdown-item-disabled:hover { background-color: transparent; color: #9ca3af; }
-    #publicCompanyUserDropdown .dropdown-item-disabled .dropdown-item-icon { color: #9ca3af; }
+    #publicCompanyUserDropdown .dropdown-item-disabled:hover,
+    #publicBuyerUserDropdown .dropdown-item-disabled:hover { background-color: transparent; color: #9ca3af; }
+    #publicCompanyUserDropdown .dropdown-item-disabled .dropdown-item-icon,
+    #publicBuyerUserDropdown .dropdown-item-disabled .dropdown-item-icon { color: #9ca3af; }
 
     #publicMobileMenu {
         z-index: 5001;
@@ -618,6 +717,7 @@
         // 共通ヘッダー内のユーザーアイコン用ドロップダウン
         setupDropdown('publicFreelancerUserDropdown', 'publicFreelancerUserDropdownToggle');
         setupDropdown('publicCompanyUserDropdown', 'publicCompanyUserDropdownToggle');
+        setupDropdown('publicBuyerUserDropdown', 'publicBuyerUserDropdownToggle');
     })();
 </script>
 

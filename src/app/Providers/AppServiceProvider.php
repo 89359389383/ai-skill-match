@@ -195,5 +195,42 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
         });
+
+        View::composer(['layouts.public', 'partials.public-header'], function ($view) {
+            if (Auth::guard('buyer')->check()) {
+                $user = Auth::guard('buyer')->user();
+                $buyer = $user->buyer ?? null;
+
+                $unreadDirectMessageCount = 0;
+                $userInitial = '購';
+
+                if ($buyer) {
+                    $unreadDirectMessageCount = DirectConversation::query()
+                        ->where('is_unread_for_buyer', true)
+                        ->where(function ($q) use ($buyer) {
+                            $q->where('buyer_id', $buyer->id)
+                                ->orWhere(function ($sq) use ($buyer) {
+                                    $sq->where('initiator_id', $buyer->id)
+                                       ->where('initiator_type', 'buyer');
+                                });
+                        })
+                        ->count();
+
+                    if (!empty($buyer->display_name)) {
+                        $userInitial = mb_substr($buyer->display_name, 0, 1);
+                    } elseif (!empty($user->email)) {
+                        $userInitial = mb_substr($user->email, 0, 1);
+                    }
+                } elseif (!empty($user->email)) {
+                    $userInitial = mb_substr($user->email, 0, 1);
+                }
+
+                $view->with([
+                    'buyer' => $buyer,
+                    'unreadDirectMessageCount' => $unreadDirectMessageCount,
+                    'userInitial' => $userInitial,
+                ]);
+            }
+        });
     }
 }

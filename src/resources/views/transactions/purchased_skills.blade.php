@@ -423,6 +423,8 @@
     $tab = request('tab', 'active');
     $currentCount = isset($currentTransactions) ? $currentTransactions->count() : 0;
     $pastCount = isset($pastTransactions) ? $pastTransactions->count() : 0;
+    $viewerRole = auth()->user()?->role;
+    $isBuyer = $viewerRole === 'buyer';
 
     $statusLabel = function (?string $status): string {
         return match ($status) {
@@ -477,14 +479,18 @@
             <div class="ps-tabs">
                 <a
                     class="ps-tab {{ $tab === 'active' ? 'ps-tab-active' : 'ps-tab-inactive' }}"
-                    href="{{ route('purchased-skills.index', array_filter(['tab' => 'active'])) }}"
+                    href="{{ $isBuyer
+                        ? route('buyer.purchased-skills.index', array_filter(['tab' => 'active']))
+                        : route('purchased-skills.index', array_filter(['tab' => 'active'])) }}"
                 >
                     現在取引中
                     <span class="ps-badge ps-badge-orange">{{ $currentCount }}</span>
                 </a>
                 <a
                     class="ps-tab {{ $tab === 'past' ? 'ps-tab-active' : 'ps-tab-inactive' }}"
-                    href="{{ route('purchased-skills.index', array_filter(['tab' => 'past'])) }}"
+                    href="{{ $isBuyer
+                        ? route('buyer.purchased-skills.index', array_filter(['tab' => 'past']))
+                        : route('purchased-skills.index', array_filter(['tab' => 'past'])) }}"
                 >
                     過去の取引
                     <span class="ps-badge ps-badge-gray">{{ $pastCount }}</span>
@@ -504,7 +510,9 @@
                 $pLastItem = $isPaginator ? (int) $paginator->lastItem() : 0;
                 $pLastPage = $isPaginator ? (int) $paginator->lastPage() : 1;
                 $pCurPage = $isPaginator ? (int) $paginator->currentPage() : 1;
-                $baseUrl = route('purchased-skills.index', array_filter(['tab' => $tab]));
+                $baseUrl = $isBuyer
+                    ? route('buyer.purchased-skills.index', array_filter(['tab' => $tab]))
+                    : route('purchased-skills.index', array_filter(['tab' => $tab]));
             @endphp
 
             <p class="text-sm text-gray-600 mb-4">
@@ -527,7 +535,9 @@
                     $isDelivered = ($tx->transaction_status === 'delivered');
                 @endphp
 
-                <a href="{{ route('transactions.show', ['skill_order' => $tx->id]) }}" class="ps-card">
+                <a href="{{ $isBuyer
+                    ? route('buyer.transactions.show', ['skill_order' => $tx->id])
+                    : route('transactions.show', ['skill_order' => $tx->id]) }}" class="ps-card">
                     <div class="ps-card-content">
                         <div class="ps-card-flex">
                             @if (!empty($thumb))

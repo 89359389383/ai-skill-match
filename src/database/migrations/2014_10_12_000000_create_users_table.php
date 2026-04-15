@@ -26,8 +26,8 @@ class CreateUsersTable extends Migration
             // パスワード
             $table->string('password');
             
-            // ロール（企業/フリーランサー）
-            $table->enum('role', ['company', 'freelancer']);
+            // ロール（企業/フリーランサー/購入者）
+            $table->enum('role', ['company', 'freelancer', 'buyer']);
             
             // ログイン記憶用トークン
             $table->rememberToken();

@@ -14,6 +14,7 @@ class DirectConversation extends Model
     protected $fillable = [
         'company_id',
         'freelancer_id',
+        'buyer_id',
         'initiator_type',
         'initiator_id',
         'latest_sender_type',
@@ -21,16 +22,19 @@ class DirectConversation extends Model
         'latest_message_at',
         'is_unread_for_company',
         'is_unread_for_freelancer',
+        'is_unread_for_buyer',
     ];
 
     protected $casts = [
         'company_id' => 'integer',
         'freelancer_id' => 'integer',
+        'buyer_id' => 'integer',
         'initiator_id' => 'integer',
         'latest_sender_id' => 'integer',
         'latest_message_at' => 'datetime',
         'is_unread_for_company' => 'boolean',
         'is_unread_for_freelancer' => 'boolean',
+        'is_unread_for_buyer' => 'boolean',
     ];
 
     public function company(): BelongsTo
@@ -41,6 +45,11 @@ class DirectConversation extends Model
     public function freelancer(): BelongsTo
     {
         return $this->belongsTo(Freelancer::class);
+    }
+
+    public function buyer(): BelongsTo
+    {
+        return $this->belongsTo(Buyer::class, 'buyer_id');
     }
 
     public function messages(): HasMany

@@ -42,8 +42,9 @@ class SkillOrderController extends Controller
 
         $order = $service->purchase($user, $skill_listing);
 
-        // 購入後は取引（チャット）画面へ遷移する
-        return redirect()->route('transactions.show', ['skill_order' => $order->id]);
+        // 購入後は取引（チャット）画面へ遷移する（buyer は専用URLへ）
+        $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
+        return redirect()->route($routeName, ['skill_order' => $order->id]);
     }
 }
 

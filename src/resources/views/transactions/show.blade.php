@@ -194,7 +194,9 @@
         ?? '購入者';
 
     $counterpartyLabel = $isSeller ? "購入者: {$buyerName}" : "出品者: {$sellerName}";
-    $backUrl = $isSeller ? route('sales-performance.index') : route('purchased-skills.index');
+    $backUrl = $isSeller
+        ? route('sales-performance.index')
+        : (($me?->role === 'buyer') ? route('buyer.purchased-skills.index') : route('purchased-skills.index'));
 
     $status = $tx->transaction_status;
     $statusLabel = match ($status) {
@@ -423,7 +425,9 @@
     <!-- メッセージ入力エリア（取引完了まで） -->
     @if ($status !== 'completed')
         <div class="pscc-input-area">
-            <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ route('transactions.messages.store', ['skill_order' => $tx->id]) }}">
+            <form class="pscc-input-content" method="POST" enctype="multipart/form-data" action="{{ $me?->role === 'buyer'
+                ? route('buyer.transactions.messages.store', ['skill_order' => $tx->id])
+                : route('transactions.messages.store', ['skill_order' => $tx->id]) }}">
                 @csrf
                 <input type="file"
                     id="dmAttachment"
@@ -497,7 +501,9 @@
                     </svg>
                 </button>
 
-                <form method="POST" action="{{ route('transactions.complete', ['skill_order' => $tx->id]) }}" onsubmit="return validateRating();">
+                <form method="POST" action="{{ $me?->role === 'buyer'
+                    ? route('buyer.transactions.complete', ['skill_order' => $tx->id])
+                    : route('transactions.complete', ['skill_order' => $tx->id]) }}" onsubmit="return validateRating();">
                     @csrf
                     <input type="hidden" name="rating" id="ratingInput" value="{{ old('rating') }}">
 
