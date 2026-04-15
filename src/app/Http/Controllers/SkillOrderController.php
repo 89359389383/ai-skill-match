@@ -4,29 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\SkillListing;
 use App\Services\SkillOrderService;
+use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SkillOrderController extends Controller
 {
-    /**
-     * スキル購入（ログイン必須）。
-     *
-     * 現段階:
-     * - 決済連携が未実装のため「注文レコードを作る」まで
-     * - 成功後は一覧 or 詳細に戻す（UIが固まり次第調整）
-     */
-    public function store(Request $request, SkillListing $skill_listing, SkillOrderService $service)
-    {
-        // “ログインしているユーザー” は auth.any ミドルウェアで確定させているため
-        // request()->user() で取得できる（Auth::shouldUse が効く）
+    public function store(
+        Request $request,
+        SkillListing $skill_listing,
+        SkillOrderService $orderService,
+        StripeCheckoutService $checkoutService
+    ) {
         $user = $request->user();
-
-        // 念のため（ミドルウェアが外れていた場合の防御）
         if (!$user) {
             return redirect()->route('auth.login.form');
         }
 
-        // 非公開のスキル購入は不可（本人のみ可）
+        // 非公開スキルは本人のみ閲覧可
         if ((int) $skill_listing->status !== 1) {
             $viewerFreelancerId = $user->role === 'freelancer' ? $user->freelancer?->id : null;
             if (!$viewerFreelancerId || (int) $skill_listing->freelancer_id !== (int) $viewerFreelancerId) {
@@ -34,17 +29,33 @@ class SkillOrderController extends Controller
             }
         }
 
-        // ここで「購入ボタン押下」の最低限を validate しておく
-        // 将来: クーポン、数量、要望などを追加する
+        // 自己購入防止（buyer/企業/フリーランス全ロール共通）
+        $sellerUserId = $skill_listing->freelancer?->user_id;
+        if ((int) $user->id === (int) $sellerUserId) {
+            return back()->with('error', '自分の出品は購入できません。');
+        }
+
         $request->validate([
             'confirm' => ['nullable', 'boolean'],
         ]);
 
-        $order = $service->purchase($user, $skill_listing);
+        $order = $orderService->createPendingOrder($user, $skill_listing);
+        $checkoutUrl = $checkoutService->createSessionForOrder($order);
 
-        // 購入後は取引（チャット）画面へ遷移する（buyer は専用URLへ）
-        $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
-        return redirect()->route($routeName, ['skill_order' => $order->id]);
+        Log::info('Checkout start requested.', [
+            'order_id' => $order->id,
+            'buyer_id' => $user->id,
+            'seller_id' => $sellerUserId,
+            'payment_type' => $order->payment_type,
+            'session_id' => $order->stripe_checkout_session_id,
+            'payment_intent_id' => $order->stripe_payment_intent_id,
+            'result' => 'redirect_checkout',
+        ]);
+
+        if (empty($checkoutUrl)) {
+            return back()->with('error', '決済画面の作成に失敗しました。時間をおいて再度お試しください。');
+        }
+
+        return redirect()->away($checkoutUrl);
     }
 }
-
