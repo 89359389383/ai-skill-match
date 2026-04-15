@@ -61,7 +61,9 @@ class DirectMessageController extends Controller
             abort(403);
         }
 
-        $profile = $role === 'company' ? $user->company : $user->freelancer;
+        $profile = $role === 'company'
+            ? $user->company
+            : ($role === 'buyer' ? $user->buyer : $user->freelancer);
         Log::info('[DirectMessageController@index] プロフィール取得', [
             'role' => $role,
             'has_profile' => $profile !== null,
@@ -78,7 +80,9 @@ class DirectMessageController extends Controller
 
         // 同じrole同士の会話も検索できるように、company_id / freelancer_id / initiator_id をチェック
         $profileClass = get_class($profile);
-        $profileType = $profileClass === 'App\Models\Company' ? 'company' : 'freelancer';
+        $profileType = $profileClass === 'App\Models\Company'
+            ? 'company'
+            : ($profileClass === 'App\Models\Buyer' ? 'buyer' : 'freelancer');
 
         // 重要:
         // companyが閲覧しているのに freelancer_id を company.id で突合してしまうと、
@@ -92,17 +96,25 @@ class DirectMessageController extends Controller
                           $sq->where('initiator_id', $profile->id)
                              ->where('initiator_type', 'company');
                       });
-                } else {
+                } elseif ($profile instanceof \App\Models\Freelancer) {
                     $q->where('freelancer_id', $profile->id)
                       ->orWhere(function ($sq) use ($profile) {
                           $sq->where('initiator_id', $profile->id)
                              ->where('initiator_type', 'freelancer');
+                      });
+                } else {
+                    // buyer
+                    $q->where('buyer_id', $profile->id)
+                      ->orWhere(function ($sq) use ($profile) {
+                          $sq->where('initiator_id', $profile->id)
+                             ->where('initiator_type', 'buyer');
                       });
                 }
             })
             ->with([
                 'company',
                 'freelancer',
+                'buyer',
                 'messages' => function ($q) {
                     $q->orderBy('sent_at');
                 },
@@ -127,6 +139,10 @@ class DirectMessageController extends Controller
                     END = ?',
                     [$profile->id]
                 );
+        } elseif ($role === 'buyer') {
+            // buyer側は is_unread_for_buyer をそのまま使う
+            $unreadCountQuery = (clone $baseQuery)
+                ->where('is_unread_for_buyer', true);
         } else {
             // 企業側: viewer companyが関与している会話のみを未読判定する
             // （freelancer_id = company.id を使う分岐は削除して漏れを防ぐ）
@@ -163,14 +179,18 @@ class DirectMessageController extends Controller
                     );
             } else {
                 // 企業側の未読フィルタも同様に viewer company が関与しているものだけに限定
-                $query->where('is_unread_for_company', true)
-                    ->where(function ($q) use ($profile) {
-                        $q->where('company_id', $profile->id)
-                          ->orWhere(function ($sq) use ($profile) {
-                              $sq->where('initiator_id', $profile->id)
-                                 ->where('initiator_type', 'company');
-                          });
-                    });
+                if ($role === 'buyer') {
+                    $query->where('is_unread_for_buyer', true);
+                } else {
+                    $query->where('is_unread_for_company', true)
+                        ->where(function ($q) use ($profile) {
+                            $q->where('company_id', $profile->id)
+                              ->orWhere(function ($sq) use ($profile) {
+                                  $sq->where('initiator_id', $profile->id)
+                                     ->where('initiator_type', 'company');
+                              });
+                        });
+                }
             }
         }
 
@@ -196,7 +216,9 @@ class DirectMessageController extends Controller
         // #endregion agent debug log
 
         // roleに応じたビューを返す
-        $viewName = $role === 'company' ? 'company.direct-messages.index' : 'freelancer.direct-messages.index';
+        $viewName = $role === 'company'
+            ? 'company.direct-messages.index'
+            : ($role === 'buyer' ? 'buyer.direct-messages.index' : 'freelancer.direct-messages.index');
 
         return view($viewName, [
             'conversations' => $conversations,
@@ -233,7 +255,9 @@ class DirectMessageController extends Controller
             abort(403);
         }
 
-        $profile = $role === 'company' ? $user->company : $user->freelancer;
+        $profile = $role === 'company'
+            ? $user->company
+            : ($role === 'buyer' ? $user->buyer : $user->freelancer);
         Log::info('[DirectMessageController@show] プロフィール取得', [
             'role' => $role,
             'has_profile' => $profile !== null,
@@ -287,6 +311,7 @@ class DirectMessageController extends Controller
         $directConversation->load([
             'company',
             'freelancer',
+            'buyer',
             'messages.attachments',
         ]);
 
@@ -311,7 +336,9 @@ class DirectMessageController extends Controller
         // #endregion agent debug log
 
         // roleに応じたビューを返す
-        $viewName = $role === 'company' ? 'company.direct-messages.show' : 'freelancer.direct-messages.show';
+        $viewName = $role === 'company'
+            ? 'company.direct-messages.show'
+            : ($role === 'buyer' ? 'buyer.direct-messages.show' : 'freelancer.direct-messages.show');
 
         return view($viewName, [
             'conversation' => $directConversation,
@@ -363,7 +390,9 @@ class DirectMessageController extends Controller
             abort(403);
         }
 
-        $currentProfile = $currentRole === 'company' ? $currentUser->company : $currentUser->freelancer;
+        $currentProfile = $currentRole === 'company'
+            ? $currentUser->company
+            : ($currentRole === 'buyer' ? $currentUser->buyer : $currentUser->freelancer);
         Log::info('[DirectMessageController@start] プロフィール取得', [
             'current_role' => $currentRole,
             'has_profile' => $currentProfile !== null,
@@ -497,6 +526,7 @@ class DirectMessageController extends Controller
             // 同じrole同士の場合: 片方をNULLにする（テーブル制約対応）
             $companyId = null;
             $freelancerId = null;
+            $buyerId = null;
             $isSameRoleConversation = false;
 
             if ($currentProfile instanceof \App\Models\Company && $counterpart instanceof \App\Models\Company) {
@@ -515,6 +545,28 @@ class DirectMessageController extends Controller
                 $isSameRoleConversation = true;
                 Log::info('[DirectMessageController@start] フリーランス→フリーランス', [
                     'company_id' => $companyId,
+                    'freelancer_id' => $freelancerId,
+                ]);
+            } elseif ($currentProfile instanceof \App\Models\Buyer && $counterpart instanceof \App\Models\Freelancer) {
+                // buyer -> freelancer
+                $companyId = null;
+                $buyerId = $currentProfile->id;
+                $freelancerId = $counterpart->id;
+                $isSameRoleConversation = false;
+                Log::info('[DirectMessageController@start] 購入者→フリーランス', [
+                    'company_id' => $companyId,
+                    'buyer_id' => $buyerId,
+                    'freelancer_id' => $freelancerId,
+                ]);
+            } elseif ($currentProfile instanceof \App\Models\Freelancer && $counterpart instanceof \App\Models\Buyer) {
+                // freelancer -> buyer
+                $companyId = null;
+                $buyerId = $counterpart->id;
+                $freelancerId = $currentProfile->id;
+                $isSameRoleConversation = false;
+                Log::info('[DirectMessageController@start] フリーランス→購入者', [
+                    'company_id' => $companyId,
+                    'buyer_id' => $buyerId,
                     'freelancer_id' => $freelancerId,
                 ]);
             } else {
@@ -593,20 +645,40 @@ class DirectMessageController extends Controller
                     ]);
                 }
             } else {
-                // 異なるrole間は従来通りfirstOrCreate
-                $conversation = DirectConversation::query()->firstOrCreate(
-                    [
-                        'company_id' => $companyId,
-                        'freelancer_id' => $freelancerId,
-                    ],
-                    [
-                        'latest_sender_type' => $currentRole,
-                        'latest_sender_id' => $senderId,
-                        'latest_message_at' => Carbon::now(),
-                        'is_unread_for_company' => $currentRole !== 'company',
-                        'is_unread_for_freelancer' => $currentRole !== 'freelancer',
-                    ]
-                );
+                if ($buyerId !== null) {
+                    // buyer <-> freelancer
+                    $conversation = DirectConversation::query()->firstOrCreate(
+                        [
+                            'buyer_id' => $buyerId,
+                            'freelancer_id' => $freelancerId,
+                        ],
+                        [
+                            'company_id' => null,
+                            'latest_sender_type' => $currentRole,
+                            'latest_sender_id' => $senderId,
+                            'latest_message_at' => Carbon::now(),
+                            'is_unread_for_company' => true, // company_id は常にNULL側
+                            'is_unread_for_freelancer' => $currentRole !== 'freelancer',
+                            'is_unread_for_buyer' => $currentRole !== 'buyer',
+                        ]
+                    );
+                } else {
+                    // company <-> freelancer（従来通り）
+                    $conversation = DirectConversation::query()->firstOrCreate(
+                        [
+                            'company_id' => $companyId,
+                            'freelancer_id' => $freelancerId,
+                        ],
+                        [
+                            'latest_sender_type' => $currentRole,
+                            'latest_sender_id' => $senderId,
+                            'latest_message_at' => Carbon::now(),
+                            'is_unread_for_company' => $currentRole !== 'company',
+                            'is_unread_for_freelancer' => $currentRole !== 'freelancer',
+                            'is_unread_for_buyer' => false,
+                        ]
+                    );
+                }
 
                 Log::info('[DirectMessageController@start] 会話取得/作成完了', [
                     'conversation_id' => $conversation->id,
@@ -658,7 +730,9 @@ class DirectMessageController extends Controller
             return $conversation;
         });
 
-        $redirectUrl = route('direct-messages.show', ['direct_conversation' => $conversation->id]);
+        $redirectUrl = $currentRole === 'buyer'
+            ? route('buyer.direct-messages.show', ['direct_conversation' => $conversation->id])
+            : route('direct-messages.show', ['direct_conversation' => $conversation->id]);
         Log::info('[DirectMessageController@start] リダイレクト', [
             'conversation_id' => $conversation->id,
             'redirect_url' => $redirectUrl,
@@ -677,7 +751,9 @@ class DirectMessageController extends Controller
         // #endregion agent debug log
 
         return redirect()
-            ->route('direct-messages.show', ['direct_conversation' => $conversation->id])
+            ->route($currentRole === 'buyer' ? 'buyer.direct-messages.show' : 'direct-messages.show', [
+                'direct_conversation' => $conversation->id,
+            ])
             ->with('success', 'メッセージを送信しました');
     }
 
@@ -700,7 +776,9 @@ class DirectMessageController extends Controller
             abort(403);
         }
 
-        $profile = $role === 'company' ? $user->company : $user->freelancer;
+        $profile = $role === 'company'
+            ? $user->company
+            : ($role === 'buyer' ? $user->buyer : $user->freelancer);
         if ($profile === null) {
             Log::warning('[DirectMessageController@reply] プロフィール未登録');
             return redirect($role === 'company' ? '/company/profile' : '/freelancer/profile')
@@ -823,7 +901,9 @@ class DirectMessageController extends Controller
         Log::info('[DirectMessageController@reply] 返信完了');
 
         return redirect()
-            ->route('direct-messages.show', ['direct_conversation' => $directConversation->id])
+            ->route($role === 'buyer' ? 'buyer.direct-messages.show' : 'direct-messages.show', [
+                'direct_conversation' => $directConversation->id
+            ])
             ->with('success', 'メッセージを送信しました');
     }
 
@@ -835,6 +915,10 @@ class DirectMessageController extends Controller
 
         if ($user->role === 'freelancer') {
             return 'freelancer';
+        }
+
+        if ($user->role === 'buyer') {
+            return 'buyer';
         }
 
         return null;
@@ -888,6 +972,28 @@ class DirectMessageController extends Controller
             return $profile;
         }
 
+        // 購入者→フリーランス
+        if ($currentRole === 'buyer' && $user->role === 'freelancer') {
+            $profile = $user->freelancer;
+            return $profile;
+        }
+
+        // フリーランス→購入者
+        if ($currentRole === 'freelancer' && $user->role === 'buyer') {
+            $profile = $user->buyer;
+            return $profile;
+        }
+
+        // 企業→購入者（仕様上非対応）
+        if ($currentRole === 'company' && $user->role === 'buyer') {
+            return null;
+        }
+
+        // 購入者→企業（仕様上非対応）
+        if ($currentRole === 'buyer' && $user->role === 'company') {
+            return null;
+        }
+
         Log::warning('[DirectMessageController@resolveCounterpart] 不明な組み合わせ', [
             'current_role' => $currentRole,
             'target_user_role' => $user->role,
@@ -914,13 +1020,15 @@ class DirectMessageController extends Controller
 
     private function checkParticipant(DirectConversation $conversation, string $role, int $profileId): bool
     {
-        // company_id または freelancer_id が一致すれば参加権限あり
+        // company_id / freelancer_id / buyer_id が一致すれば参加権限あり
         // NULLの場合は比較しない
         $companyId = $conversation->company_id;
         $freelancerId = $conversation->freelancer_id;
+        $buyerId = $conversation->buyer_id;
 
         $isCompanyMatch = $companyId !== null && (int) $companyId === $profileId;
         $isFreelancerMatch = $freelancerId !== null && (int) $freelancerId === $profileId;
+        $isBuyerMatch = $buyerId !== null && (int) $buyerId === $profileId;
 
         // 同じrole同士の会話の場合、initiator_id もチェック
         $isInitiatorMatch = false;
@@ -975,7 +1083,7 @@ class DirectMessageController extends Controller
         );
         // #endregion agent debug log
 
-        return $isCompanyMatch || $isFreelancerMatch || $isInitiatorMatch || $isLatestSenderMatch;
+        return $isCompanyMatch || $isFreelancerMatch || $isBuyerMatch || $isInitiatorMatch || $isLatestSenderMatch;
     }
 
     private function markRead(DirectConversation $conversation, string $role, int $viewerProfileId): void
@@ -1015,6 +1123,19 @@ class DirectMessageController extends Controller
                         'conversation_id' => $conversation->id,
                         'is_initiator_based' => $isInitiatorBased,
                         'receiver_id' => $receiverId,
+                        'viewer_id' => $viewerProfileId,
+                    ]);
+                }
+            }
+        }
+
+        if ($role === 'buyer') {
+            if ($conversation->is_unread_for_buyer) {
+                $receiverId = $conversation->buyer_id !== null ? (int) $conversation->buyer_id : null;
+                if ($receiverId !== null && (int) $viewerProfileId === $receiverId) {
+                    $conversation->forceFill(['is_unread_for_buyer' => false])->save();
+                    Log::debug('[DirectMessageController@markRead] buyer既読（受信者）', [
+                        'conversation_id' => $conversation->id,
                         'viewer_id' => $viewerProfileId,
                     ]);
                 }
@@ -1094,6 +1215,7 @@ class DirectMessageController extends Controller
         // initiatorベースの会話: initiatorと異なる参加者が未読
         $isUnreadForCompany = $senderType !== 'company';
         $isUnreadForFreelancer = $senderType !== 'freelancer';
+        $isUnreadForBuyer = $senderType !== 'buyer';
 
         // initiatorベースの会話の場合、initiator_typeに応じて未読状態を調整
         if ($conversation->initiator_id !== null && $conversation->initiator_type !== null) {
@@ -1107,6 +1229,11 @@ class DirectMessageController extends Controller
                 // 送信時点では、受信者はまだページを開いていない前提なので常に true にする。
                 $isUnreadForCompany = true;
                 $isUnreadForFreelancer = true;
+            } elseif ($conversation->initiator_type === 'buyer') {
+                // initiatorがbuyerの場合、buyer側はsenderType次第、相手側(freelancer)は未読扱い
+                $isUnreadForCompany = true;
+                $isUnreadForFreelancer = true;
+                $isUnreadForBuyer = ($senderType !== 'buyer');
             }
         }
 
@@ -1116,6 +1243,7 @@ class DirectMessageController extends Controller
             'latest_message_at' => $now,
             'is_unread_for_company' => $isUnreadForCompany,
             'is_unread_for_freelancer' => $isUnreadForFreelancer,
+            'is_unread_for_buyer' => $isUnreadForBuyer,
         ])->save();
 
         Log::info('[DirectMessageController@sendMessage] メッセージ作成完了', [

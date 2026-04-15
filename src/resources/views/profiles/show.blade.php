@@ -348,8 +348,15 @@
                             @endif
                         </div>
                         @php
-                            $isGuest = !auth()->check() && !auth('freelancer')->check() && !auth('company')->check();
-                            $currentUser = auth('company')->check() ? auth('company')->user() : (auth('freelancer')->check() ? auth('freelancer')->user() : null);
+                            $isGuest = !auth()->check()
+                                && !auth('freelancer')->check()
+                                && !auth('company')->check()
+                                && !auth('buyer')->check();
+                            $currentUser = auth('company')->check()
+                                ? auth('company')->user()
+                                : (auth('freelancer')->check()
+                                    ? auth('freelancer')->user()
+                                    : (auth('buyer')->check() ? auth('buyer')->user() : null));
                             $currentUserId = $currentUser?->id;
                             $isOwnProfile = $currentUserId && $currentUserId === $user->id;
                             // フリーランスまたは企業としてログインしていれば、自分以外のプロフィールにメッセージ送信可能

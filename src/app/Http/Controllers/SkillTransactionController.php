@@ -28,7 +28,7 @@ class SkillTransactionController extends Controller
 
         $base = SkillOrder::query()
             ->where('buyer_user_id', $user->id)
-            ->with(['skillListing.freelancer', 'buyer.company', 'buyer.freelancer']);
+            ->with(['skillListing.freelancer', 'buyer.company', 'buyer.freelancer', 'buyer.buyer']);
 
         $current = (clone $base)
             ->whereIn('transaction_status', ['in_progress', 'delivered'])
@@ -127,6 +127,7 @@ class SkillTransactionController extends Controller
             'skillListing.freelancer',
             'buyer.company',
             'buyer.freelancer',
+            'buyer.buyer',
             'messages.sender.company',
             'messages.sender.freelancer',
         ]);
@@ -168,8 +169,9 @@ class SkillTransactionController extends Controller
 
         // 取引完了後は送信不可（仕様：入力エリアは完了まで）
         if ($skill_order->transaction_status === 'completed') {
+            $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
             return redirect()
-                ->route('transactions.show', ['skill_order' => $skill_order->id])
+                ->route($routeName, ['skill_order' => $skill_order->id])
                 ->with('error', '取引が完了しているため送信できません');
         }
 
@@ -203,7 +205,10 @@ class SkillTransactionController extends Controller
         ]);
 
         return redirect()
-            ->route('transactions.show', ['skill_order' => $skill_order->id])
+            ->route(
+                $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show',
+                ['skill_order' => $skill_order->id]
+            )
             ->with('success', 'メッセージを送信しました');
     }
 
@@ -264,8 +269,9 @@ class SkillTransactionController extends Controller
         }
 
         if ($skill_order->transaction_status !== 'delivered') {
+            $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
             return redirect()
-                ->route('transactions.show', ['skill_order' => $skill_order->id])
+                ->route($routeName, ['skill_order' => $skill_order->id])
                 ->with('error', '現在のステータスでは承認できません');
         }
 
@@ -306,7 +312,10 @@ class SkillTransactionController extends Controller
         });
 
         return redirect()
-            ->route('transactions.show', ['skill_order' => $skill_order->id])
+            ->route(
+                $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show',
+                ['skill_order' => $skill_order->id]
+            )
             ->with('success', '取引を完了しました');
     }
 }

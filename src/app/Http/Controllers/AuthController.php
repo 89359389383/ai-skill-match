@@ -230,6 +230,66 @@ class AuthController extends Controller
     }
 
     /**
+     * 購入者としてログインする（buyer guard）
+     */
+    public function loginBuyer(LoginRequest $request)
+    {
+        $credentials = $request->validated();
+
+        if (!Auth::guard('buyer')->attempt($credentials)) {
+            throw ValidationException::withMessages(['email' => 'メールアドレスまたはパスワードが正しくありません']);
+        }
+
+        $request->session()->regenerate();
+
+        /** @var User $user */
+        $user = Auth::guard('buyer')->user();
+
+        if (!$user || $user->role !== 'buyer') {
+            Auth::guard('buyer')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect('/login')->withErrors(['email' => '購入者アカウントではありません']);
+        }
+
+        // プロフィール未登録なら 2段階目へ
+        if (!$user->buyer()->exists()) {
+            return redirect('/buyer/profile');
+        }
+
+        // 登録済みなら、意図先があればそこへ（なければスキル一覧）
+        return redirect()->intended('/skills');
+    }
+
+    /**
+     * 購入者登録画面を表示する（表示のみ）
+     */
+    public function showBuyerRegister(Request $request)
+    {
+        return view('auth.register.buyer');
+    }
+
+    /**
+     * 購入者ユーザーを作成し、プロフィール入力へ遷移する
+     */
+    public function storeBuyer(RegisterRequest $request)
+    {
+        $validated = $request->validated();
+
+        $user = User::create([
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'buyer',
+        ]);
+
+        Auth::guard('buyer')->login($user);
+        $request->session()->regenerate();
+
+        return redirect('/buyer/profile');
+    }
+
+    /**
      * 企業登録画面を表示する（表示のみ）
      */
     public function showCompanyRegister(Request $request)
@@ -368,6 +428,7 @@ class AuthController extends Controller
         // どちらでログインしていても確実に落とす（同時ログインは要件外だが、安全側）
         Auth::guard('freelancer')->logout();
         Auth::guard('company')->logout();
+        Auth::guard('buyer')->logout();
         Auth::logout();
 
         // セッションを無効化して安全にする

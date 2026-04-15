@@ -372,10 +372,18 @@
                     企業でログイン
                 </button>
 
+                <button
+                    type="submit"
+                    class="login-button"
+                    formaction="{{ route('auth.login.buyer') }}">
+                    購入者でログイン
+                </button>
+
                 <div class="register-links">
                     <a href="{{ route('password.request') }}">パスワードを忘れた方はこちら</a>
                     <a href="{{ route('auth.register.freelancer.form') }}">フリーランスとして新規登録</a>
                     <a href="{{ route('auth.register.company.form') }}">企業として新規登録</a>
+                    <a href="{{ route('auth.register.buyer.form') }}">購入者として新規登録</a>
                 </div>
             </form>
         </div>

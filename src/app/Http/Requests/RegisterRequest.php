@@ -46,17 +46,23 @@ class RegisterRequest extends FormRequest
     protected function passedValidation(): void
     {
         $routeName = $this->route()?->getName();
-        if (!in_array($routeName, ['auth.register.company.store', 'auth.register.freelancer.store'], true)) {
+        if (!in_array($routeName, ['auth.register.company.store', 'auth.register.freelancer.store', 'auth.register.buyer.store'], true)) {
             return;
         }
 
         $isCompany = $routeName === 'auth.register.company.store';
-        Log::info($isCompany ? '[企業登録] RegisterRequest バリデーション成功' : '[フリーランス登録] RegisterRequest バリデーション成功', [
+        $isBuyer = $routeName === 'auth.register.buyer.store';
+        Log::info(
+            $isBuyer
+                ? '[購入者登録] RegisterRequest バリデーション成功'
+                : ($isCompany ? '[企業登録] RegisterRequest バリデーション成功' : '[フリーランス登録] RegisterRequest バリデーション成功'),
+            [
             'route' => $routeName,
             'ip' => $this->ip(),
             'email' => $this->input('email'),
             'password_length' => strlen((string) $this->input('password', '')),
-        ]);
+            ]
+        );
     }
 
     protected function failedValidation(Validator $validator): void

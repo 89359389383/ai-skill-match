@@ -83,6 +83,7 @@ Route::get('/profiles/{user}/skills', [SkillListingController::class, 'skillsByF
     ->whereNumber('user')
     ->name('profiles.skills.index');
 
+// ダイレクトチャット（一覧/詳細：buyer は専用URLに誘導するため別グループで扱う）
 Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::get('/messages', [DirectMessageController::class, 'index'])
         ->name('direct-messages.index');
@@ -90,7 +91,10 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::get('/messages/{direct_conversation}', [DirectMessageController::class, 'show'])
         ->whereNumber('direct_conversation')
         ->name('direct-messages.show');
+});
 
+// ダイレクトチャット（開始/返信：buyer もOK）
+Route::middleware(['auth.any:freelancer,company,buyer'])->group(function () {
     Route::post('/profiles/{user}/messages', [DirectMessageController::class, 'start'])
         ->whereNumber('user')
         ->name('direct-messages.start');
@@ -98,6 +102,16 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::post('/messages/{direct_conversation}/messages', [DirectMessageController::class, 'reply'])
         ->whereNumber('direct_conversation')
         ->name('direct-messages.reply');
+});
+
+// buyer 専用ダイレクトチャットURL
+Route::middleware(['auth:buyer', 'buyer'])->group(function () {
+    Route::get('/buyer/direct-messages', [DirectMessageController::class, 'index'])
+        ->name('buyer.direct-messages.index');
+
+    Route::get('/buyer/direct-messages/{direct_conversation}', [DirectMessageController::class, 'show'])
+        ->whereNumber('direct_conversation')
+        ->name('buyer.direct-messages.show');
 });
 
 /*
@@ -111,6 +125,7 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login
 // ログイン処理（guard別）
 Route::post('/login/freelancer', [AuthController::class, 'loginFreelancer'])->name('auth.login.freelancer');
 Route::post('/login/company', [AuthController::class, 'loginCompany'])->name('auth.login.company');
+Route::post('/login/buyer', [AuthController::class, 'loginBuyer'])->name('auth.login.buyer');
 
 // ログアウト（クリック導線用：POST）
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
@@ -142,6 +157,12 @@ Route::get('/register/company', [AuthController::class, 'showCompanyRegister'])-
 
 // 企業 新規登録 保存（ログイン情報登録）
 Route::post('/register/company', [AuthController::class, 'storeCompany'])->name('auth.register.company.store');
+
+// 購入者 新規登録 表示（ログイン情報登録）
+Route::get('/register/buyer', [AuthController::class, 'showBuyerRegister'])->name('auth.register.buyer.form');
+
+// 購入者 新規登録 保存（ログイン情報登録）
+Route::post('/register/buyer', [AuthController::class, 'storeBuyer'])->name('auth.register.buyer.store');
 
 Route::middleware(['auth:freelancer', 'freelancer'])->group(function () {
     // フリーランス プロフィール 表示
@@ -271,8 +292,21 @@ Route::middleware(['auth:company', 'company'])->group(function () {
     Route::patch('/company/threads/{thread}/application-status', [CompanyMessageController::class, 'updateApplicationStatus'])->name('company.threads.application-status.update');
 });
 
-// 記事投稿/質問投稿（ログイン必須：フリーランス/企業どちらでも可）
-Route::middleware(['auth.any:freelancer,company'])->group(function () {
+// buyer のプロフィール（2段階目）
+Route::middleware(['auth:buyer', 'buyer'])->group(function () {
+    Route::get('/buyer/profile', [\App\Http\Controllers\BuyerProfileController::class, 'create'])
+        ->name('buyer.profile.create');
+    Route::post('/buyer/profile', [\App\Http\Controllers\BuyerProfileController::class, 'store'])
+        ->name('buyer.profile.store');
+
+    Route::get('/buyer/profile/settings', [\App\Http\Controllers\BuyerProfileController::class, 'edit'])
+        ->name('buyer.profile.settings');
+    Route::post('/buyer/profile/settings', [\App\Http\Controllers\BuyerProfileController::class, 'update'])
+        ->name('buyer.profile.settings.update');
+});
+
+// 記事投稿/質問投稿/スキル購入（ログイン必須：フリーランス/企業/購入者どれでも可）
+Route::middleware(['auth.any:freelancer,company,buyer'])->group(function () {
     // 記事投稿
     Route::get('/articles/new', [ArticleController::class, 'create'])->name('articles.create');
     Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
@@ -320,10 +354,10 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::post('/skills/{skill_listing}/inquiry', [SkillInquiryController::class, 'store'])
         ->whereNumber('skill_listing')
         ->name('skills.inquiry');
+});
 
-    // =========================
-    // スキル購入後（取引管理・チャット）
-    // =========================
+// スキル購入後（取引管理・チャット：seller側画面。buyer は下の buyer 専用ルートへ）
+Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::get('/purchased-skills', [SkillTransactionController::class, 'purchasedSkills'])
         ->name('purchased-skills.index');
 
@@ -345,4 +379,23 @@ Route::middleware(['auth.any:freelancer,company'])->group(function () {
     Route::post('/transactions/{skill_order}/complete', [SkillTransactionController::class, 'complete'])
         ->whereNumber('skill_order')
         ->name('transactions.complete');
+});
+
+// buyer のスキル購入後（取引管理）
+Route::middleware(['auth:buyer', 'buyer'])->group(function () {
+    Route::get('/buyer/purchased-skills', [SkillTransactionController::class, 'purchasedSkills'])
+        ->name('buyer.purchased-skills.index');
+
+    Route::get('/buyer/transactions/{skill_order}', [SkillTransactionController::class, 'show'])
+        ->whereNumber('skill_order')
+        ->name('buyer.transactions.show');
+
+    Route::post('/buyer/transactions/{skill_order}/messages', [SkillTransactionController::class, 'storeMessage'])
+        ->whereNumber('skill_order')
+        ->name('buyer.transactions.messages.store');
+
+    // buyer は「完了」側を操作する（deliver は seller 専用）
+    Route::post('/buyer/transactions/{skill_order}/complete', [SkillTransactionController::class, 'complete'])
+        ->whereNumber('skill_order')
+        ->name('buyer.transactions.complete');
 });

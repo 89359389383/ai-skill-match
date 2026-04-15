@@ -141,6 +141,8 @@ class QuestionController extends Controller
             $user = Auth::guard('freelancer')->user();
         } elseif (Auth::guard('company')->check()) {
             $user = Auth::guard('company')->user();
+        } elseif (Auth::guard('buyer')->check()) {
+            $user = Auth::guard('buyer')->user();
         }
 
         if (!$user) {
@@ -183,6 +185,8 @@ class QuestionController extends Controller
             $user = Auth::guard('freelancer')->user();
         } elseif (Auth::guard('company')->check()) {
             $user = Auth::guard('company')->user();
+        } elseif (Auth::guard('buyer')->check()) {
+            $user = Auth::guard('buyer')->user();
         }
 
         if (!$user) {

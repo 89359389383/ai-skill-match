@@ -48,6 +48,11 @@ class DirectConversationMessage extends Model
         return $this->belongsTo(Freelancer::class, 'sender_id');
     }
 
+    public function senderBuyer(): BelongsTo
+    {
+        return $this->belongsTo(Buyer::class, 'sender_id');
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(DirectConversationMessageAttachment::class, 'direct_conversation_message_id')
