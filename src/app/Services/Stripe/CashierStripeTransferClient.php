@@ -13,4 +13,11 @@ class CashierStripeTransferClient implements StripeTransferClientInterface
 
         return $transfer->toArray();
     }
+
+    public function createReversal(string $transferId, array $payload = []): array
+    {
+        $reversal = Cashier::stripe()->transfers->createReversal($transferId, $payload);
+
+        return $reversal->toArray();
+    }
 }

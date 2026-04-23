@@ -11,9 +11,17 @@ use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use UnexpectedValueException;
+use App\Contracts\StripeTransferClientInterface;
 
 class StripeWebhookController extends Controller
 {
+    private StripeTransferClientInterface $transferClient;
+
+    public function __construct(StripeTransferClientInterface $transferClient)
+    {
+        $this->transferClient = $transferClient;
+    }
+
     public function handle(Request $request): JsonResponse
     {
         $payload = $request->getContent();
@@ -81,15 +89,81 @@ class StripeWebhookController extends Controller
             ]);
         }
 
-        if ($event->type !== 'checkout.session.completed') {
-            Log::info('Webhook ignored (event type mismatch).', [
-                'event_id' => $event->id,
-                'event_type' => $event->type,
-            ]);
-
-            return response()->json(['message' => 'ignored']);
+        if ($event->type === 'checkout.session.completed') {
+            return $this->handleCheckoutSessionCompleted($event, $verbose);
         }
 
+        if (in_array($event->type, ['charge.dispute.created', 'charge.dispute.closed'], true)) {
+            return $this->handleDispute($event, $verbose);
+        }
+
+        Log::info('Webhook ignored (event type mismatch).', [
+            'event_id' => $event->id,
+            'event_type' => $event->type,
+        ]);
+
+        return response()->json(['message' => 'ignored']);
+    }
+
+    private function handleDispute($event, bool $verbose): JsonResponse
+    {
+        $dispute = $event->data->object;
+        $paymentIntentId = is_string($dispute->payment_intent ?? null)
+            ? $dispute->payment_intent
+            : (is_object($dispute->payment_intent ?? null) ? ($dispute->payment_intent->id ?? null) : null);
+
+        if (!$paymentIntentId) {
+            Log::error('Stripe webhook missing payment_intent in dispute.', [
+                'event_id' => $event->id,
+            ]);
+            return response()->json(['message' => 'missing payment intent'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($paymentIntentId, $event, $dispute): void {
+                $order = SkillOrder::query()->where('stripe_payment_intent_id', $paymentIntentId)->lockForUpdate()->first();
+                if (!$order) {
+                    Log::error('Order not found for dispute.', [
+                        'event_id' => $event->id,
+                        'payment_intent_id' => $paymentIntentId,
+                    ]);
+                    return;
+                }
+
+                if ($order->stripe_webhook_event_id === $event->id) {
+                    return;
+                }
+
+                $order->dispute_status = $dispute->status ?? 'needs_response';
+                $order->stripe_webhook_event_id = $event->id;
+                $order->last_webhook_type = $event->type;
+                $order->last_webhook_received_at = Carbon::now();
+
+                if ($order->dispute_status === 'lost' && $order->payout_status === SkillOrder::PAYOUT_TRANSFERRED && $order->stripe_transfer_id) {
+                    // Reverse the transfer
+                    $reversalAmount = (int) ($order->amount * 0.9); // assuming 10% fee as in refund service
+                    $reversal = $this->transferClient->createReversal($order->stripe_transfer_id, [
+                        'amount' => $reversalAmount,
+                    ]);
+                    $order->transfer_reversed_at = Carbon::now();
+                    $order->reversal_amount = $reversalAmount;
+                }
+
+                $order->save();
+            });
+        } catch (\Throwable $e) {
+            Log::error('Stripe dispute webhook apply failed.', [
+                'event_id' => $event->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'failed'], 500);
+        }
+
+        return response()->json(['message' => 'ok']);
+    }
+
+    private function handleCheckoutSessionCompleted($event, bool $verbose): JsonResponse
+    {
         $session = $event->data->object;
         $metadataRaw = $session->metadata ?? null;
         // Stripe SDK の metadata は StripeObject のことがあり、(array)キャストだと内部プロパティだけになるため toArray() を優先する

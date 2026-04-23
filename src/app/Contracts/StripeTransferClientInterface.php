@@ -9,4 +9,10 @@ interface StripeTransferClientInterface
      * @return array<string, mixed>
      */
     public function createTransfer(array $payload): array;
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function createReversal(string $transferId, array $payload = []): array;
 }
