@@ -106,10 +106,47 @@ class SkillPaymentFlowTest extends TestCase
         $this->assertDatabaseHas('skill_orders', [
             'id' => $order->id,
             'status' => SkillOrder::STATUS_PAID,
-            'transaction_status' => SkillOrder::TX_IN_PROGRESS,
+            'transaction_status' => SkillOrder::TX_COMPLETED,
             'stripe_webhook_event_id' => $eventId,
             'stripe_checkout_session_id' => 'cs_test_100',
             'stripe_payment_intent_id' => 'pi_test_100',
+        ]);
+    }
+
+    public function test_webhook_marks_instant_order_paid_and_completed(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder(
+            $buyer->id,
+            SkillOrder::STATUS_PENDING,
+            SkillOrder::TX_WAITING_PAYMENT,
+            SkillOrder::PAYMENT_TYPE_INSTANT
+        );
+
+        $eventId = 'evt_test_instant_1';
+        $payload = json_encode([
+            'id' => $eventId,
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_test_instant_1',
+                    'payment_intent' => 'pi_test_instant_1',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                    ],
+                ],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $this->postWebhookPayload($payload)->assertOk();
+
+        $this->assertDatabaseHas('skill_orders', [
+            'id' => $order->id,
+            'status' => SkillOrder::STATUS_PAID,
+            'transaction_status' => SkillOrder::TX_COMPLETED,
+            'stripe_webhook_event_id' => $eventId,
+            'stripe_checkout_session_id' => 'cs_test_instant_1',
+            'stripe_payment_intent_id' => 'pi_test_instant_1',
         ]);
     }
 
@@ -286,7 +323,7 @@ class SkillPaymentFlowTest extends TestCase
         return [$sellerUser, $listing];
     }
 
-    private function createOrder(int $buyerUserId, string $status, string $tx): SkillOrder
+    private function createOrder(int $buyerUserId, string $status, string $tx, string $paymentType = SkillOrder::PAYMENT_TYPE_ESCROW): SkillOrder
     {
         [, $listing] = $this->createListing();
 
@@ -295,7 +332,7 @@ class SkillPaymentFlowTest extends TestCase
             'buyer_user_id' => $buyerUserId,
             'amount' => 10000,
             'status' => $status,
-            'payment_type' => SkillOrder::PAYMENT_TYPE_ESCROW,
+            'payment_type' => $paymentType,
             'transaction_status' => $tx,
             'payout_status' => SkillOrder::PAYOUT_NOT_TRANSFERRED,
             'purchased_at' => Carbon::now(),

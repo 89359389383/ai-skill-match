@@ -1,0 +1,266 @@
+1. 仮注文作成：購入ボタン押下で仮注文が作成される（初期状態）
+①. 購入者として `POST /skills/{id}/purchase` を実行する
+②. 必須入力（`buyer_user_id`,`seller_user_id`,`skill_id`,`amount`,`currency`）を全て正しく渡す
+`orders` が作成される
+`order_status=pending` / `transaction_status=waiting_payment` / `payout_status=not_transferred` / `refund_status=none` / `payment_status=unpaid` になる
+
+2. 仮注文作成：必須入力が欠けた場合は注文を作成しない
+①. `POST /skills/{id}/purchase` を実行する
+②. `amount` または `currency` を欠落させる
+バリデーションエラー（例：`422`）で失敗し、`orders` は作成されない
+
+3. 仮注文作成：金額が不正（0/負）な場合は注文を作成しない
+①. `POST /skills/{id}/purchase` を実行する
+②. `amount=0` または `amount<0` を指定する
+バリデーションエラーで失敗し、`orders` は作成されない
+
+4. Stripe Checkout生成：仮注文成功後にCheckout Sessionが作成されCheckoutへ遷移できる
+①. 購入者として `POST /skills/{id}/purchase` を実行する
+②. 仮注文が作成される
+③. システムが `Stripe Checkout Session` を作成し `checkout_url` を返却する
+`checkout_url` へ遷移できる
+`orders` に `checkout_session_id` と `payment_intent_id` 相当の識別子が保存される
+
+5. Stripe Checkout生成：`metadata` に `order_id` / `buyer_user_id` / `seller_user_id` が含まれる
+①. `POST /skills/{id}/purchase` を実行する
+②. 作成されたCheckout Sessionの `metadata` を確認する（Stripeダッシュボード or モック）
+`metadata.order_id` が存在し、Webhookで注文特定に利用できる状態で保存されている
+
+6. Stripe Checkout生成：`success_url` と `cancel_url` が正しく指定される
+①. `POST /skills/{id}/purchase` を実行する
+②. 作成されたCheckout Sessionの戻り先URLを確認する
+`success_url` は決済後戻り先として設定されている
+`cancel_url` はキャンセル時戻り先として設定されている
+
+7. Stripe Checkout生成：Checkout Session作成に失敗した場合は決済画面を作らず失敗表示する
+①. Stripe APIを失敗させる（無効キー、ネットワーク遮断、モック）
+②. `POST /skills/{id}/purchase` を実行する
+ユーザーに「決済画面の作成に失敗」等の失敗表示が出る
+決済確定は行われない（Webhook待ち状態に進まない）
+
+8. success_url（遷移のみ）：`success_url` はDBの決済確定（`payment_status=paid`）を実行しない
+①. Checkoutを成功させ、ブラウザで `success_url` を開く
+②. `Webhook` はまだ送らない
+表示遷移は行われる
+少なくとも `payment_status` は `paid` に更新されない（決済確定はWebhookのみ）
+
+9. success_url（不一致制御）：`buyer_user_id` が一致しない場合は `403` を返す（決済確定しない）
+①. 別ユーザーで `success_url`（同一`order_id`相当）を開く
+`403` が返る
+DBの決済確定更新は行われない
+
+10. cancel_url：`order_status=pending` かつ未キャンセルの場合、キャンセル時刻が保存される
+①. `POST /skills/{id}/purchase` で仮注文〜Checkout遷移まで行う
+②. Checkoutをキャンセルして `cancel_url` を開く
+`checkout_cancelled_at` が `now()` として保存される（または設計通り）
+
+11. cancel_url：`order_status!=pending` または既にキャンセル済みなら `checkout_cancelled_at` を更新しない
+①. `order_status=active`、または `checkout_cancelled_at` が既に入った注文で `cancel_url` を開く
+②. 取消操作を実行する
+DBの更新は行われない、または既存値を維持する
+
+12. Webhook：署名検証：署名検証失敗時はDB更新せず `400` を返す
+①. `POST /stripe/webhook` に改ざんした `Stripe-Signature` を付与する
+②. Webhookを送信する
+署名検証に失敗し `400` 相当が返る
+`orders` / `webhook_events` は決済確定につながる更新をしない
+
+13. Webhook：イベント種別：`checkout.session.completed` 以外は決済確定に使わない
+①. `POST /stripe/webhook` に `type != checkout.session.completed` のイベントを送る（署名は有効）
+DB更新せず、`orders.payment_status` 等は変化しない（監査は必要なら`failed/ignored`相当）
+
+14. Webhook：metadata不足：`metadata.order_id` が無い/0の場合は `422` を返し更新しない
+①. 署名有効なイベントを送り、`metadata` を欠落させる
+`422` が返る
+`orders` の状態は変更されない
+
+15. Webhook：決済確定：`checkout.session.completed` かつ署名検証OKで注文が確定更新される
+①. 署名有効な `checkout.session.completed` を `POST /stripe/webhook` へ送信する
+②. `metadata.order_id` が存在する状態にする
+`webhook_events` に `event.id` を記録
+`orders` が更新される：
+`paid_via_webhook=true` / `order_status=active` / `payment_status=paid` / `transaction_status=in_progress`
+
+16. Webhook：Webhook以外で確定しない：`success_url` で確定しないことをWebhookと対比で確認する
+①. Checkout完了後、`success_url` を開く
+②. `Webhook` はまだ送らない
+`payment_status` は `unpaid` のまま
+UI表示のみで、DB確定が発生しない
+
+17. Webhook：冪等性：同一 `event.id` の再送は `no-op` で二重更新しない
+①. `event.id=evt_x` の `checkout.session.completed` を送る（成功）
+②. 同じ `event.id=evt_x` で再送する
+2回目は状態変更なし（`orders` / `webhook_events` が二重に増えない）
+
+18. Webhook：冪等性（セッション/決済）：同一 `checkout_session_id` / `payment_intent_id` の二重登録が拒否される
+①. 既に確定済みの `checkout_session_id` と一致するWebhookを再送する
+UNIQUE制約または同等ロジックで二重反映されない
+状態変更なし
+
+19. Webhook：重要イベント再確認：重要イベントでStripe再確認（retrieve）できて最終状態が照合される
+①. 重要イベントのWebhookを受信する
+②. Stripe APIの `PaymentIntent retrieve` / `Charge retrieve` をモックし、呼び出しと照合を確認
+retrieveが実行され、Stripe最終情報とDB更新が整合する（矛盾時は設計に従い失敗/拒否）
+
+20. Webhook：受信後のレスポンス戦略として、重い処理をキューに渡して即時 `2xx` を返す
+①. `checkout.session.completed` を受信し、署名検証は成功させる
+②. 後続処理をキュー/ジョブに回す実装をモックする
+処理の本体は非同期に回り、Webhook応答は即時 `200` 相当で返る
+
+21. Webhook：非同期処理失敗時は失敗ログを残し、自前リトライ対象になる
+①. キューに渡した後の処理を失敗させる
+②. Webhookを送信する
+`webhook_events` に失敗情報または失敗履歴が残り、再処理対象として扱われる
+
+22. 納品（deliver）：正当な販売者が `canDeliver()` を満たす場合、納品できる
+①. 取引が `payment_status=paid` かつ `transaction_status=in_progress` の `orders` を用意
+②. 取引の販売者として `POST /transactions/{order}/deliver` を実行する
+`transaction_status=delivered` になる
+`delivered_at` が保存される（および必要ならsystem message生成）
+
+23. 納品（deliver）：`canDeliver()` を満たさない場合（未払い/状態不一致）は納品できない
+①. `payment_status=unpaid` または `transaction_status!=in_progress` の注文を用意
+②. 販売者として `deliver` を実行
+失敗（例：`403/422`）し、`transaction_status` や `delivered_at` は更新されない
+
+24. 納品（deliver）：販売者本人でない場合は納品できない
+①. 別ユーザーで `POST /transactions/{order}/deliver` を実行
+認可により拒否される（例：`403`）
+DB更新なし
+
+25. 完了（complete）：正当な購入者が `canCompleteEscrow()` を満たす場合、完了できる
+①. `payment_status=paid` かつ `payment_type=escrow` かつ `transaction_status=delivered` を用意
+②. 購入者として `POST /transactions/{order}/complete` を実行する
+`transaction_status=completed` になる
+`completed_at` が保存される
+
+26. 完了（complete）：`canCompleteEscrow()` を満たさない場合は完了できない
+①. `delivered` 前（`transaction_status!=delivered`）の注文を用意
+②. 購入者として `complete` を実行
+失敗し、`transaction_status` / `completed_at` は更新されない
+
+27. 完了（complete）：既に送金済みの場合、二重送金されずに完了のみ進む
+①. `alreadyTransferred=true` の状態（例：`payout_status=transferred` または `stripe_transfer_id` あり）を用意
+②. 購入者として `complete` を実行
+送金処理は実行されない（重複Transferなし）
+注文側は完了状態に更新される（設計に従う）
+
+28. 送金（transfer）：全条件成立時、Stripe Transferが成功し送金状態が更新される
+①. 取引を `transaction_status=completed` にする
+②. `paid_via_webhook=true` / `payout_status=not_transferred` を満たす
+③. 販売者の `transfers capability=active` 且つ `KYC完了` 且つ `dispute_status=none` にする
+④. 送金バッチ/同期処理を実行
+`payout_status=transferred` / `transferred_at` 保存
+`transferred_amount=amountの90%`、`platform_fee_amount=amountの10%` が記録される
+
+29. 送金（transfer）：`paid_via_webhook=false` の場合は送金しない
+①. `transaction_status=completed` だが `paid_via_webhook=false` を用意
+②. 送金を実行
+送金しない
+`payout_status=transfer_failed` になり、`transfer_retry_count` 等が更新される
+
+30. 送金（transfer）：`transaction_status!=completed` の場合は送金しない
+①. `transaction_status=in_progress` 等の注文を用意
+②. 送金を実行
+送金しない
+`payout_status=transfer_failed` 相当の失敗記録が行われる（設計通り）
+
+31. 送金（transfer）：`payout_status!=not_transferred` の場合は二重送金されない
+①. `payout_status=transferred` を用意
+②. 同じ注文で送金処理を再実行
+Transferは作成されない（no-op）
+状態は変化しない
+
+32. 送金（transfer）：販売者の `transfers capability` が無効なら送金失敗として記録・保留する
+①. `transaction_status=completed` 等は満たす
+②. 販売者の `transfers capability!=active` にする
+③. 送金を実行
+送金API呼び出しは実行されない（または失敗扱い）
+`payout_status=transfer_failed` と `last_transfer_error` が保存され、再試行へ回る
+
+33. 送金（transfer）：販売者のKYC未完了なら送金失敗として記録・保留する
+①. `KYC完了=false` の販売者を用意
+②. 送金を実行
+送金しない
+`payout_status=transfer_failed`、`next_retry_at` が設定される
+
+34. 送金（transfer）：`dispute_status!=none` の間は送金を禁止し失敗として記録する
+①. `dispute_status=needs_response` 等を用意
+②. 送金を実行
+Transferは実行されない
+`payout_status=transfer_failed` または設計上の保留状態が記録される
+
+35. 送金（transfer）：送金API失敗時、即終了せずリトライ情報が更新される
+①. Stripe Transferを失敗させる（無効な理由でモック）
+②. 送金を実行
+`payout_status=transfer_failed` に更新
+`transfer_retry_count += 1`、`last_transfer_error` 保存、`next_retry_at` 設定
+
+36. 送金（transfer）：リトライ上限到達時に運営アラートが発報され手動確認へ移る
+①. `transfer_retry_count` を上限-1 の状態にする
+②. 失敗を継続させて再試行を実行
+上限到達後に運営アラートが発報
+手動確認キューへ移動（設計通り）
+
+37. 送金（transfer）：送金のidempotency key重複でも二重送金しない
+①. `idempotency key=transfer_order_{order_id}` で送金を実行（成功）
+②. 同じキーで再実行する
+2回目はDB/Stripeの重複防止により二重Transferが起きない
+`stripe_transfer_id` は同一
+
+38. 返金（refund）：返金（全額）が成功し状態遷移する
+①. 返金対象 `order_id` を選ぶ
+②. `refund_amount`=全額、`refund_reason` を設定
+③. 返金処理を実行
+`refund_status=requested` → `refunding` → `refunded` の遷移になる
+`stripe_refund_id` と `refunded_at` が保存される
+
+39. 返金（refund）：返金（一部）が成功し `partial_refunded` 相当になる
+①. 返金対象を選ぶ
+②. `refund_amount` を一部にする
+③. 返金処理を実行
+`refund_status=partial_refunded` が許可される
+Stripe側返金ID（`stripe_refund_id`）が保存される
+
+40. 返金（refund）：送金済み（`payout_status=transferred`）の場合のみ reversal を実行する
+①. 返金対象の `payout_status=transferred` を満たす状態を用意
+②. 返金処理を実行
+返金先にまずStripe Refundが実行される
+その後に reversal が実行され、`transfer_reversed_at` と `reversal_amount` が保存される
+
+41. 返金（refund）：送金未実行（`payout_status!=transferred`）の場合は reversal しない
+①. 返金対象の `payout_status=not_transferred` を用意
+②. 返金処理を実行
+reversal は実行されない
+`transfer_reversed_at` / `reversal_amount` は更新されない（またはnullのまま）
+
+42. 返金（refund）：返金に失敗した場合の状態
+①. Stripe Refundを失敗させる（モック/異常系）
+②. 返金処理を実行
+`refund_status` が `failed` になる
+取り消し（reversal）は設計上不要/実行されない
+
+43. チャージバック（dispute）：dispute created で注文と紐付いたステータスが更新される
+①. `charge.dispute.created` を `POST /stripe/webhook` で受信（署名有効）
+②. `dispute_id`/`payment_intent_id`/`charge_id` を含める
+`dispute_status` が `needs_response` 等に更新される
+該当 `order_id` と紐付く
+`payment_status=disputed` になる
+
+44. チャージバック（dispute）：`charge.dispute.closed` で `won` / `lost` に遷移し、以後の送金可否を再評価する
+①. `charge.dispute.closed` を `POST /stripe/webhook` で受信（署名有効）
+②. `dispute_id` と結果（勝訴/敗訴）を含める
+`dispute_status=won` または `dispute_status=lost` に更新される
+`dispute_status` が `none` へ戻るか、少なくとも送金再評価の対象になる
+
+45. チャージバック（dispute）：dispute中は送金が禁止される（transfer禁止ルール）
+①. `dispute_status!=none` の状態にする
+②. 送金処理を実行
+Transferは実行されない
+失敗記録・保留状態（`payout_status=transfer_failed` 等）が反映される
+
+46. Webhook監査・レスポンス：webhookの監査記録が成功/失敗で分岐し、署名失敗は即400になる
+①. 署名失敗のWebhookを送る
+②. 別途署名成功で処理成功させる
+失敗時：`400` を返しDB更新しない（少なくとも決済確定更新なし）
+成功時：`webhook_event_status` が `received -> verified -> processed` で監査される

@@ -1,0 +1,145 @@
+## Stripe決済設計：DBカラムとStripeから来る値（現行実装対応）
+
+このドキュメントは、現行コードが Stripe から受け取った値を、`skill_orders` のどのDBカラムに保存しているかを対応づけます。
+
+対象カラムは `@ai-skill-match/src/ドキュメント/Stripe決済設計/機能要件` と `機能フロー` / `メソッドフロー` に出てくるもの、および現行コードが書き込んでいるものです。
+
+前提（読み方）
+- カラム名（例：`stripe_checkout_session_id`）はアプリ側の命名です。
+- ただし「stripe_ で始まるカラムに入る値」は、原則として Stripe のレスポンス（公式フィールド）をそのまま保存しています。
+- 一部のカラム（例：`paid_at` など）は Stripe の値ではなく、アプリ側が `now()` で保存します。
+
+---
+
+## 1. Checkout Session 作成（`Cashier::stripe()->checkout->sessions->create(...)` の戻り値）
+
+保存されるカラムと、Stripeから来る値は次です。
+
+### 1-1. `skill_orders.stripe_checkout_session_id`
+- Stripeフィールド：`session.id`（Checkout Sessionの一意ID）
+- DBカラム名：`stripe_checkout_session_id`（アプリ側の命名、値は `session.id`）
+- 保存タイミング：`StripeCheckoutService::createSessionForOrder()` の最後で `stripe_checkout_session_id` に保存される
+- 保存される値：例 `cs_test_51...XyZ`
+- コード対応（要点）
+  - `StripeCheckoutService` で `$session['id'] ?? null` を `stripe_checkout_session_id` に格納しています。
+  - その後、Webhookでも同様に `session.id` があれば補完（上書き）されます（`StripeWebhookController::handle` 内）。
+
+### 1-2. `skill_orders.stripe_payment_intent_id`
+- Stripeフィールド：`session.payment_intent`（実際の支払いを表すPaymentIntentの参照）
+- DBカラム名：`stripe_payment_intent_id`（アプリ側の命名、値は `session.payment_intent`）
+- 保存タイミング：`StripeCheckoutService::createSessionForOrder()` の最後で `stripe_payment_intent_id` に保存される
+- 保存される値：例 `pi_1...abc`
+- 補足：Webhook側でも `payment_intent` が文字列である場合のみ `stripe_payment_intent_id` を上書きしています（`StripeWebhookController::handle` 内）。
+
+---
+
+## 2. Webhook受信（`checkout.session.completed`）
+
+Webhookは `StripeWebhookController::handle()` で受信し、`checkout.session.completed（決済完了イベント）` のときだけ `SkillOrder` を更新します。
+
+### 2-1. `skill_orders.stripe_checkout_session_id`
+- Stripeフィールド：`session.id`（Webhookの対象Checkout SessionのID）
+- DBカラム名：`stripe_checkout_session_id`（アプリ側の命名、値は `session.id`）
+- 保存タイミング：Webhook処理中（`checkout.session.completed` が一致したとき）
+- 保存される値：例 `cs_test_51...XyZ`
+- 補足（動き）
+  - `StripeCheckoutService` ですでに保存されていることが多いですが、
+  - Webhook処理でも `$session->id ?? $order->stripe_checkout_session_id` の考え方で補完（必要なら上書き）します。
+
+### 2-2. `skill_orders.stripe_payment_intent_id`
+- Stripeフィールド：`session.payment_intent`（Webhookの対象PaymentIntent参照）
+- DBカラム名：`stripe_payment_intent_id`（アプリ側の命名、値は `session.payment_intent`）
+- 保存タイミング：Webhook処理中
+- 保存される値：例 `pi_1...abc`
+- 補足：`payment_intent` が文字列のときだけ `stripe_payment_intent_id` を上書きする設計です。
+
+### 2-3. `skill_orders.stripe_webhook_event_id`
+- Stripeフィールド：`event.id`（Webhookイベントの一意ID）
+- DBカラム名：`stripe_webhook_event_id`（アプリ側の命名、値は `event.id`）
+- 保存タイミング：Webhook処理中（成功時）
+- 保存される値：例 `evt_1...def`
+- コード対応（要点）
+  - `StripeWebhookController::handle` の中で `$order->stripe_webhook_event_id = $event->id` を保存します。
+
+### 2-4. `skill_orders.last_webhook_type`
+- Stripeフィールド：`event.type`（イベント種別）
+- DBカラム名：`last_webhook_type`（アプリ側の命名、値は `event.type`）
+- 保存タイミング：Webhook処理中（成功時）
+- 保存される値：例 `checkout.session.completed`
+- コード対応（要点）
+  - `StripeWebhookController::handle` の中で `$order->last_webhook_type = $event->type` を保存します。
+
+### 2-5. Stripeから来るが「DBには保存されない」値（参照のみ）
+- `session.metadata['order_id']`（注文特定キー）
+  - 保存されない理由：Webhookの対象注文を特定するために使うだけで、DBの別カラムとしては保存していないためです。
+- `session.status` / `session.payment_status`（Webhooks内の状態）
+  - 保存されない理由：現行コードでは「保存」していないため（主に `checkout.session.completed` を受けた事実で確定する設計）
+
+---
+
+## 3. Transfer 作成（`Cashier::stripe()->transfers->create(...)` の戻り値）
+
+送金（`Transfer（送金処理）`）は `PayoutService::transferForOrder()` が呼び出し、戻り値からDBへ保存します。
+
+### 3-1. `skill_orders.stripe_transfer_id`
+- Stripeフィールド：`transfer.id`（送金Transferの一意ID）
+- DBカラム名：`stripe_transfer_id`（アプリ側の命名、値は `transfer.id`）
+- 保存タイミング：`PayoutService::transferForOrder()` の成功時
+- 保存される値：例 `tr_1...transfer`
+- コード対応（要点）
+  - `PayoutService::transferForOrder` が `StripeTransferClientInterface::createTransfer(...)` の戻り値から `['id']` を取り出し、`stripe_transfer_id` に保存します。
+
+---
+
+## 4. 「Stripe値ではなく、アプリ側で `now()` / 例外文字列を保存している」カラム
+
+読み手の誤解を防ぐため、Stripeのフィールドそのものではないものも明記します。
+
+### 4-1. `skill_orders.paid_at`
+- Stripeフィールド：保存していない
+- 実際の保存：`Carbon::now()`（Webhook受信時刻をアプリ側で保存）
+
+### 4-2. `skill_orders.last_webhook_received_at`
+- Stripeフィールド：保存していない
+- 実際の保存：`Carbon::now()`（Webhook受信時刻をアプリ側で保存）
+
+### 4-3. `skill_orders.completed_at`
+- Stripeフィールド：保存していない
+- 実際の保存：Webhook受信時に `Carbon::now()`（要件上「完了」はWebhookのタイミングで確定扱い）
+
+### 4-4. `skill_orders.transferred_at`
+- Stripeフィールド：保存していない
+- 実際の保存：`Carbon::now()`（送金API呼び出し後にアプリ側で保存）
+
+### 4-5. `skill_orders.last_transfer_error`
+- Stripeフィールド：単体のフィールドは保存していない
+- 実際の保存：送金APIで例外が発生したときの例外メッセージ（例外文内に Stripe 由来の情報が含まれる場合があります）
+
+### 4-6. `skill_orders.transfer_attempts`
+- Stripeフィールド：保存していない（内部でカウント）
+- 実際の保存：送金試行のたびに `+1` されるカウンタ（Stripeの値ではありません）
+
+---
+
+## 5. 未実装のため、Stripeから来ても現状は保存されない（可能性が高い）カラム
+
+### 5-1. `skill_orders.stripe_charge_id`
+- 現状：`checkout.session.completed` だけを処理しているため、Charge関連のWebhook（例：`charge.dispute.*` 等）を扱っていません。
+- その結果：`stripe_charge_id` は現状 null のままになり得ます。
+- 追加で作るなら
+  - `charge`（または `payment_intent`）のどの情報をWebhookで受けて保存するかを設計し、`StripeWebhookController` 側で追加処理する必要があります。
+
+---
+
+## 6. 返金（`refund`）/ Dispute（`charge.dispute.*`）/ reversal（送金取り消し）
+
+`機能要件` には `Refund / Dispute / reversal` が登場しますが、現行コード・DBスキーマ上（`SkillOrder` モデル/今回確認した migrations）では、
+- `refund_status`
+- `transfer_reversed_at`
+- `reversal_amount`
+- `dispute_status`
+
+といった保存カラムや、対応する Controller/Service が確認できません。
+
+そのため現行の `Stripeカラム` には「返金/Dispute/送金取り消しでStripeから来るフィールド -> DB保存」の対応表は、作成できていません（新規実装が必要です）。
+

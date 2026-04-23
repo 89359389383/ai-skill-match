@@ -1,0 +1,419 @@
+# Laravel + Stripe Connect（separate charges and transfers）決済システム 機能要件
+
+## ■ 1. 概要
+
+本システムの目的は、スキルマッチングサイトにおいて「購入者の支払いを安全に受け付け、取引完了後に販売者へ正しく送金する」ことです。  
+決済は Stripe Checkout（Stripeの決済画面）を使って実行し、資金はまずプラットフォーム（運営）アカウントで受領します（エスクロー運用）。その後、取引が完了した時点で、販売価格の 90% を販売者へ transfer（送金処理）で送金し、10% を運営手数料として保持します。
+
+### 決済フロー（必須）
+1. 購入者が「購入する」を押す。
+2. Laravel 側で仮注文（pending）を作成する。
+3. Stripe Checkout Session（Stripeで決済を進めるための予約データ）を作成し、購入者を Checkout（Stripeの決済画面）へ遷移させる。
+4. 支払い完了後、Stripe から Webhook（決済結果などを通知してくる仕組み：`checkout.session.completed`）を受信する。
+5. Webhook の署名検証が成功した場合のみ、注文を「決済済み」に更新する。
+6. 取引（納品・確認・完了）を進める。
+7. 送金条件を全て満たした場合のみ、Stripe Transfer（販売者へ送る送金処理）で販売者へ送金する。
+8. 返金やチャージバックが発生した場合は、返金状態と transfer reversal（送金取り消し）状態を追跡する。
+
+> 重要：`success_url（決済後の戻り先URL）` は画面遷移専用です。決済確定処理は絶対に実行しません。
+
+---
+
+## ■ 2. 登場人物
+
+### 購入者
+- スキル商品を購入するユーザー。
+- Stripe Checkout（Stripeの決済画面）で支払いを行う。
+- 納品確認後に取引完了操作を行う。
+
+### 販売者
+- スキル商品を出品するユーザー。
+- Stripe Connect の connected account（販売者本人のStripeアカウント）を持つ。
+- `transfers` capability（Stripe上で「送金できる権限」）有効かつ本人確認完了時のみ送金対象となる。
+
+### 運営
+- プラットフォーム管理者。
+- 決済金を一旦受領する。
+- 取引状態と送金実行を管理する。
+- 返金・チャージバック時の負担主体となる。
+
+### Stripe
+- Checkout（決済のための画面・セッションを扱う仕組み）/ PaymentIntent（実際の支払いそのもの）/ Webhook（Stripeから結果通知を受け取る仕組み）/ Transfer（送金処理）/ Refund（返金）/ Dispute（異議申立て・チャージバック）を提供する外部決済基盤。
+
+---
+
+## ■ 3. 機能一覧
+
+1. 仮注文作成
+2. Stripe Checkout 生成
+3. 決済完了処理（Webhook）
+4. 取引管理（納品・完了）
+5. 送金処理
+6. 返金処理
+7. チャージバック対応
+8. Webhook受信管理
+9. 冪等性管理
+
+---
+
+## ■ 4. 各機能の詳細要件
+
+### 4-1. 仮注文作成
+**何をする機能か**  
+- 決済前に注文レコードを作成し、支払い結果を後で安全に反映できる状態を作る。
+
+**トリガー**  
+- 購入者が購入ボタンを押したとき（`POST /skills/{id}/purchase` など）。
+
+**入力**  
+- buyer_user_id（購入者ユーザーを識別するID）
+- seller_user_id（販売者ユーザーを識別するID）
+- skill_id（どのスキル商品かを識別するID）
+- amount（購入時点で確定させる請求金額）
+- currency（決済通貨。例: jpy）
+
+**出力**  
+- order_id（注文を識別するID）
+- order_status = `pending`（注文は作成済みだが、まだ未決済）
+- transaction_status = `waiting_payment`（取引は支払い待ち）
+- payout_status = `not_transferred`（販売者への送金は未実行）
+- refund_status = `none`（返金処理はまだ発生していない）
+- payment_status = `unpaid`（決済はまだ成立していない）
+
+**状態の変化（ステータス遷移）**  
+- なし（新規作成時の初期状態設定）。
+
+---
+
+### 4-2. Stripe Checkout 生成
+**何をする機能か**  
+- Stripe Checkout Session（Stripeで決済を進めるための予約データ）を作成し、購入者を決済画面へ遷移させる。
+
+**トリガー**  
+- 仮注文作成成功後。
+
+**入力**  
+- order_id（どの注文の決済かを識別するID）
+- amount / currency（請求金額と通貨）
+- `success_url`（決済後の戻り先URL） / `cancel_url`（キャンセル時の戻り先URL）
+- metadata（必須）
+  - order_id（Webhookで注文を特定するためのID）
+  - buyer_user_id（購入者を特定するためのID）
+  - seller_user_id（販売者を特定するためのID）
+
+**出力**  
+- checkout_session_id（Checkoutセッションを識別するID）
+- checkout_url（購入者を遷移させるStripe決済URL）
+- （Stripe側で）payment_intent_id（実際の支払い処理を識別するID）
+
+**状態の変化（ステータス遷移）**  
+- order_status は `pending` のまま（この段階では確定しない）。
+
+---
+
+### 4-3. 決済完了処理（Webhook）
+**何をする機能か**  
+- Stripe Webhook の `checkout.session.completed`（決済が完了した通知イベント）を唯一の決済確定トリガーとして処理し、注文を決済済みに更新する。
+
+**トリガー**  
+- `POST /stripe/webhook` への Stripe 通知受信時。
+
+**入力**  
+- HTTPヘッダ `Stripe-Signature（Stripeが正しい送信元であることを証明する署名）`
+- 生のリクエストボディ（`$request->getContent()`）
+- event payload（type, id, data.object）（イベント種別・イベントID・対象データ本体）
+
+**出力**  
+- paid_via_webhook = true（Webhookで決済確定済みであることを示す）
+- order_status = `active`（注文が取引進行中の状態）
+- payment_status = `paid`（注文の支払いが完了した状態）
+- transaction_status = `in_progress`（取引を進行可能な状態）
+- checkout_session_id / payment_intent_id の保存（どの決済か後で追跡できる状態）
+- webhook_events テーブルへの `event.id（Stripeイベントの一意ID）` 記録（同一イベントの再処理防止）
+
+**状態の変化（ステータス遷移）**  
+- order_status: `pending` → `active`
+- payment_status: `unpaid` → `paid`
+- transaction_status: `waiting_payment` → `in_progress`
+
+**必須ルール**  
+- 署名検証に失敗した場合は DB 更新しない。
+- `checkout.session.completed` 以外で決済確定しない。
+- `success_url（決済後の戻り先URL）` 到達時に決済確定しない。
+- event.id が既処理なら何もしない（冪等）。
+- 重要イベント時は Stripe API で再確認する（`PaymentIntent retrieve`（支払い情報を最終取得） / `Charge retrieve`（請求情報を最終取得）で最終状態を照合）。
+
+---
+
+### 4-4. 取引管理（納品・完了）
+**何をする機能か**  
+- 支払い後の業務進行（納品、検収、完了）を管理する。
+
+**トリガー**  
+- 販売者の納品操作、購入者の完了操作。
+
+**入力**  
+- order_id（どの取引かを識別するID）
+- deliver action / complete action（販売者の納品操作または購入者の完了操作）
+- 操作ユーザーの認可情報
+
+**出力**  
+- transaction_status 更新（取引の進行状態を更新）
+- completed_at（取引完了が確定した日時）
+
+**状態の変化（ステータス遷移）**  
+- transaction_status: `in_progress` → `delivered` → `completed`
+
+**タイムアウト・自動完了ルール（推奨）**  
+- `delivered`（納品済み）から 7日経過したら `completed`（取引完了）へ自動遷移する。
+- 自動完了ジョブ実行時は、対象 order_id / 実行時刻 / 実行結果をログに残す。
+
+---
+
+### 4-5. 送金処理
+**何をする機能か**  
+- 取引完了後、販売者へ Stripe Transfer（販売者へ送る送金処理）を実行する。
+
+**トリガー**  
+- 取引完了時の送金バッチまたは同期処理。
+
+**入力**  
+- order_id（どの注文の送金かを識別するID）
+- amount（送金計算の基準となる注文金額）
+- seller_stripe_account_id（送金先の connected account（販売者本人のStripeアカウント）ID）
+- platform_fee_rate（運営手数料率。固定10%）
+- idempotency key（同じ送金を二重実行しないための一意キー。例: `transfer_order_{order_id}`）
+
+**出力**  
+- transfer_id（Stripe上の送金処理を識別するID）
+- transferred_amount（販売者へ実際に送る金額。= amount の 90%）
+- platform_fee_amount（運営が受け取る手数料金額。= amount の 10%）
+- payout_status = `transferred`（販売者への送金が完了した状態）
+- transferred_at（送金完了日時）
+- transfer_retry_count（送金再試行回数）
+- last_transfer_error（直近の送金失敗理由）
+- next_retry_at（次回の自動再試行予定日時）
+
+**状態の変化（ステータス遷移）**  
+- payout_status: `not_transferred` → `transferred`
+
+**送金実行の必須条件（全て必須）**  
+1. `paid_via_webhook = true（Webhookで決済確定したことを示すフラグ）`
+2. `transaction_status = completed（取引が完了した状態）`
+3. `payout_status = not_transferred（まだ送金していない状態）`
+4. 販売者アカウントで `transfers` capability（送金する権限）が `active（有効）`
+5. 本人確認（KYC（本人確認の略））が完了している
+
+**禁止・注意**  
+- 上記条件未達で送金しない。
+- transfer API（送金API） 呼び出し時は必ず idempotency key を付与する。
+- `dispute_status != none（チャージバック案件あり）` なら送金を禁止する。
+
+**失敗リトライ設計（必須）**  
+- 送金失敗時は `payout_status = transfer_failed（送金失敗）` に更新し、即終了しない。
+- `transfer_retry_count` を +1 し、`last_transfer_error` に Stripe エラー内容を保存する。
+- `next_retry_at` を設定し、キュー/バッチで再試行する（例: 指数バックオフ）。
+- 上限回数到達時は運営アラートを発報し、手動確認キューへ移す。
+
+---
+
+### 4-6. 返金処理
+**何をする機能か**  
+- 購入者への返金をプラットフォーム側で実行し、内部状態を一貫管理する。
+
+**トリガー**  
+- 運営の返金操作、または規約に基づく返金判定。
+
+**入力**  
+- order_id（どの注文の返金かを識別するID）
+- refund_amount（返金する金額。全額または一部）
+- refund_reason（返金理由）
+
+**出力**  
+- stripe_refund_id（Stripe上の返金処理を識別するID）
+- refund_status 更新（返金進行状態を更新）
+- refunded_at（返金完了日時）
+- transfer 済みの場合：reversal（送金取り消し）実行結果（販売者送金の取り消し結果）
+
+**状態の変化（ステータス遷移）**  
+- refund_status: `none（返金なし）` → `requested（返金申請中）` → `refunded（返金完了）`（または `failed（返金失敗）`）
+- transfer 済み時：`transfer_reversed_at（送金取り消しを実行した日時）` と `reversal_amount（取り消した送金金額）` を記録
+
+**必須管理項目**  
+- `refund_status`（返金の進行状態）
+- `transfer_reversed_at`（送金取り消しを実行した日時）
+- `reversal_amount`（取り消した送金金額）
+
+**返金時の処理順（必須）**  
+1. Stripe Refund（Stripe上での返金処理）を実行する（購入者への返金を先に確定）。
+2. `payout_status = transferred（すでに販売者へ送金済み）` の場合のみ reversal を実行する。
+3. reversal（送金取り消し）の結果（成功/失敗、金額、時刻、エラー内容）を記録する。
+
+---
+
+### 4-7. チャージバック対応
+**何をする機能か**  
+- Stripe で dispute（異議申立て・チャージバック）が発生した場合に注文と送金状態を追跡し、必要なら証拠提出フローへ連携する。
+
+**トリガー**  
+- `charge.dispute.created（チャージバック開始通知）` / `charge.dispute.closed（チャージバック終了通知）` Webhook 受信時。
+
+**入力**  
+- dispute_id（Stripe側でこのチャージバック案件を識別する管理番号）
+- payment_intent_id（どの決済かを特定するID） / charge_id（どの請求かを特定するID）
+- dispute_amount / reason / due_by（異議申立て金額・理由・証拠提出の期限）
+
+**出力**  
+- チャージバック管理ステータス更新（対応状況を記録）
+- order への紐付け（どの注文の問題か追跡可能にする）
+- transfer 済みなら reversal（送金取り消し）検討・実行履歴更新（送金取り消しの判断と結果を記録）
+
+**状態の変化（ステータス遷移）**  
+- refund_status とは別軸で dispute 管理状態を保持（例: `none（異議なし）` → `needs_response（対応待ち）` → `won/lost（勝訴/敗訴）`）。
+
+**送金停止ルール（必須）**  
+- `dispute_status != none（チャージバック案件あり）` の間は、当該注文の transfer 実行を禁止する。
+- `dispute_status = won`（異議申立て勝訴）または `dispute_status = lost`（異議申立て敗訴）で確定後に、運営判断で送金可否を再評価する。
+
+---
+
+### 4-8. Webhook受信管理
+**何をする機能か**  
+- Webhook の受信・検証・処理結果を監査可能な形で管理する。
+
+**トリガー**  
+- Stripe からイベント受信時。
+
+**入力**  
+- event.id（Webhookイベントを一意に識別するID）
+- event.type（イベント種別。例: checkout.session.completed）
+- created（Stripe側でイベントが作成された時刻）
+- raw payload（署名検証に使う生のJSONデータ）
+- signature verification result（署名検証の成否）
+
+**出力**  
+- webhook_events レコード（processed（成功）/ failed（失敗））（処理成功か失敗かを保存）
+- 処理時刻、失敗理由、リトライ履歴
+
+**状態の変化（ステータス遷移）**  
+- webhook_event_status: `received（受信済み）` → `verified（署名検証済み）` → `processed（処理完了）`（または `failed（処理失敗）`）
+
+**実装必須**  
+- 署名検証は必ず実施。
+- 生ボディを使って検証。
+- 検証失敗時は即 400 を返す。
+
+**レスポンス戦略（本番必須）**  
+- Webhook 受信時は、DB保存前に重い処理（外部API連打・大量集計）を実行しない。
+- 署名検証と最小限の重複判定後、処理キューへ渡して 2xx（成功応答）を即返却する（推奨は 200）。
+- 非同期処理が失敗した場合は失敗ログを残し、Stripe の再送と自前リトライで再処理する。
+
+---
+
+### 4-9. 冪等性管理
+**何をする機能か**  
+- 同一イベント・同一送金の二重実行を防止する。
+
+**トリガー**  
+- Webhook処理時、送金処理時、返金処理時。
+
+**入力**  
+- Stripe `event.id`（同一Webhookイベントの再処理防止キー）
+- `checkout_session_id`（同一Checkout完了の重複反映防止キー）
+- `payment_intent_id`（同一支払いの重複反映防止キー）
+- transfer idempotency key（同一送金の重複実行防止キー）
+
+**出力**  
+- 一意制約による重複拒否（2回目以降の同一処理をDBレベルで防止）
+- 「既処理」レスポンス（重複イベント受信時に安全に終了）
+
+**状態の変化（ステータス遷移）**  
+- 同一キー検知時は状態変更なし（no-op（何もしない））。
+
+**DB要件（例）**  
+- `orders.checkout_session_id` に UNIQUE（同一セッションの重複登録防止）
+- `orders.payment_intent_id` に UNIQUE（同一決済の重複登録防止）
+- `webhook_events.event_id` に UNIQUE（同一イベントの重複処理防止）
+- `payout_transfers.idempotency_key` に UNIQUE（同一送金の重複実行防止）
+
+---
+
+## ■ 5. 状態管理
+
+### 5-0. payment_status（支払いそのものの状態）
+- `unpaid`（未払い。まだ決済が成立していない）
+- `paid`（支払い完了。Stripe上で決済成立）
+- `partially_refunded`（一部返金済み。支払いの一部のみ返金）
+- `refunded`（全額返金済み）
+- `disputed`（チャージバック発生中）
+
+**主な遷移**  
+- `unpaid` → `paid`（Webhook確定時）
+- `paid` → `partially_refunded` / `refunded`（返金実行時）
+- `paid` → `disputed`（チャージバック発生時）
+
+### 5-1. order_status（注文そのものの状態）
+- `pending`：仮注文作成済み（まだ取引開始前）
+- `active`：取引進行中（決済確定後に業務進行中）
+- `completed`：注文完了（取引終了）
+- `cancelled`：注文キャンセル
+
+**主な遷移**  
+- `pending` → `active`（決済確定後に取引開始）
+- `active` → `completed`（納品・検収完了）
+- `pending` / `active` → `cancelled`（運営または規約に基づく中止）
+
+### 5-2. transaction_status（業務取引状態）
+- `waiting_payment`：支払い待ち
+- `in_progress`：取引進行中
+- `delivered`：納品済み
+- `completed`：購入者完了済み
+- `cancelled`：取引中止
+
+**主な遷移**  
+- `waiting_payment` → `in_progress` → `delivered` → `completed`
+
+### 5-3. payout_status（販売者送金状態）
+- `not_transferred`：未送金
+- `transferred`：送金済み
+- `transfer_failed`：送金失敗
+- `reversed`：送金後にreversal済み
+
+**主な遷移**  
+- `not_transferred` → `transferred`
+- `transferred` → `reversed`（返金/チャージバックに伴うreversal）
+
+### 5-4. refund_status（返金状態）
+- `none`：返金なし
+- `requested`：返金申請中
+- `refunding`：Stripe返金処理中
+- `refunded`：返金完了
+- `failed`：返金失敗
+- `partial_refunded`：一部返金完了
+
+**主な遷移**  
+- `none` → `requested` → `refunding` → `refunded`
+- 失敗時は `refunding` → `failed`
+- 一部返金時は `partial_refunded` を許可
+
+---
+
+## ■ 6. 禁止事項
+
+1. `success_url（決済後の戻り先URL）` で決済確定しない。  
+   - 完了画面表示は許可するが、DB更新（`payment_status` の `paid（支払い完了）` 化）は禁止。
+
+2. Webhook未検証でDB更新しない。  
+   - `Stripe-Signature（Stripeが正しい送信元であることを証明する署名）` 検証失敗時は処理中断し、注文状態を変更しない。
+
+3. 二重処理を許可しない。  
+   - 同一 `event.id（Stripeイベントの一意ID）`、同一 `checkout_session_id（Checkoutセッションを識別するID）`、同一 `payment_intent_id（実際の支払い処理を識別するID）`、同一 `transfer idempotency key（同一送金の重複実行防止キー）` の重複実行は禁止。
+
+4. capability未確認の販売者へ送金しない。  
+   - `transfers` が `active（有効）` でない、または `KYC（本人確認）` 未完了の場合、送金処理は失敗として記録し保留する。
+
+5. APIキーをコードに直書きしない。  
+   - `.env` から読み込み、`sk_live（本番用シークレットキー）` 直書きは禁止。必要に応じて `restricted key（権限を制限したキー）` を利用する。
+
+6. 返金・チャージバックの記録を省略しない。  
+   - `refund_status` / `transfer_reversed_at` / `reversal_amount` を必ず保持する。

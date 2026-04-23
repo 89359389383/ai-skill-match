@@ -353,6 +353,8 @@ Route::middleware(['auth.any:freelancer,company,buyer'])->group(function () {
         ->name('questions.answers.comments.store');
 
     // スキル購入/問い合わせ（将来想定：現時点はルートのみ）
+    Route::get('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'purchaseGet'])
+        ->whereNumber('skill_listing');
     Route::post('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'store'])
         ->whereNumber('skill_listing')
         ->name('skills.purchase');

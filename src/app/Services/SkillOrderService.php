@@ -7,6 +7,7 @@ use App\Models\SkillOrder;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SkillOrderService
 {
@@ -15,8 +16,15 @@ class SkillOrderService
      */
     public function createPendingOrder(User $buyer, SkillListing $listing): SkillOrder
     {
+        Log::info('SkillOrderService createPendingOrder begin.', [
+            'buyer_id' => $buyer->id,
+            'listing_id' => $listing->id,
+            'listing_price' => $listing->price,
+            'listing_status' => $listing->status,
+        ]);
+
         return DB::transaction(function () use ($buyer, $listing): SkillOrder {
-            return SkillOrder::create([
+            $order = SkillOrder::create([
                 'skill_listing_id' => $listing->id,
                 'buyer_user_id' => $buyer->id,
                 'amount' => (int) $listing->price,
@@ -26,6 +34,18 @@ class SkillOrderService
                 'payout_status' => SkillOrder::PAYOUT_NOT_TRANSFERRED,
                 'purchased_at' => Carbon::now(),
             ]);
+
+            Log::info('SkillOrderService createPendingOrder created.', [
+                'order_id' => $order->id,
+                'buyer_id' => $order->buyer_user_id,
+                'skill_listing_id' => $order->skill_listing_id,
+                'amount' => $order->amount,
+                'status' => $order->status,
+                'transaction_status' => $order->transaction_status,
+                'payout_status' => $order->payout_status,
+            ]);
+
+            return $order;
         });
     }
 }

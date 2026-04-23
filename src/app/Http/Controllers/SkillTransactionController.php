@@ -114,6 +114,29 @@ class SkillTransactionController extends Controller
             return redirect()->route('auth.login.form');
         }
 
+        // スキルチャット画面表示の直前に、注文/取引状態をログへ出す
+        // （Webhook反映タイミング差の原因切り分け用）
+        Log::info('SkillTransactionController@show entered.', [
+            'order_id' => $skill_order->id,
+            'viewer_user_id' => $user->id,
+            'viewer_role' => $user->role ?? null,
+            'viewer_is_buyer' => (int) $user->id === (int) $skill_order->buyer_user_id,
+            'viewer_is_seller' => (int) $user->id === (int) ($skill_order->skillListing?->freelancer?->user_id ?? 0),
+            'order_status_before' => $skill_order->status,
+            'transaction_status_before' => $skill_order->transaction_status,
+            'payout_status_before' => $skill_order->payout_status,
+            'paid_at' => $skill_order->paid_at,
+            'completed_at' => $skill_order->completed_at,
+            'stripe_checkout_session_id' => $skill_order->stripe_checkout_session_id,
+            'stripe_webhook_event_id' => $skill_order->stripe_webhook_event_id,
+            'last_webhook_type' => $skill_order->last_webhook_type,
+            'last_webhook_received_at' => $skill_order->last_webhook_received_at,
+            'request_url' => $request->fullUrl(),
+            'request_ip' => $request->ip(),
+            'x_forwarded_for' => $request->header('X-Forwarded-For'),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         $skill_order->load([
             'skillListing.freelancer',
             'buyer.company',
@@ -124,13 +147,52 @@ class SkillTransactionController extends Controller
         ]);
 
         $sellerUserId = $skill_order->skillListing?->freelancer?->user_id;
+
+        Log::info('SkillTransactionController@show relations loaded.', [
+            'order_id' => $skill_order->id,
+            'seller_user_id' => $sellerUserId,
+            'viewer_user_id' => $user->id,
+            'is_seller' => (int) $user->id === (int) $sellerUserId,
+            'transaction_status' => $skill_order->transaction_status,
+            'payout_status' => $skill_order->payout_status,
+            'stripe_webhook_event_id' => $skill_order->stripe_webhook_event_id,
+            'last_webhook_type' => $skill_order->last_webhook_type,
+            'last_webhook_received_at' => $skill_order->last_webhook_received_at,
+            'messages_count' => $skill_order->messages->count(),
+        ]);
+
         if ((int) $user->id !== (int) $skill_order->buyer_user_id && (int) $user->id !== (int) $sellerUserId) {
+            Log::warning('SkillTransactionController@show abort 403 (authz failed).', [
+                'order_id' => $skill_order->id,
+                'viewer_user_id' => $user->id,
+                'buyer_user_id' => $skill_order->buyer_user_id,
+                'seller_user_id' => $sellerUserId,
+            ]);
             abort(403);
         }
 
+        Log::info('SkillTransactionController@show view existence check.', [
+            'order_id' => $skill_order->id,
+            'view_transactions_show_exists' => View::exists('transactions.show'),
+        ]);
+
         if (!View::exists('transactions.show')) {
+            Log::error('SkillTransactionController@show transactions.show view missing.', [
+                'order_id' => $skill_order->id,
+            ]);
             return view('welcome');
         }
+
+        Log::info('SkillTransactionController@show rendering view.', [
+            'order_id' => $skill_order->id,
+            'order_status_after' => $skill_order->status,
+            'transaction_status_after' => $skill_order->transaction_status,
+            'payout_status_after' => $skill_order->payout_status,
+            'stripe_webhook_event_id' => $skill_order->stripe_webhook_event_id,
+            'last_webhook_type' => $skill_order->last_webhook_type,
+            'last_webhook_received_at' => $skill_order->last_webhook_received_at,
+            'messages_count' => $skill_order->messages->count(),
+        ]);
 
         return view('transactions.show', [
             'transaction' => $skill_order,
@@ -272,14 +334,14 @@ class SkillTransactionController extends Controller
         $validated = $request->validated();
 
         try {
-            DB::transaction(function () use ($skill_order, $user, $validated, $payoutService) {
+            $transactionResult = DB::transaction(function () use ($skill_order, $user, $validated, $payoutService) {
                 /** @var SkillOrder $order */
                 $order = SkillOrder::query()->whereKey($skill_order->id)->lockForUpdate()->firstOrFail();
                 if (!$order->canCompleteEscrow()) {
-                    return;
+                    return 'cannot_complete';
                 }
                 if ($order->alreadyTransferred()) {
-                    return;
+                    return 'already_transferred';
                 }
 
                 SkillReview::create([
@@ -326,11 +388,26 @@ class SkillTransactionController extends Controller
                     'transfer_id' => $order->stripe_transfer_id,
                     'result' => 'completed',
                 ]);
+
+                return 'completed';
             });
         } catch (\Throwable $e) {
             $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
             return redirect()->route($routeName, ['skill_order' => $skill_order->id])
                 ->with('error', '取引完了処理に失敗しました: ' . $e->getMessage());
+        }
+
+        // transaction 内で早期 return されたケースでは success を出さない
+        if (($transactionResult ?? null) !== 'completed') {
+            $routeName = $user->role === 'buyer' ? 'buyer.transactions.show' : 'transactions.show';
+            $message = match ($transactionResult) {
+                'already_transferred' => 'この取引は既に完了しています',
+                'cannot_complete' => '現在のステータスでは承認できません',
+                default => '取引完了処理がスキップされました',
+            };
+
+            return redirect()->route($routeName, ['skill_order' => $skill_order->id])
+                ->with('error', $message);
         }
 
         return redirect()->route(

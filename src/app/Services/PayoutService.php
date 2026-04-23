@@ -40,37 +40,40 @@ class PayoutService
      */
     public function transferForOrder(SkillOrder $order): SkillOrder
     {
-        return DB::transaction(function () use ($order): SkillOrder {
-            /** @var SkillOrder $locked */
-            $locked = SkillOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+        // NOTE:
+        // - 失敗状態（PAYOUT_FAILED）は「必ず永続化」する必要があるため、
+        //   DB::transaction の外側で catch して保存する構造に変更する。
+        // - トランザクション内では throw のみを行い、ロールバックにより失敗保存が無効化されないようにする。
+        try {
+            return DB::transaction(function () use ($order): SkillOrder {
+                /** @var SkillOrder $locked */
+                $locked = SkillOrder::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
 
-            if ($locked->alreadyTransferred()) {
-                return $locked;
-            }
+                if ($locked->alreadyTransferred()) {
+                    return $locked;
+                }
 
-            $locked->loadMissing(['skillListing.freelancer']);
-            $locked->transfer_attempts = (int) $locked->transfer_attempts + 1;
+                $locked->loadMissing(['skillListing.freelancer']);
+                $locked->transfer_attempts = (int) $locked->transfer_attempts + 1;
 
-            $connectedAccountId = $locked->skillListing?->freelancer?->stripe_connect_account_id;
-            if (empty($connectedAccountId)) {
-                $locked->payout_status = SkillOrder::PAYOUT_FAILED;
-                $locked->last_transfer_error = 'Stripe connected account が未設定のため送金できません。';
-                $locked->save();
+                $connectedAccountId = $locked->skillListing?->freelancer?->stripe_connect_account_id;
+                if (empty($connectedAccountId)) {
+                    $failureMessage = 'Stripe connected account が未設定のため送金できません。';
 
-                Log::warning('Payout failed: missing connected account.', [
-                    'order_id' => $locked->id,
-                    'buyer_id' => $locked->buyer_user_id,
-                    'seller_id' => optional(optional($locked->skillListing)->freelancer)->user_id,
-                    'payment_type' => $locked->payment_type,
-                    'result' => 'failed',
-                ]);
+                    // ログ出力は維持（保存はトランザクション外で行う）
+                    Log::warning('Payout failed: missing connected account.', [
+                        'order_id' => $locked->id,
+                        'buyer_id' => $locked->buyer_user_id,
+                        'seller_id' => optional(optional($locked->skillListing)->freelancer)->user_id,
+                        'payment_type' => $locked->payment_type,
+                        'result' => 'failed',
+                    ]);
 
-                throw new RuntimeException('connected account missing');
-            }
+                    throw new RuntimeException($failureMessage);
+                }
 
-            $amounts = $this->calculateAmounts((int) $locked->amount);
+                $amounts = $this->calculateAmounts((int) $locked->amount);
 
-            try {
                 $transfer = $this->transferClient->createTransfer([
                     'amount' => $amounts['seller_amount'],
                     'currency' => 'jpy',
@@ -97,22 +100,48 @@ class PayoutService
                 ]);
 
                 return $locked;
-            } catch (Throwable $e) {
-                $locked->payout_status = SkillOrder::PAYOUT_FAILED;
-                $locked->last_transfer_error = mb_substr($e->getMessage(), 0, 1000);
-                $locked->save();
+            });
+        } catch (Throwable $e) {
+            // 失敗状態は「必ずDBに保存」
+            $failedOrder = SkillOrder::query()
+                ->with(['skillListing.freelancer'])
+                ->find($order->id);
 
-                Log::error('Payout transfer failed.', [
-                    'order_id' => $locked->id,
-                    'buyer_id' => $locked->buyer_user_id,
-                    'seller_id' => optional(optional($locked->skillListing)->freelancer)->user_id,
-                    'payment_type' => $locked->payment_type,
-                    'result' => 'failed',
-                    'error' => $e->getMessage(),
-                ]);
+            if ($failedOrder) {
 
-                throw $e;
+                // 競合対策：catch側でFAILED上書きを抑止するために、最新状態に基づき判定
+                $failedOrder->refresh(); // 要件①：必ず最新状態を取得
+
+                // 🔴 送金済みチェック（強化版：要件②）
+                $alreadyTransferred =
+                    $failedOrder->payout_status === SkillOrder::PAYOUT_TRANSFERRED
+                    || !empty($failedOrder->stripe_transfer_id);
+
+                if ($alreadyTransferred) {
+                    // 送金済み状態は絶対に上書きしない（要件④のスキップ分岐）
+                    Log::warning('Payout failed but already transferred; skip FAILED overwrite.', [
+                        'order_id' => $failedOrder->id,
+                        'seller_id' => optional($failedOrder->skillListing?->freelancer)->user_id,
+                        'result' => 'skip_failed_overwrite',
+                        'error' => $e->getMessage(),
+                    ]);
+                } else {
+                    // それ以外の場合のみ FAILED と last_transfer_error を保存（要件④）
+                    $failedOrder->payout_status = SkillOrder::PAYOUT_FAILED;
+                    $failedOrder->last_transfer_error = mb_substr($e->getMessage(), 0, 1000);
+                    $failedOrder->save();
+                }
             }
-        });
+
+            // ログ出力は維持（要件⑤：例外は必ず throw して呼び出し元へ伝播）
+            Log::error('Payout transfer failed.', [
+                'order_id' => $order->id,
+                'seller_id' => optional($failedOrder?->skillListing?->freelancer)->user_id,
+                'result' => 'failed',
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 }
