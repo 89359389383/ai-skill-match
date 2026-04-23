@@ -47,7 +47,12 @@ class EnsureAuthenticatedAnyGuard
             abort(401, 'Unauthenticated.');
         }
 
-        return redirect()->guest(route('auth.login.form'));
+        // Stripe の決済成功/失敗から戻ってきたタイミングでセッションが未判定になることがあるため、
+        // ログイン後に「元の遷移先へ戻す」ための intended URL を保存する。
+        // AuthController@showLoginForm が `redirect` クエリから session('url.intended') を設定する前提。
+        return redirect()->guest(route('auth.login.form', [
+            'redirect' => $request->fullUrl(),
+        ]));
     }
 }
 

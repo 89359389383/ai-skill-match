@@ -273,7 +273,7 @@
                     @endphp
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
                         <a href="{{ route('skills.show', ['skill_listing' => $l->id]) }}" class="block">
-                            <div class="relative h-48 overflow-hidden">
+                            <div class="relative h-52 overflow-hidden">
                                 <img src="{{ $l->thumbnail_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $l->title }}" class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500">
                             </div>
                             <div class="p-6">

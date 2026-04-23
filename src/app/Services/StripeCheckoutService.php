@@ -22,6 +22,15 @@ class StripeCheckoutService
     {
         $order->loadMissing(['skillListing', 'buyer']);
 
+        Log::info('StripeCheckoutService createSessionForOrder begin.', [
+            'order_id' => $order->id,
+            'buyer_id' => $order->buyer_user_id,
+            'listing_id' => $order->skill_listing_id,
+            'amount' => (int) $order->amount,
+            'payment_type' => $order->payment_type,
+            'stripe_checkout_session_id_before' => $order->stripe_checkout_session_id,
+        ]);
+
         $payload = [
             'mode' => 'payment',
             'success_url' => route('skills.checkout.success', ['order' => $order->id]) . '?session_id={CHECKOUT_SESSION_ID}',
@@ -44,6 +53,17 @@ class StripeCheckoutService
             ]],
         ];
 
+        // payloadは秘密情報を含まない想定（ログはキー中心）
+        Log::info('StripeCheckoutService payload prepared.', [
+            'order_id' => $order->id,
+            'mode' => $payload['mode'] ?? null,
+            'client_reference_id' => $payload['client_reference_id'] ?? null,
+            'metadata_order_id' => $payload['metadata']['order_id'] ?? null,
+            'unit_amount' => $payload['line_items'][0]['price_data']['unit_amount'] ?? null,
+            'has_success_url' => !empty($payload['success_url'] ?? null),
+            'has_cancel_url' => !empty($payload['cancel_url'] ?? null),
+        ]);
+
         $session = $this->stripeCheckout->createSession($payload);
 
         $order->forceFill([
@@ -59,6 +79,20 @@ class StripeCheckoutService
             'payment_intent_id' => $session['payment_intent'] ?? null,
         ]);
 
-        return (string) ($session['url'] ?? '');
+        // 重要: Stripe が返す Checkout URL はハッシュ（#...）を含めて完全一致で返却する必要があります。
+        // URL を一切加工せず、そのまま返します。
+        $url = (string) ($session['url'] ?? '');
+        $originalUrlHadHash = $url !== '' && strpos($url, '#') !== false;
+
+        Log::info('StripeCheckoutService createSessionForOrder returning checkout url.', [
+            'order_id' => $order->id,
+            'stripe_checkout_session_id' => $session['id'] ?? null,
+            'payment_intent_id' => $session['payment_intent'] ?? null,
+            'returned_url_length' => strlen($url),
+            'original_url_had_hash' => $originalUrlHadHash,
+            'returned_url_has_hash' => strpos($url, '#') !== false,
+        ]);
+
+        return $url;
     }
 }

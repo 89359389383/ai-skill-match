@@ -429,7 +429,6 @@
     $statusLabel = function (?string $status): string {
         return match ($status) {
             'waiting_payment' => '支払い待ち',
-            'waiting_payment' => '支払い待ち',
             'in_progress' => '取引中',
             'delivered' => '納品済み',
             'completed' => '完了',
