@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Contracts\StripeCheckoutClientInterface;
 use App\Contracts\StripeTransferClientInterface;
+use App\Contracts\StripeRefundClientInterface;
 use App\Services\Stripe\CashierStripeCheckoutClient;
 use App\Services\Stripe\CashierStripeTransferClient;
+use App\Services\Stripe\CashierStripeRefundClient;
 use App\Models\SkillOrder;
 use App\Models\DirectConversation;
 use App\Models\Thread;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(StripeCheckoutClientInterface::class, CashierStripeCheckoutClient::class);
         $this->app->bind(StripeTransferClientInterface::class, CashierStripeTransferClient::class);
+        $this->app->bind(StripeRefundClientInterface::class, CashierStripeRefundClient::class);
     }
 
     /**

@@ -179,6 +179,104 @@ class SkillPaymentFlowTest extends TestCase
         $this->assertSame('evt_dup_1', $order->stripe_webhook_event_id);
     }
 
+    public function test_webhook_fails_with_invalid_signature(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder($buyer->id, SkillOrder::STATUS_PENDING, SkillOrder::TX_WAITING_PAYMENT);
+
+        $payload = json_encode([
+            'id' => 'evt_invalid_sig',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_invalid_sig',
+                    'payment_intent' => 'pi_invalid_sig',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                    ],
+                ],
+            ],
+        ]);
+
+        // intentionally use wrong signature
+        $secret = 'whsec_test';
+        config()->set('services.stripe.webhook_secret', $secret);
+
+        $res = $this->call(
+            'POST',
+            route('stripe.webhook'),
+            [],
+            [],
+            [],
+            [
+                'HTTP_STRIPE_SIGNATURE' => "t=" . time() . ",v1=invalid_signature",
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            $payload
+        );
+
+        $res->assertStatus(400);
+
+        // Assert DB is not updated
+        $this->assertDatabaseHas('skill_orders', [
+            'id' => $order->id,
+            'status' => SkillOrder::STATUS_PENDING,
+            'transaction_status' => SkillOrder::TX_WAITING_PAYMENT,
+        ]);
+    }
+
+    public function test_webhook_ignored_when_event_type_is_not_checkout_session_completed(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder($buyer->id, SkillOrder::STATUS_PENDING, SkillOrder::TX_WAITING_PAYMENT);
+
+        $payload = json_encode([
+            'id' => 'evt_other_event',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_other_event',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->postWebhookPayload($payload)->assertOk()->assertJson(['message' => 'ignored']);
+
+        $this->assertDatabaseHas('skill_orders', [
+            'id' => $order->id,
+            'status' => SkillOrder::STATUS_PENDING,
+        ]);
+    }
+
+    public function test_webhook_returns_422_when_metadata_order_id_is_missing(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder($buyer->id, SkillOrder::STATUS_PENDING, SkillOrder::TX_WAITING_PAYMENT);
+
+        $payload = json_encode([
+            'id' => 'evt_no_metadata',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_no_metadata',
+                    'payment_intent' => 'pi_no_metadata',
+                    // order_id is intentionally missing from metadata
+                    'metadata' => [],
+                ],
+            ],
+        ]);
+
+        $this->postWebhookPayload($payload)->assertStatus(422)->assertJson(['message' => 'missing order id']);
+
+        $this->assertDatabaseHas('skill_orders', [
+            'id' => $order->id,
+            'status' => SkillOrder::STATUS_PENDING,
+        ]);
+    }
+
     public function test_seller_can_deliver_when_paid_in_progress(): void
     {
         [$sellerUser, $listing] = $this->createListing();

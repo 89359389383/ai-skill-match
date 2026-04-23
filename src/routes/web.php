@@ -28,6 +28,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\StripeCheckoutController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\RefundController;
 
 /*
 |--------------------------------------------------------------------------
@@ -366,6 +367,10 @@ Route::middleware(['auth.any:freelancer,company,buyer'])->group(function () {
     Route::get('/skills/orders/{order}/checkout/cancel', [StripeCheckoutController::class, 'cancel'])
         ->whereNumber('order')
         ->name('skills.checkout.cancel');
+
+    Route::post('/skills/orders/{skill_order}/refund', [RefundController::class, 'store'])
+        ->whereNumber('skill_order')
+        ->name('skills.orders.refund');
 
     Route::post('/skills/{skill_listing}/inquiry', [SkillInquiryController::class, 'store'])
         ->whereNumber('skill_listing')

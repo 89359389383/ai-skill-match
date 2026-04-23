@@ -14,6 +14,7 @@ class SkillOrder extends Model
     public const STATUS_PENDING = 'pending';
     public const STATUS_PAID = 'paid';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_REFUNDED = 'refunded';
 
     public const PAYMENT_TYPE_ESCROW = 'escrow';
     public const PAYMENT_TYPE_INSTANT = 'instant';
