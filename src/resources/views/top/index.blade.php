@@ -944,7 +944,7 @@ section {
         <div class="hero-main">
             <div class="hero-content-left">
                 <h1 class="hero-main-title">
-                    AIエンジニアに <span class="hero-highlight-orange">月11万円〜</span> で<br>
+                    AIエンジニアに <span class="hero-highlight-orange">月10万円〜</span> で<br>
                     <span class="hero-highlight-cyan">業務自動化</span> を依頼する。
                 </h1>
                 <p class="hero-subtitle">
