@@ -50,7 +50,16 @@
 
     <div class="p-6 {{ $featuredBest ? 'pt-2' : '' }}">
         <div class="flex items-center gap-3 mb-4">
-            <img src="{{ $answer->author_icon_url ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-10 h-10 rounded-full object-cover bg-sky-100">
+            @php
+                $answerInitial = mb_substr($answer->author_name ?? 'U', 0, 1);
+            @endphp
+            @if(!empty($answer->author_icon_url))
+                <img src="{{ $answer->author_icon_url }}" alt="" class="w-10 h-10 rounded-full object-cover">
+            @else
+                <div class="w-10 h-10 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold">
+                    {{ $answerInitial }}
+                </div>
+            @endif
             <div>
                 <div class="font-medium text-sm text-blue-600">{{ $answer->author_name }}さん</div>
                 <div class="text-xs text-gray-500">{{ $answer->created_at?->format('Y/m/d H:i') }}</div>
@@ -85,7 +94,16 @@
                         $commentBgClass = $isCommentByQuestioner ? 'bg-white border-gray-200' : 'bg-white border-gray-200';
                     @endphp
                     <div class="flex gap-3 {{ $commentBgClass }} rounded-lg p-3 border">
-                        <img src="{{ $comment->author_icon_url ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                        @php
+                            $commentInitial = mb_substr($comment->author_name ?? 'U', 0, 1);
+                        @endphp
+                        @if(!empty($comment->author_icon_url))
+                            <img src="{{ $comment->author_icon_url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                        @else
+                            <div class="w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold flex-shrink-0">
+                                {{ $commentInitial }}
+                            </div>
+                        @endif
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="font-medium text-sm text-gray-900">{{ $comment->author_name }}</span>

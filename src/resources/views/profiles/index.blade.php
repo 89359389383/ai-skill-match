@@ -136,6 +136,7 @@
                                 @php
                                     $iconPath = $f->icon_path ?? null;
                                     $iconSrc = null;
+                                    $fInitial = mb_substr($f->display_name ?? 'U', 0, 1);
 
                                     if (!empty($iconPath)) {
                                         if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
@@ -175,9 +176,20 @@
                                     }
                                 @endphp
 
-                                <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}"
-                                     alt="{{ $f->display_name }}"
-                                     class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
+                                @if(!empty($iconSrc))
+                                    <img
+                                        src="{{ $iconSrc }}"
+                                        alt="{{ $f->display_name }}"
+                                        class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                                    >
+                                @else
+                                    <div
+                                        class="w-24 h-24 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold border-4 border-white shadow-lg"
+                                        aria-label="{{ $f->display_name }}"
+                                    >
+                                        {{ $fInitial }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="pt-16 px-6 pb-6 text-center">

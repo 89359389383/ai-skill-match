@@ -281,8 +281,8 @@
                                     @php $seller = $l->freelancer; @endphp
                                     @php
                                         $iconPath = $seller?->icon_path ?? null;
-                                        $defaultIcon = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop';
-                                        $avatarSrc = $defaultIcon;
+                                        $sellerInitial = mb_substr($seller->display_name ?? 'U', 0, 1);
+                                        $avatarSrc = null;
 
                                         if (!empty($iconPath)) {
                                             if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
@@ -297,7 +297,13 @@
                                             }
                                         }
                                     @endphp
-                                    <img src="{{ $avatarSrc }}" alt="{{ $seller->display_name }}" class="w-8 h-8 rounded-full object-cover">
+                                    @if(!empty($avatarSrc))
+                                        <img src="{{ $avatarSrc }}" alt="{{ $seller->display_name }}" class="w-8 h-8 rounded-full object-cover">
+                                    @else
+                                        <div class="w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold">
+                                            {{ $sellerInitial }}
+                                        </div>
+                                    @endif
                                     <div class="flex-1">
                                         <div class="font-bold text-sm text-gray-900">{{ $seller->display_name ?? '出品者' }}</div>
                                         <div class="text-xs text-gray-500">職種: {{ $seller->job_title ?? '-' }}</div>

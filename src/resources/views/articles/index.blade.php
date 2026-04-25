@@ -207,7 +207,7 @@
                                     @if($avatarSrc)
                                         <img src="{{ $avatarSrc }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
                                     @else
-                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center text-xs font-bold flex-shrink-0">
                                             {{ $authorInitial }}
                                         </div>
                                     @endif

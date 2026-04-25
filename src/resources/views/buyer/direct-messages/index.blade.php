@@ -158,7 +158,7 @@
                                     @if($avatarSrc)
                                         <img src="{{ $avatarSrc }}" alt="{{ $counterpartName }}" class="w-12 h-12 rounded-full object-cover flex-shrink-0">
                                     @else
-                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center font-bold flex-shrink-0">
                                             {{ mb_substr($counterpartName, 0, 1) }}
                                         </div>
                                     @endif

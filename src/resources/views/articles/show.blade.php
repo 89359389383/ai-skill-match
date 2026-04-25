@@ -332,11 +332,11 @@
                             @endif
                         @else
                             @if($isCompanyAuthor)
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                <div class="w-14 h-14 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center text-lg font-bold flex-shrink-0">
                                     {{ $authorInitial }}
                                 </div>
                             @else
-                                <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-14 h-14 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center text-lg font-bold flex-shrink-0">
                                     {{ $authorInitial }}
                                 </a>
                             @endif

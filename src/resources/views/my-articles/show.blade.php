@@ -291,11 +291,11 @@
                                 @endif
                             @else
                                 @if($isCompanyAuthor)
-                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base font-bold flex-shrink-0">
+                                    <div class="w-12 h-12 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center text-base font-bold flex-shrink-0">
                                         {{ $authorInitial }}
                                     </div>
                                 @else
-                                    <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base font-bold flex-shrink-0">
+                                    <a href="{{ route('profiles.show', ['user' => $article->user_id]) }}" class="w-12 h-12 rounded-full bg-[#E5E7EB] text-[#374151] flex items-center justify-center text-base font-bold flex-shrink-0">
                                         {{ $authorInitial }}
                                     </a>
                                 @endif

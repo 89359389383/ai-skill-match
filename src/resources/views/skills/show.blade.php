@@ -28,8 +28,8 @@
                         // 出品者アイコン表示用（null/ローカルパス/storage対応）
                         $seller = $listing->freelancer;
                         $sellerIconPath = $seller?->icon_path ?? null;
-                        $sellerDefaultIcon = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop';
-                        $sellerAvatarSrc = $sellerDefaultIcon;
+                        $sellerAvatarSrc = null;
+                        $sellerInitial = mb_substr($seller->display_name ?? 'U', 0, 1);
 
                         if (!empty($sellerIconPath)) {
                             if (str_starts_with($sellerIconPath, 'http://') || str_starts_with($sellerIconPath, 'https://')) {
@@ -51,11 +51,20 @@
                                 class="shrink-0"
                                 aria-label="出品者プロフィールへ"
                             >
-                                <img
-                                    src="{{ $sellerAvatarSrc }}"
-                                    alt="{{ $seller->display_name ?? '出品者' }}"
-                                    class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
-                                >
+                                @if(!empty($sellerAvatarSrc))
+                                    <img
+                                        src="{{ $sellerAvatarSrc }}"
+                                        alt="{{ $seller->display_name ?? '出品者' }}"
+                                        class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+                                    >
+                                @else
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold border border-gray-200 shadow-sm"
+                                        aria-label="{{ $seller->display_name ?? '出品者' }}"
+                                    >
+                                        {{ $sellerInitial }}
+                                    </div>
+                                @endif
                             </a>
                             <div class="flex flex-col">
                                 <a
@@ -126,8 +135,8 @@
                                         $reviewIconPath = $isCompanyReviewer
                                             ? ($reviewerC?->icon_path ?? null)
                                             : ($reviewerF?->icon_path ?? null);
-                                        $reviewDefaultIcon = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop';
-                                        $reviewAvatarSrc = $reviewDefaultIcon;
+                                        $reviewInitial = mb_substr($reviewName ?? 'U', 0, 1);
+                                        $reviewAvatarSrc = null;
 
                                         if (!empty($reviewIconPath)) {
                                             if (str_starts_with($reviewIconPath, 'http://') || str_starts_with($reviewIconPath, 'https://')) {
@@ -141,7 +150,13 @@
                                             }
                                         }
                                     @endphp
-                                    <img src="{{ $reviewAvatarSrc }}" alt="{{ $reviewName }}" class="w-12 h-12 rounded-full object-cover">
+                                    @if(!empty($reviewAvatarSrc))
+                                        <img src="{{ $reviewAvatarSrc }}" alt="{{ $reviewName }}" class="w-12 h-12 rounded-full object-cover">
+                                    @else
+                                        <div class="w-12 h-12 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold">
+                                            {{ $reviewInitial }}
+                                        </div>
+                                    @endif
                                     <div class="flex-1">
                                         <div class="flex items-center justify-between mb-2">
                                             <div class="font-bold text-gray-900">{{ $reviewName }}</div>

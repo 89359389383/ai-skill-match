@@ -175,6 +175,7 @@
                             @php
                                 $iconPath = $freelancer->icon_path ?? null;
                                 $iconSrc = null;
+                                $freelancerInitial = mb_substr($freelancer->display_name ?? 'U', 0, 1);
                                 if (!empty($iconPath)) {
                                     if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
                                         $iconSrc = $iconPath;
@@ -187,7 +188,16 @@
                                     }
                                 }
                             @endphp
-                            <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&h=160&fit=crop' }}" alt="{{ $freelancer->display_name }}" class="w-40 h-40 object-cover rounded-lg shadow-md">
+                            @if(!empty($iconSrc))
+                                <img src="{{ $iconSrc }}" alt="{{ $freelancer->display_name }}" class="w-40 h-40 object-cover rounded-lg shadow-md">
+                            @else
+                                <div
+                                    class="w-40 h-40 rounded-lg bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold shadow-md"
+                                    aria-label="{{ $freelancer->display_name }}"
+                                >
+                                    {{ $freelancerInitial }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

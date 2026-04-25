@@ -111,7 +111,13 @@
                 $authorName = $authorF?->display_name ?? $authorC?->contact_name ?? $authorC?->name ?? $authorUser?->email ?? '匿名';
             @endphp
             <div class="flex items-center gap-3 pt-6 border-t border-gray-200">
-                <img src="{{ $authorIconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="w-12 h-12 rounded-full object-cover">
+                @if(!empty($authorIconSrc))
+                    <img src="{{ $authorIconSrc }}" alt="" class="w-12 h-12 rounded-full object-cover">
+                @else
+                    <div class="w-12 h-12 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold">
+                        {{ mb_substr($authorName ?? 'U', 0, 1) }}
+                    </div>
+                @endif
                 <div>
                     <div class="font-medium text-gray-900">{{ $authorName }}</div>
                     <div class="text-sm text-gray-500">{{ $question->created_at?->format('Y/m/d H:i') }}</div>

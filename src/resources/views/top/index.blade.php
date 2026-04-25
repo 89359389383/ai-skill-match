@@ -944,7 +944,7 @@ section {
         <div class="hero-main">
             <div class="hero-content-left">
                 <h1 class="hero-main-title">
-                    AIエンジニアに <span class="hero-highlight-orange">月10万円〜</span> で<br>
+                    AIエンジニアに <span class="hero-highlight-orange">月11万円〜</span> で<br>
                     <span class="hero-highlight-cyan">業務自動化</span> を依頼する。
                 </h1>
                 <p class="hero-subtitle">
@@ -1096,6 +1096,7 @@ section {
                                 @php
                                     $iconPath = $f->icon_path ?? null;
                                     $iconSrc = null;
+                                    $fInitial = mb_substr($f->display_name ?? 'U', 0, 1);
 
                                     if (!empty($iconPath)) {
                                         if (str_starts_with($iconPath, 'http://') || str_starts_with($iconPath, 'https://')) {
@@ -1146,9 +1147,20 @@ section {
                                     $allSkills = $f->skills->pluck('name')->merge($f->customSkills->pluck('name'))->values();
                                 @endphp
 
-                                <img src="{{ $iconSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop' }}"
-                                     alt="{{ $f->display_name }}"
-                                     class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
+                                @if(!empty($iconSrc))
+                                    <img
+                                        src="{{ $iconSrc }}"
+                                        alt="{{ $f->display_name }}"
+                                        class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                                    >
+                                @else
+                                    <div
+                                        class="w-24 h-24 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold border-4 border-white shadow-lg"
+                                        aria-label="{{ $f->display_name }}"
+                                    >
+                                        {{ $fInitial }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="pt-16 px-6 pb-6 text-center">
@@ -1255,7 +1267,16 @@ section {
                                     }
                                 }
                             @endphp
-                            <img src="{{ $avatarSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
+                            @php
+                                $authorInitial = mb_substr($authorName ?? 'U', 0, 1);
+                            @endphp
+                            @if(!empty($avatarSrc))
+                                <img src="{{ $avatarSrc }}" alt="" class="author-avatar">
+                            @else
+                                <div class="author-avatar bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold text-xs">
+                                    {{ $authorInitial }}
+                                </div>
+                            @endif
                             <div>
                                 <div class="author-name">{{ $authorName }}</div>
                                 <div class="question-date">{{ $q->created_at?->format('Y/m/d') }}</div>
@@ -1291,7 +1312,16 @@ section {
                         <div class="skill-content">
                             <div class="seller-info">
                                 @php $seller = $l->freelancer; @endphp
-                                <img src="{{ !empty($seller?->icon_path) ? asset('storage/' . $seller->icon_path) : 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop' }}" alt="{{ $seller->display_name }}" class="seller-avatar">
+                                            @php
+                                                $sellerInitial = mb_substr($seller?->display_name ?? 'U', 0, 1);
+                                            @endphp
+                                            @if(!empty($seller?->icon_path))
+                                                <img src="{{ asset('storage/' . $seller->icon_path) }}" alt="{{ $seller->display_name }}" class="seller-avatar">
+                                            @else
+                                                <div class="seller-avatar bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold text-xs">
+                                                    {{ $sellerInitial }}
+                                                </div>
+                                            @endif
                                 <div>
                                     <div class="seller-name">{{ $seller->display_name ?? '出品者' }}</div>
                                     <div class="seller-role">職種: {{ $seller->job_title ?? '-' }}</div>
@@ -1361,7 +1391,16 @@ section {
                                         }
                                     }
                                 @endphp
-                                <img src="{{ $avatarSrc ?? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' }}" alt="" class="author-avatar">
+                                @php
+                                    $authorInitial = mb_substr($authorName ?? 'U', 0, 1);
+                                @endphp
+                                @if(!empty($avatarSrc))
+                                    <img src="{{ $avatarSrc }}" alt="" class="author-avatar">
+                                @else
+                                    <div class="author-avatar bg-[#E5E7EB] flex items-center justify-center text-[#374151] font-bold text-xs">
+                                        {{ $authorInitial }}
+                                    </div>
+                                @endif
                                 <div>
                                     <div class="author-name">{{ $authorName }}</div>
                                     <div class="question-date">{{ $a->published_at?->format('Y/m/d') ?? $a->created_at?->format('Y/m/d') }}</div>

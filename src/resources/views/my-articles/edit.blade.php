@@ -747,17 +747,6 @@
                                     </span>
                                     引用
                                 </div>
-                                <div class="menu-item" data-action="toc">
-                                    <span class="menu-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M4 6h16"></path>
-                                            <path d="M4 10h16"></path>
-                                            <path d="M4 14h10"></path>
-                                            <path d="M4 18h7"></path>
-                                        </svg>
-                                    </span>
-                                    目次
-                                </div>
                                 <div class="menu-item" data-action="hr">
                                     <span class="menu-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
