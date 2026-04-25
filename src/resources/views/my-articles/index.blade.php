@@ -121,7 +121,7 @@
                 @foreach($articles as $a)
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden flex flex-col">
                         <a href="{{ route('articles.show', ['article' => $a->id]) }}" class="block flex-1">
-                            <div class="relative h-48 overflow-hidden">
+                            <div class="relative h-52 overflow-hidden">
                                 <img src="{{ $a->eyecatch_image_url ?? 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop' }}" alt="{{ $a->title }}" class="w-full h-full object-cover">
                             </div>
                             <div class="p-6">

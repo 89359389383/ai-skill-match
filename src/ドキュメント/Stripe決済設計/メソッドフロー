@@ -1,0 +1,263 @@
+## Stripe決済設計：メソッドフロー（現行コードに対応）
+
+# ✅ A. 購入 → 仮注文作成 → Stripe Checkout セッション作成 → Checkoutへ遷移
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. 購入ボタン押下（ルート：`POST /skills/{skill_listing}/purchase`）**
+
+→ Controller：`App\Http\Controllers\SkillOrderController::store`
+
+→ ここで呼ぶ既存メソッドは次の2つです。
+
+**2. `SkillOrderService::createPendingOrder($user, $skill_listing)`**
+
+→ 既存メソッド：`App\Services\SkillOrderService::createPendingOrder`
+
+→ 成果：`skill_orders` に仮注文を作成
+
+→ 保存する値（要件の対応）
+  - `status = pending（仮注文）`
+  - `payment_type = escrow（エスクロー運用の支払い種別）`
+  - `transaction_status = waiting_payment（支払い待ち状態）`
+  - `payout_status = not_transferred（未送金状態）`
+  - `purchased_at = now()`
+
+**3. `StripeCheckoutService::createSessionForOrder($order)`**
+
+→ 既存メソッド：`App\Services\StripeCheckoutService::createSessionForOrder`
+
+→ 成果：Stripe Checkout Session を作成し、注文へ識別子を保存して、Checkout URL を返します。
+
+→ 保存する値（要件の対応）
+  - `stripe_checkout_session_id`
+  - `stripe_payment_intent_id`
+  - （URLは返却され、ユーザーは Stripeへ遷移）
+
+→ 関連する既存のClient呼び出し（内部）
+  - `StripeCheckoutService` が持つ `StripeCheckoutClientInterface`
+  - 実体：`App\Services\Stripe\CashierStripeCheckoutClient::createSession`
+  - 中身：`Cashier::stripe()->checkout->sessions->create(...)`
+
+**4. Checkoutへ遷移**
+
+→ `SkillOrderController::store` は返ってきた Checkout URL を使い、`Location` ヘッダでリダイレクトします。
+
+→ 失敗時
+  - `SkillOrderService` または `StripeCheckoutService` の例外
+  - ユーザーには「決済画面の作成に失敗」表示
+  - ※新規メソッド追加なし
+
+---
+
+# ✅ B. Checkout成功/キャンセル（UI遷移＋必要なDB更新のみ）
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. 成功（ルート：`GET /skills/orders/{order}/checkout/success`）**
+
+→ Controller：`App\Http\Controllers\StripeCheckoutController::success`
+
+→ 既存の挙動
+  - Buyerと`buyer_user_id`の不一致なら `403`
+  - ただし **DB上の決済確定更新は行わない**
+  - `transactions.show`（販売者/購入者画面）へリダイレクト
+
+**2. キャンセル（ルート：`GET /skills/orders/{order}/checkout/cancel`）**
+
+→ Controller：`App\Http\Controllers\StripeCheckoutController::cancel`
+
+→ 既存の挙動（DB更新あり）
+  - 条件：
+    - `order.status == pending（仮注文）`
+    - `checkout_cancelled_at == null`
+  - 更新：
+    - `checkout_cancelled_at = now()`
+
+→ 新規メソッドは不要（既存実装済み）
+
+---
+
+# ✅ C. 決済確定（Webhook：`checkout.session.completed（決済完了通知）`）
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. Webhook受信（ルート：`POST /stripe/webhook`）**
+
+→ Controller：`App\Http\Controllers\StripeWebhookController::handle`
+
+→ 既存の処理（重要ポイント）
+
+**2. `Stripe-Signature`（署名）を検証**
+
+→ `Webhook::constructEvent` で署名検証
+→ 失敗：`400` を返して終了（DB更新なし）
+
+**3. `event->type` を判定**
+
+→ `checkout.session.completed（決済完了通知）` 以外なら無視
+
+**4. `session->metadata` から `order_id` を取り出す**
+
+→ `order_id` が無い/0の場合：`422` を返す
+
+**5. `DB::transaction` + `lockForUpdate()` で `SkillOrder` をロックして更新**
+
+→ 冪等性（重複対策）
+  - `stripe_webhook_event_id` の重複があればスキップ
+
+**6. 成功時の更新（現行コードが更新しているカラム）**
+
+→ `status = paid（支払い完了）`
+→ `paid_at = paid_at が無ければ now()`
+→ `stripe_checkout_session_id = session.id`
+→ `stripe_payment_intent_id = session.payment_intent`
+→ `stripe_webhook_event_id = event.id`
+→ `last_webhook_type = event.type`
+→ `last_webhook_received_at = now()`
+→ `transaction_status = completed（取引完了）`（必要なら `completed_at` も補完）
+
+→ 補足
+  - `payout_status`（送金状態）はこのWebhookでは行いません
+  - 送金は次の `deliver/complete` 側で実行します（現行実装）
+
+→ 新規メソッド不要（このWebhook部分は既存実装済み）
+
+---
+
+# ✅ D. 納品（`deliver`）
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. 納品操作（ルート：`POST /transactions/{skill_order}/deliver`）**
+
+→ Controller：`App\Http\Controllers\SkillTransactionController::deliver`
+
+→ 既存の処理
+
+**2. Seller本人チェック**
+
+→ `skill_order->skillListing->freelancer->user_id` と一致するか
+
+**3. `SkillOrder::canDeliver()` を確認**
+
+→ `canDeliver()` は現行コード上
+  - `isPaid()`（`status == paid`）
+  - `transaction_status == in_progress（取引進行中）`
+
+**4. 成功時の更新**
+
+→ `transaction_status = delivered（納品済み）`
+→ `delivered_at = now()`
+→ system message を作成（チャット画面用）
+
+→ 新規メソッド不要（既存実装済み）
+
+---
+
+# ✅ E. 完了（`complete`）→ 送金（`PayoutService::transferForOrder`）
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. 完了操作（呼ばれるのは同じ Controller）**
+
+→ 役割でルートは分かれるが、Controllerは同じです。
+  - `POST /transactions/{skill_order}/complete`
+  - `POST /buyer/transactions/{skill_order}/complete`
+
+→ Controller：`App\Http\Controllers\SkillTransactionController::complete`
+
+**2. 既存の処理順（既存メソッドのみ）**
+
+1. Buyer本人チェック（`buyer_user_id` と一致）
+2. `SkillOrder::canCompleteEscrow()` を確認
+   - `isPaid()`（`status == paid`）
+   - `isEscrow()`（`payment_type == escrow（エスクロー運用の支払い種別）`）
+   - `transaction_status == delivered`
+3. `SkillOrder::alreadyTransferred()` がtrueならスキップ（上書きしない）
+   - 実装：`alreadyTransferred()` は
+     - `stripe_transfer_id != empty` OR `payout_status == transferred`
+4. レビュー作成（`SkillReview::create`）
+5. 出品者側の rating 集計を更新（`SkillListing`）
+6. 送金実行：`PayoutService::transferForOrder($order)`
+   - 既存メソッド：`App\Services\PayoutService::transferForOrder`
+   - 送金APIを叩くClient呼び出し
+     - `StripeTransferClientInterface` の実体：`App\Services\Stripe\CashierStripeTransferClient::createTransfer`
+     - 中身：`Cashier::stripe()->transfers->create(...)`
+   - 成功時の更新（`PayoutService` が担当）
+     - `stripe_transfer_id`
+     - `transferred_at = now()`
+     - `payout_status = transferred`
+     - `last_transfer_error = null`
+   - 失敗時の更新（`PayoutService` が担当）
+     - 「すでに送金済み」なら `failed` を上書きしない（スキップ）
+     - それ以外は `payout_status = failed` と `last_transfer_error` を保存
+7. 送金成功後に注文側を完了へ更新
+   - `transaction_status = completed（取引完了）`
+   - `completed_at = now()`
+   - system message 作成
+
+**3. 結論**
+
+→ 送金（`Transfer`）のメソッドは「新規追加」ではありません
+→ 既に `PayoutService::transferForOrder` が存在します
+
+---
+
+# ✅ F. 返金（refund）/ チャージバック（dispute）/ reversal（送金取り消し）
+
+### 🎯 全体フロー（やさしい解説つき）
+
+**1. 現状のコード状況（重要）**
+
+`refund（返金）` / `dispute（チャージバック/異議申立て）` / `reversal（送金取り消し）` に相当するもの
+→ Controller / Service / Route / DBカラム（例：`refund_status` や `transfer_reversed_at` 等）
+
+は、現行コードとDBスキーマ（`SkillOrder` / migrations）から確認できません。
+
+具体的に：
+- `SkillOrder` モデルに `refund_status` 等のカラムが存在しない
+- `StripeWebhookController` は `checkout.session.completed` しか処理していない
+- `PayoutService` は transfer の成功/失敗だけ扱い、取り消しは未実装
+
+**2. したがって必要なこと（新規追加が必要）**
+
+要件どおりに `refund/dispute/reversal` を実現するには、少なくとも以下が必要です。
+
+1. DB拡張
+   - `orders（skill_orders）` に
+     - `refund_status`
+     - `transfer_reversed_at`
+     - `reversal_amount`
+     - （必要なら）`dispute_status`
+2. 返金APIの入口（Controller + Route）
+   - 例：`RefundController@create`（運営操作）
+3. 返金処理のService
+   - 例：`RefundService::refundOrder($order, $refund_amount, $refund_reason)`
+   - 返金成功時に `refund_status` と `refunded_at` を更新
+4. 送金取り消し（reversal）のService/処理
+   - 返金に伴い、`payout_status = transferred（送金済み）` のときだけ実行
+   - 実行結果を `transfer_reversed_at` / `reversal_amount` に記録
+5. Dispute（チャージバック）のWebhook入口
+   - `StripeWebhookController@handle` で
+     - `charge.dispute.created` / `charge.dispute.closed`
+     のイベントタイプを追加で処理する
+   - 送金停止（`dispute_status != none`）の判定ロジックを `PayoutService` 側にも反映する
+
+---
+
+# ✅ まとめ（既存/新規の判断）
+
+**既存で実装済み（メソッドがある）**
+- `SkillOrderService::createPendingOrder`
+- `StripeCheckoutService::createSessionForOrder`
+- `StripeWebhookController::handle（checkout.session.completedのみ）`
+- `SkillTransactionController::deliver`
+- `SkillTransactionController::complete`（内部で `PayoutService::transferForOrder`）
+- `PayoutService::transferForOrder`（内部で transfer client）
+
+**新規実装が必要（現行コードに見当たらない）**
+- `Refund（Stripe Refund）`
+- `Dispute（charge.dispute.*）`
+- `Transfer reversal（送金取り消し）`
+

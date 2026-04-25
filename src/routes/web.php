@@ -26,6 +26,9 @@ use App\Http\Controllers\AnswerController;
 use App\Http\Controllers\AnswerCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DirectMessageController;
+use App\Http\Controllers\StripeCheckoutController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\RefundController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +44,10 @@ use App\Http\Controllers\DirectMessageController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Stripe webhook（決済確定は webhook を正とする）
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
 
 // =========================
 // 新機能（トップ / スキル / 記事 / 質問 / プロフィール）
@@ -347,9 +354,23 @@ Route::middleware(['auth.any:freelancer,company,buyer'])->group(function () {
         ->name('questions.answers.comments.store');
 
     // スキル購入/問い合わせ（将来想定：現時点はルートのみ）
+    Route::get('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'purchaseGet'])
+        ->whereNumber('skill_listing');
     Route::post('/skills/{skill_listing}/purchase', [SkillOrderController::class, 'store'])
         ->whereNumber('skill_listing')
         ->name('skills.purchase');
+
+    Route::get('/skills/orders/{order}/checkout/success', [StripeCheckoutController::class, 'success'])
+        ->whereNumber('order')
+        ->name('skills.checkout.success');
+
+    Route::get('/skills/orders/{order}/checkout/cancel', [StripeCheckoutController::class, 'cancel'])
+        ->whereNumber('order')
+        ->name('skills.checkout.cancel');
+
+    Route::post('/skills/orders/{skill_order}/refund', [RefundController::class, 'store'])
+        ->whereNumber('skill_order')
+        ->name('skills.orders.refund');
 
     Route::post('/skills/{skill_listing}/inquiry', [SkillInquiryController::class, 'store'])
         ->whereNumber('skill_listing')

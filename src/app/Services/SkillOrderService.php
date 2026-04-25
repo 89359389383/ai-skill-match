@@ -4,45 +4,48 @@ namespace App\Services;
 
 use App\Models\SkillListing;
 use App\Models\SkillOrder;
-use App\Models\SkillOrderMessage;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SkillOrderService
 {
     /**
-     * スキル購入（注文）を作成する。
-     *
-     * 現時点は「決済連携なし」のため:
-     * - order を pending で作成するだけ
-     * - amount は出品価格をスナップショットとして保存する
+     * 決済開始前の仮注文を作成する。
      */
-    public function purchase(User $buyer, SkillListing $listing): SkillOrder
+    public function createPendingOrder(User $buyer, SkillListing $listing): SkillOrder
     {
-        return DB::transaction(function () use ($buyer, $listing): SkillOrder {
-            // すでに購入済みか、などの制約は将来追加する（仕様が固まったら）
+        Log::info('SkillOrderService createPendingOrder begin.', [
+            'buyer_id' => $buyer->id,
+            'listing_id' => $listing->id,
+            'listing_price' => $listing->price,
+            'listing_status' => $listing->status,
+        ]);
 
+        return DB::transaction(function () use ($buyer, $listing): SkillOrder {
             $order = SkillOrder::create([
                 'skill_listing_id' => $listing->id,
                 'buyer_user_id' => $buyer->id,
-                // 注文時点の価格を保存しておく（後から出品価格が変わっても注文は変えない）
-                'amount' => $listing->price,
-                'status' => 'pending',
+                'amount' => (int) $listing->price,
+                'status' => SkillOrder::STATUS_PENDING,
+                'payment_type' => SkillOrder::PAYMENT_TYPE_ESCROW,
+                'transaction_status' => SkillOrder::TX_WAITING_PAYMENT,
+                'payout_status' => SkillOrder::PAYOUT_NOT_TRANSFERRED,
                 'purchased_at' => Carbon::now(),
             ]);
 
-            // 取引開始のシステムメッセージ（任意）
-            SkillOrderMessage::create([
-                'skill_order_id' => $order->id,
-                'sender_user_id' => null,
-                'message_type' => 'system',
-                'body' => '取引を開始しました。チャットでやり取りしてください。',
-                'sent_at' => Carbon::now(),
+            Log::info('SkillOrderService createPendingOrder created.', [
+                'order_id' => $order->id,
+                'buyer_id' => $order->buyer_user_id,
+                'skill_listing_id' => $order->skill_listing_id,
+                'amount' => $order->amount,
+                'status' => $order->status,
+                'transaction_status' => $order->transaction_status,
+                'payout_status' => $order->payout_status,
             ]);
 
             return $order;
         });
     }
 }
-

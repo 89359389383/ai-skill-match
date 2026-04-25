@@ -486,6 +486,8 @@
 
     $statusLabel = function (?string $status): string {
         return match ($status) {
+            // waiting_payment のラベルを statusClass と整合させる
+            'waiting_payment' => '支払い待ち',
             'in_progress' => '作業中',
             'delivered' => '納品待ち',
             'completed' => '完了',
@@ -494,6 +496,7 @@
     };
     $statusClass = function (?string $status): string {
         return match ($status) {
+            'waiting_payment' => 'sp-status-progress',
             'in_progress' => 'sp-status-progress',
             'delivered' => 'sp-status-delivered',
             'completed' => 'sp-status-completed',
