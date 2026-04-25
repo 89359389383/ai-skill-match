@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\StripeCheckoutClientInterface;
 use App\Models\SkillOrder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StripeCheckoutService
 {
@@ -31,10 +32,30 @@ class StripeCheckoutService
             'stripe_checkout_session_id_before' => $order->stripe_checkout_session_id,
         ]);
 
+        // slot によりセッションCookie名が分割されるため、
+        // Stripe へ外部遷移する前に決まっている slot を success/cancel URL に引き継ぎ、
+        // 戻ってきた直後も同じログイン状態を維持する。
+        $slot = request()->attributes->get('slot')
+            ?? request()->attributes->get('resolved_slot')
+            ?? request()->query('slot')
+            ?? request()->input('slot');
+        $slot = is_string($slot) ? trim($slot) : null;
+
+        $successUrl = route('skills.checkout.success', ['order' => $order->id]) . '?session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('skills.checkout.cancel', ['order' => $order->id]);
+
+        if (is_string($slot) && $slot !== '' && !Str::contains($successUrl, 'slot=')) {
+            $successUrl .= '&slot=' . urlencode($slot);
+        }
+
+        if (is_string($slot) && $slot !== '' && !Str::contains($cancelUrl, 'slot=')) {
+            $cancelUrl .= '?slot=' . urlencode($slot);
+        }
+
         $payload = [
             'mode' => 'payment',
-            'success_url' => route('skills.checkout.success', ['order' => $order->id]) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('skills.checkout.cancel', ['order' => $order->id]),
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
             'client_reference_id' => (string) $order->id,
             'metadata' => [
                 'order_id' => (string) $order->id,

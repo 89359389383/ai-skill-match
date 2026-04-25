@@ -340,10 +340,26 @@ class SkillTransactionController extends Controller
                 if (!$order->canCompleteEscrow()) {
                     return 'cannot_complete';
                 }
+
+                // 転送済みならここでは何もしない（2重完了対策）
                 if ($order->alreadyTransferred()) {
                     return 'already_transferred';
                 }
 
+                // 先に送金を試す。送金失敗時は payout_status=failed が PayoutService 内で保存される前提なので、
+                // ここでは例外でロールバックさせない（テスト要件: failed が永続化されること）。
+                try {
+                    $payoutOrder = $payoutService->transferForOrder($order);
+                } catch (\Throwable $e) {
+                    $order->refresh(); // failed が反映された状態を読み直す
+                    return 'transfer_failed';
+                }
+
+                if ($payoutOrder->payout_status !== SkillOrder::PAYOUT_TRANSFERRED) {
+                    return 'transfer_failed';
+                }
+
+                // 送金成功後にのみレビュー作成・取引完了更新を行う
                 SkillReview::create([
                     'skill_listing_id' => $order->skill_listing_id,
                     'user_id' => $user->id,
@@ -358,11 +374,6 @@ class SkillTransactionController extends Controller
                     $listing->reviews_count = (int) $reviewsCount;
                     $listing->rating_average = $avg !== null ? round((float) $avg, 1) : 0;
                     $listing->save();
-                }
-
-                $payoutOrder = $payoutService->transferForOrder($order);
-                if ($payoutOrder->payout_status !== SkillOrder::PAYOUT_TRANSFERRED) {
-                    throw new RuntimeException('transfer failed');
                 }
 
                 $order->refresh();
@@ -403,6 +414,7 @@ class SkillTransactionController extends Controller
             $message = match ($transactionResult) {
                 'already_transferred' => 'この取引は既に完了しています',
                 'cannot_complete' => '現在のステータスでは承認できません',
+                'transfer_failed' => '送金に失敗しました',
                 default => '取引完了処理がスキップされました',
             };
 
