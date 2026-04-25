@@ -74,11 +74,68 @@ class SkillPaymentFlowTest extends TestCase
             ->get(route('skills.checkout.success', ['order' => $order->id]));
 
         $res->assertOk();
+        $res->assertDontSee('取引画面へ');
         $this->assertDatabaseHas('skill_orders', [
             'id' => $order->id,
             'status' => SkillOrder::STATUS_PENDING,
             'transaction_status' => SkillOrder::TX_WAITING_PAYMENT,
         ]);
+    }
+
+    public function test_success_url_shows_transaction_button_after_webhook_reflects_payment(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder($buyer->id, SkillOrder::STATUS_PENDING, SkillOrder::TX_WAITING_PAYMENT);
+
+        $payload = json_encode([
+            'id' => 'evt_success_button_visible',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_success_button_visible',
+                    'payment_intent' => 'pi_success_button_visible',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                    ],
+                ],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $this->postWebhookPayload($payload)->assertOk();
+
+        $res = $this->actingAs($buyer, 'buyer')
+            ->get(route('skills.checkout.success', ['order' => $order->id]));
+
+        $res->assertOk();
+        $res->assertSee('取引画面へ');
+    }
+
+    public function test_purchase_button_is_hidden_after_webhook_marks_order_paid(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createOrder($buyer->id, SkillOrder::STATUS_PENDING, SkillOrder::TX_WAITING_PAYMENT);
+
+        $payload = json_encode([
+            'id' => 'evt_hide_purchase_button',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_hide_purchase_button',
+                    'payment_intent' => 'pi_hide_purchase_button',
+                    'metadata' => [
+                        'order_id' => (string) $order->id,
+                    ],
+                ],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $this->postWebhookPayload($payload)->assertOk();
+
+        $res = $this->actingAs($buyer, 'buyer')
+            ->get(route('skills.show', ['skill_listing' => $order->skill_listing_id]));
+
+        $res->assertOk();
+        $res->assertDontSee('購入する');
     }
 
     public function test_webhook_marks_pending_order_paid_and_in_progress(): void
@@ -376,6 +433,36 @@ class SkillPaymentFlowTest extends TestCase
             'id' => $order->id,
             'payout_status' => SkillOrder::PAYOUT_FAILED,
         ]);
+    }
+
+    public function test_purchase_button_is_restored_after_transaction_completed(): void
+    {
+        $buyer = $this->createBuyerUser();
+        $order = $this->createDeliveredPaidOrderForBuyer($buyer->id, true);
+
+        $payout = Mockery::mock(PayoutService::class);
+        $payout->shouldReceive('transferForOrder')
+            ->once()
+            ->andReturnUsing(function (SkillOrder $order) {
+                $order->stripe_transfer_id = 'tr_restore_1';
+                $order->payout_status = SkillOrder::PAYOUT_TRANSFERRED;
+                $order->save();
+                return $order;
+            });
+        $this->app->instance(PayoutService::class, $payout);
+
+        $this->actingAs($buyer, 'buyer')
+            ->post(route('buyer.transactions.complete', ['skill_order' => $order->id]), [
+                'rating' => 5,
+                'review' => 'great',
+            ])
+            ->assertRedirect();
+
+        $res = $this->actingAs($buyer, 'buyer')
+            ->get(route('skills.show', ['skill_listing' => $order->skill_listing_id]));
+
+        $res->assertOk();
+        $res->assertSee('購入する');
     }
 
     private function createBuyerUser(): User

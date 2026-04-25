@@ -12,12 +12,17 @@ class StripeCheckoutController extends Controller
     public function success(Request $request, SkillOrder $order)
     {
         $user = $request->user();
+        $sessionCookieName = (string) config('session.cookie');
         if (!$user || (int) $user->id !== (int) $order->buyer_user_id) {
             Log::warning('StripeCheckoutController@success denied by buyer mismatch.', [
                 'order_id' => $order->id,
                 'order_buyer_user_id' => $order->buyer_user_id,
                 'auth_user_id' => $user?->id,
                 'auth_user_role' => $user?->role,
+                'session_cookie_name' => $sessionCookieName,
+                'has_session_cookie' => $request->cookies->has($sessionCookieName),
+                'query_slot' => $request->query('slot'),
+                'resolved_slot_attr' => $request->attributes->get('resolved_slot'),
             ]);
             abort(403);
         }
@@ -29,6 +34,13 @@ class StripeCheckoutController extends Controller
             'status' => $order->status,
             'transaction_status' => $order->transaction_status,
             'payout_status' => $order->payout_status,
+            'session_cookie_name' => $sessionCookieName,
+            'has_session_cookie' => $request->cookies->has($sessionCookieName),
+            'query_slot' => $request->query('slot'),
+            'slot_attr' => $request->attributes->get('slot'),
+            'resolved_slot_attr' => $request->attributes->get('resolved_slot'),
+            'auth_buyer_check' => auth('buyer')->check(),
+            'auth_buyer_user_id' => auth('buyer')->user()?->id,
             'checkout_cancelled_at' => $order->checkout_cancelled_at,
             'stripe_checkout_session_id' => $order->stripe_checkout_session_id,
             'stripe_payment_intent_id' => $order->stripe_payment_intent_id,
@@ -38,36 +50,32 @@ class StripeCheckoutController extends Controller
             'session_id_param' => $request->query('session_id'),
         ]);
 
-        // 決済完了後は「取引チャット」へ自動遷移する
-        // Webhook反映がまだの場合でも `transactions.show` 側で支払い確認中表示になるため、
-        // このタイミングで遷移しても問題ありません。
-        $routeName = $user->role === 'buyer'
-            ? 'buyer.transactions.show'
-            : 'transactions.show';
+        $showTransactionButton =
+            $order->status === SkillOrder::STATUS_PAID
+            && $order->transaction_status === SkillOrder::TX_COMPLETED;
 
-        Log::info('StripeCheckoutController@success redirecting to transaction screen.', [
-            'order_id' => $order->id,
-            'route_name' => $routeName,
-            'order_status' => $order->status,
-            'transaction_status' => $order->transaction_status,
-            'payout_status' => $order->payout_status,
-            'stripe_webhook_event_id' => $order->stripe_webhook_event_id,
-            'last_webhook_received_at' => $order->last_webhook_received_at,
-            'session_id_param' => $request->query('session_id'),
+        // success_url は「公開ページ」であり、決済確定（paid確定）などは行わず画面表示だけ行う。
+        // （テスト要件: 302ではなく 200 を返す）
+        return view('skills.checkout_success', [
+            'order' => $order,
+            'showTransactionButton' => $showTransactionButton,
         ]);
-
-        return redirect()->route($routeName, ['skill_order' => $order->id]);
     }
 
     public function cancel(Request $request, SkillOrder $order)
     {
         $user = $request->user();
+        $sessionCookieName = (string) config('session.cookie');
         if (!$user || (int) $user->id !== (int) $order->buyer_user_id) {
             Log::warning('StripeCheckoutController@cancel denied by buyer mismatch.', [
                 'order_id' => $order->id,
                 'order_buyer_user_id' => $order->buyer_user_id,
                 'auth_user_id' => $user?->id,
                 'auth_user_role' => $user?->role,
+                'session_cookie_name' => $sessionCookieName,
+                'has_session_cookie' => $request->cookies->has($sessionCookieName),
+                'query_slot' => $request->query('slot'),
+                'resolved_slot_attr' => $request->attributes->get('resolved_slot'),
             ]);
             abort(403);
         }

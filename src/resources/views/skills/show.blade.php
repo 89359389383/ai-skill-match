@@ -209,7 +209,7 @@
                             $defaultMessageContent = '(' . ($listing->title ?? 'スキル') . ')について相談させてください。';
                         @endphp
 
-                        @if (!$isOwnListing)
+                        @if (!$isOwnListing && $canPurchase)
                             <form action="{{ route('skills.purchase', ['skill_listing' => $listing->id]) }}" method="POST" class="mb-4">
                                 @csrf
                                 <button type="submit" class="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">

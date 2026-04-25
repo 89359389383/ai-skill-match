@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSkillListingRequest;
 use App\Models\SkillListing;
+use App\Models\SkillOrder;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\SkillListingService;
@@ -88,7 +89,7 @@ class SkillListingController extends Controller
     /**
      * スキル販売詳細（閲覧はログイン不要）。
      */
-    public function show(SkillListing $skill_listing)
+    public function show(Request $request, SkillListing $skill_listing)
     {
         // 画面で必要になる関係を一緒にロードしておく
         $skill_listing->load(['freelancer.user', 'skills', 'assets', 'reviews.user']);
@@ -102,8 +103,24 @@ class SkillListingController extends Controller
             }
         }
 
+        $canPurchase = true;
+        $buyer = $request->user('buyer') ?? Auth::guard('buyer')->user();
+        if ($buyer) {
+            $hasActiveOrder = SkillOrder::query()
+                ->where('skill_listing_id', $skill_listing->id)
+                ->where('buyer_user_id', $buyer->id)
+                ->where('status', SkillOrder::STATUS_PAID)
+                ->where('payout_status', '!=', SkillOrder::PAYOUT_TRANSFERRED)
+                ->exists();
+
+            $canPurchase = !$hasActiveOrder;
+        }
+
         if (view()->exists('skills.show')) {
-            return view('skills.show', ['listing' => $skill_listing]);
+            return view('skills.show', [
+                'listing' => $skill_listing,
+                'canPurchase' => $canPurchase,
+            ]);
         }
 
         return view('welcome');
