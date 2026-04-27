@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'AIスキルマッチ - AI人材と企業をつなぐ')
+@section('title', 'AITECH Pro Match - AI人材と企業をつなぐ')
 
 @push('styles')
 <style>
@@ -977,7 +977,7 @@ section {
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">充実の機能</h2>
-                <p class="section-subtitle">AIスキルマッチングに必要な全てが揃っています</p>
+                <p class="section-subtitle">AITECH Pro Matchに必要な全てが揃っています</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
@@ -1036,7 +1036,7 @@ section {
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">選ばれる理由</h2>
-                <p class="section-subtitle">AIスキルマッチが提供する価値</p>
+                <p class="section-subtitle">AITECH Pro Matchが提供する価値</p>
             </div>
             <div class="benefits-grid">
                 <div class="benefit-card">
@@ -1420,7 +1420,7 @@ section {
     <section class="cta-section">
         <div class="container">
             <div class="cta-content">
-                <h2 class="cta-title">今すぐAIスキルマッチを始めよう</h2>
+                <h2 class="cta-title">今すぐAITECH Pro Matchを始めよう</h2>
                 <p class="cta-subtitle">無料登録で、知識の共有、スキルの販売、キャリアアップの全てが可能に</p>
                 <a href="{{ route('auth.login.form') }}" class="btn btn-cta">
                     無料で始める

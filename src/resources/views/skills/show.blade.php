@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', ($listing->title ?? 'スキル詳細') . ' - AIスキルマッチ')
+@section('title', ($listing->title ?? 'スキル詳細') . ' - AITECH Pro Match')
 
 @section('content')
 <div class="min-h-screen py-12 bg-gray-50">

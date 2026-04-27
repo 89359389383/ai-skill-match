@@ -16,7 +16,7 @@
                     </svg>
                 </div>
                 <span class="header-logo-text text-xl font-bold text-[#FC4C0C]">
-                    AIスキルマッチ
+                    AITECH Pro Match
                 </span>
             </a>
 

@@ -11,7 +11,7 @@
                         </svg>
                     </div>
                     <span class="text-xl font-bold text-white">
-                        AIスキルマッチ
+                        AITECH Pro Match
                     </span>
                 </div>
                 <p class="text-gray-300 text-sm leading-relaxed">
@@ -57,7 +57,7 @@
         <div class="pt-8 border-t border-white/10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <p class="text-gray-300 text-sm">
-                    © <span id="publicCurrentYear"></span> AIスキルマッチ. All rights reserved.
+                    © <span id="publicCurrentYear"></span> AITECH Pro Match. All rights reserved.
                 </p>
             </div>
         </div>

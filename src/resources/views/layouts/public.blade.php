@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'AIスキルマッチ')</title>
+    <title>@yield('title', 'AITECH Pro Match')</title>
     <link rel="icon" href="{{ asset('aifavicon.png') }}">
 
     {{-- CDN版Tailwind（まずは素早く画面を出すため） --}}

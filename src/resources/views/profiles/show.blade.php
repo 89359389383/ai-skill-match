@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', ($freelancer->display_name ?? 'プロフィール') . ' - AIスキルマッチ')
+@section('title', ($freelancer->display_name ?? 'プロフィール') . ' - AITECH Pro Match')
 
 @push('styles')
 <style>

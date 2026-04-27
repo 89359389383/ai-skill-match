@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', ($article->title ?? '記事') . ' - AIスキルマッチ')
+@section('title', ($article->title ?? '記事') . ' - AITECH Pro Match')
 
 @push('styles')
 <style>
